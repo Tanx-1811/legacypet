@@ -62,6 +62,11 @@ export default {
     ],
     treat: [(v) => `@${v.treatUser} 喂了我小零食 (#${v.treatPr}) 🍪`, (v) => `谢谢 @${v.treatUser} 在 #${v.treatPr} 投喂！`],
     streak: [(v) => `连续提交 ${v.streak} 天！势不可挡 🔥`],
+    vacation: [
+      (v) => `度假中，${v.until} 回来 🌴 很快见！`,
+      (v) => `去海边玩到 ${v.until} 🏖️ 不用喂 commit 啦`,
+      '休假中。涂好防晒，消息免打扰 😎',
+    ],
     aura: [
       '能量全开！幸福了一整周 ✨',
       '这还不是我的最终形态 💥',
@@ -102,8 +107,17 @@ export default {
       status: '我的心情和原因',
       pat: '摸摸我',
       checkup: '只看体检报告',
+      trophies: '我的奖杯架',
+      vacation: '让我暂停饿肚子 N 天，例如 `/pet vacation 14`（仅维护者）',
+      back: '提前结束假期（仅维护者）',
       help: '显示这个列表',
     },
+    vacation: (until, days) => `🏖️ 我去海边玩啦，**${until}** 回来！饥饿暂停 ${days} 天，回来后这几天不算数哦。`,
+    back: '欢迎回来！👋 假期结束，我的饭碗又可以装 commit 啦。',
+    notOnVacation: '我没在度假哦，不过谢谢你来看我！😊',
+    maintainersOnly: (name) => `只有维护者才能用 \`/pet ${name}\`。不过谁都可以 \`/pet pat\` 摸摸我 💕`,
+    trophies: (n, total) => `奖杯架：${n} / ${total}`,
+    locked: '尚未解锁',
   },
   park: {
     title: (owner) => `${owner} 的宠物乐园`,
@@ -125,6 +139,7 @@ export default {
     hygieneFull: '社区资料完整度 100%，一尘不染！',
     streak: (n) => `已连续提交 ${n} 天，别断了哦！`,
     archived: '这个仓库已归档，你的宠物正在安详地冬眠。',
+    vacation: (until) => `度假中，${until} 回来。饥饿已暂停，这几天不计入。`,
   },
   diary: {
     title: (name) => `# 📔 ${name} 的日记`,
@@ -134,5 +149,22 @@ export default {
     fasted: '今天没东西吃',
     treat: (user, pr) => `收到 @${user} 的零食 (#${pr})`,
     unlocked: (list) => `解锁了 ${list}`,
+    vacation: (until) => `度假中，${until} 回来 🏖️`,
+  },
+  alert: {
+    title: {
+      sick: (name) => `🤒 ${name} 生病了：CI 失败`,
+      zombie: (name, days) => `🧟 ${name} 变成僵尸了：${days} 天没有提交`,
+      hungry: (name, days) => `🍖 ${name} 饿了：${days} 天没有提交`,
+      sad: (name) => `🥺 ${name} 难过了：有 issue 在等回复`,
+    },
+    intro: '你的宠物需要照顾啦。这个 issue 会自动更新，等宠物好起来就会自己关闭。',
+    since: (date) => `始于 ${date}。`,
+    recovered: (name, mood) => `🎉 ${name} 好多了（现在${mood}）。关闭此 issue，谢谢你的照顾！`,
+    footer: '由 LegacyPet 创建。关闭此 issue 可在宠物恢复前静音提醒，或设置 `alerts: false` 关闭提醒。',
+  },
+  chart: {
+    title: (name, days) => `${name} · 最近 ${days} 天`,
+    empty: '历史数据还不够，图表会一天天填满。',
   },
 };

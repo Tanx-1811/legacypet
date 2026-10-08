@@ -73,6 +73,11 @@ export default {
     ],
     treat: [(v) => `@${v.treatUser} m'a offert une friandise (#${v.treatPr}) 🍪`, (v) => `Merci @${v.treatUser} pour le goûter dans #${v.treatPr}!`],
     streak: [(v) => `${v.streak} jours de commits d'affilée! Inarrêtable 🔥`],
+    vacation: [
+      (v) => `En vacances jusqu'au ${v.until} 🌴 À bientôt!`,
+      (v) => `À la plage jusqu'au ${v.until} 🏖️ Pas besoin de commits`,
+      'Hors du bureau. Crème solaire oui, notifs non 😎',
+    ],
     aura: [
       'PUISSANCE MAXIMALE! Une semaine de bonheur ✨',
       "Ce n'est même pas ma forme finale 💥",
@@ -120,8 +125,17 @@ export default {
       status: 'comment je vais et pourquoi',
       pat: 'me faire une caresse',
       checkup: 'juste le bilan',
+      trophies: 'mon étagère à trophées',
+      vacation: 'mettre ma faim en pause pendant N jours, par ex. `/pet vacation 14` (mainteneurs)',
+      back: 'écourter les vacances (mainteneurs)',
       help: 'cette liste',
     },
+    vacation: (until, days) => `🏖️ Direction la plage jusqu'au **${until}**! Ma faim est en pause pendant ${days} ${plural(days, 'jour', 'jours')}, et ces jours ne compteront pas à mon retour.`,
+    back: 'Bon retour! 👋 Fini les vacances, ma gamelle est prête pour de nouveaux commits.',
+    notOnVacation: "Je ne suis pas en vacances, mais merci de prendre de mes nouvelles! 😊",
+    maintainersOnly: (name) => `Seuls les mainteneurs peuvent utiliser \`/pet ${name}\`. Mais tout le monde peut me faire un \`/pet pat\` 💕`,
+    trophies: (n, total) => `Étagère à trophées: ${n} sur ${total}`,
+    locked: 'Encore à débloquer',
   },
   park: {
     title: (owner) => `Le parc des compagnons de ${owner}`,
@@ -143,6 +157,7 @@ export default {
     hygieneFull: 'Profil communautaire à 100%. Impeccable!',
     streak: (n) => `${n} jours de commits d'affilée. Ne casse pas la série!`,
     archived: 'Ce repo est archivé, alors ton compagnon hiberne paisiblement.',
+    vacation: (until) => `En vacances jusqu'au ${until}. La faim est en pause et ces jours ne comptent pas.`,
   },
   diary: {
     title: (name) => `# 📔 Le journal de ${name}`,
@@ -152,5 +167,22 @@ export default {
     fasted: "rien à manger aujourd'hui",
     treat: (user, pr) => `a reçu une friandise de @${user} (#${pr})`,
     unlocked: (list) => `a débloqué ${list}`,
+    vacation: (until) => `en vacances jusqu'au ${until} 🏖️`,
+  },
+  alert: {
+    title: {
+      sick: (name) => `🤒 ${name} est malade: la CI échoue`,
+      zombie: (name, days) => `🧟 ${name} est devenu un zombie: aucun commit depuis ${days} ${plural(days, 'jour', 'jours')}`,
+      hungry: (name, days) => `🍖 ${name} a faim: aucun commit depuis ${days} ${plural(days, 'jour', 'jours')}`,
+      sad: (name) => `🥺 ${name} est triste: des issues attendent une réponse`,
+    },
+    intro: "Ton compagnon a besoin d'attention. Cette issue se met à jour toute seule et se ferme d'elle-même quand il va mieux.",
+    since: (date) => `Depuis le ${date}.`,
+    recovered: (name, mood) => `🎉 ${name} va mieux (${mood} maintenant). Je ferme cette issue. Merci d'avoir pris soin de lui!`,
+    footer: "Ouverte par LegacyPet. Ferme cette issue pour la mettre en sourdine jusqu'à ce que ton compagnon aille mieux, ou mets `alerts: false` pour désactiver les alertes.",
+  },
+  chart: {
+    title: (name, days) => `${name} · ${days} derniers jours`,
+    empty: "Pas encore assez d'historique. Le graphique se remplit jour après jour.",
   },
 };

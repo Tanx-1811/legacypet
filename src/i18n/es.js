@@ -67,6 +67,11 @@ export default {
     ],
     treat: [(v) => `@${v.treatUser} me dio una golosina (#${v.treatPr}) 🍪`, (v) => `¡Gracias @${v.treatUser} por el snack en #${v.treatPr}!`],
     streak: [(v) => `¡Racha de ${v.streak} días con commits! Imparable 🔥`],
+    vacation: [
+      (v) => `De vacaciones hasta el ${v.until} 🌴 ¡Vuelvo pronto!`,
+      (v) => `Me fui a la playa hasta el ${v.until} 🏖️ Sin commits`,
+      'Fuera de la oficina. Protector solar on, avisos off 😎',
+    ],
     aura: [
       '¡PODER AL MÁXIMO! Una semana entera de dicha ✨',
       'Y esta ni siquiera es mi forma final 💥',
@@ -110,8 +115,17 @@ export default {
       status: 'cómo me siento y por qué',
       pat: 'dame una caricia',
       checkup: 'solo el chequeo',
+      trophies: 'mi estante de trofeos',
+      vacation: 'pausa mi hambre N días, p. ej. `/pet vacation 14` (maintainers)',
+      back: 'termina las vacaciones antes de tiempo (maintainers)',
       help: 'esta lista',
     },
+    vacation: (until, days) => `🏖️ ¡Me voy a la playa hasta el **${until}**! Mi hambre queda en pausa ${days} ${plural(days, 'día', 'días')}, y esos días no contarán cuando vuelva.`,
+    back: '¡He vuelto! 👋 Se acabaron las vacaciones, mi platito está listo para más commits.',
+    notOnVacation: 'No estoy de vacaciones, ¡pero gracias por preguntar por mí! 😊',
+    maintainersOnly: (name) => `Solo los maintainers pueden usar \`/pet ${name}\`. Eso sí, cualquiera puede darme un \`/pet pat\` 💕`,
+    trophies: (n, total) => `Estante de trofeos: ${n} de ${total}`,
+    locked: 'Por desbloquear',
   },
   park: {
     title: (owner) => `Parque de mascotas de ${owner}`,
@@ -133,6 +147,7 @@ export default {
     hygieneFull: 'El perfil de comunidad está al 100%. ¡Impecable!',
     streak: (n) => `Racha de ${n} días con commits. ¡No la rompas!`,
     archived: 'Este repo está archivado, así que tu mascota hiberna en paz.',
+    vacation: (until) => `De vacaciones hasta el ${until}. El hambre está en pausa y estos días no cuentan.`,
   },
   diary: {
     title: (name) => `# 📔 Diario de ${name}`,
@@ -142,5 +157,22 @@ export default {
     fasted: 'hoy no comió nada',
     treat: (user, pr) => `recibió una golosina de @${user} (#${pr})`,
     unlocked: (list) => `desbloqueó ${list}`,
+    vacation: (until) => `de vacaciones hasta el ${until} 🏖️`,
+  },
+  alert: {
+    title: {
+      sick: (name) => `🤒 ${name} está enfermo: el CI está fallando`,
+      zombie: (name, days) => `🧟 ${name} se convirtió en zombi: ${days} días sin commits`,
+      hungry: (name, days) => `🍖 ${name} tiene hambre: ${days} días sin commits`,
+      sad: (name) => `🥺 ${name} está triste: hay issues esperando respuesta`,
+    },
+    intro: 'Tu mascota necesita cuidados. Este issue se actualiza solo y se cierra por sí mismo cuando la mascota se sienta mejor.',
+    since: (date) => `Desde el ${date}.`,
+    recovered: (name, mood) => `🎉 ¡${name} se siente mejor (ahora está ${mood})! Cierro esto. ¡Gracias por cuidarlo!`,
+    footer: 'Abierto por LegacyPet. Cierra este issue para silenciarlo hasta que la mascota se recupere, o pon `alerts: false` para desactivar las alertas.',
+  },
+  chart: {
+    title: (name, days) => `${name} · últimos ${days} días`,
+    empty: 'Aún no hay suficiente historial. La gráfica se irá llenando día a día.',
   },
 };

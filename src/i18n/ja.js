@@ -61,6 +61,11 @@ export default {
     ],
     treat: [(v) => `@${v.treatUser}がおやつくれた (#${v.treatPr}) 🍪`, (v) => `@${v.treatUser}、#${v.treatPr}のおやつありがと!`],
     streak: [(v) => `${v.streak}日連続コミット! 止まらない 🔥`],
+    vacation: [
+      (v) => `${v.until}まで休暇中 🌴 すぐ戻るね!`,
+      (v) => `${v.until}まで海にいるよ 🏖️ コミットはいらないよ`,
+      'おやすみ中。日焼け止めぬって通知はオフ 😎',
+    ],
     aura: [
       'パワーアップ! 一週間ずっとしあわせ ✨',
       'まだまだ最終形態じゃないよ 💥',
@@ -101,8 +106,17 @@ export default {
       status: 'ボクの気分とその理由',
       pat: 'なでなでする',
       checkup: '健康診断だけ',
+      trophies: 'ボクのトロフィー棚',
+      vacation: 'N日間おなかがすかなくなる。例: `/pet vacation 14` (メンテナー限定)',
+      back: '休暇を早めに切り上げる (メンテナー限定)',
       help: 'この一覧',
     },
+    vacation: (until, days) => `🏖️ **${until}**まで海に行ってくるね! ${days}日間はおなかがすかないし、戻ってきてもその日数はカウントしないよ。`,
+    back: 'おかえり! 👋 休暇はおしまい。お皿はまたコミット待ちだよ。',
+    notOnVacation: '休暇中じゃないよ。でも気にかけてくれてありがと! 😊',
+    maintainersOnly: (name) => `\`/pet ${name}\`はメンテナーだけが使えるよ。\`/pet pat\`ならだれでもOK 💕`,
+    trophies: (n, total) => `トロフィー棚: ${n} / ${total}`,
+    locked: 'まだ未解除',
   },
   park: {
     title: (owner) => `${owner}のペットパーク`,
@@ -124,6 +138,7 @@ export default {
     hygieneFull: 'コミュニティプロフィールは100%。ピカピカ!',
     streak: (n) => `${n}日連続コミット中。途切れさせないでね!`,
     archived: 'このリポジトリはアーカイブ済みなので、ペットは静かに冬眠中です。',
+    vacation: (until) => `${until}まで休暇中です。おなかは減らず、この期間はカウントされません。`,
   },
   diary: {
     title: (name) => `# 📔 ${name}の日記`,
@@ -133,5 +148,22 @@ export default {
     fasted: '今日はごはんなし',
     treat: (user, pr) => `@${user}からおやつをもらった (#${pr})`,
     unlocked: (list) => `実績解除: ${list}`,
+    vacation: (until) => `${until}まで休暇中 🏖️`,
+  },
+  alert: {
+    title: {
+      sick: (name) => `🤒 ${name}がびょうき: CIが失敗しています`,
+      zombie: (name, days) => `🧟 ${name}がゾンビ化: ${days}日間コミットなし`,
+      hungry: (name, days) => `🍖 ${name}がはらぺこ: ${days}日間コミットなし`,
+      sad: (name) => `🥺 ${name}がしょんぼり: issueが返信を待っています`,
+    },
+    intro: 'ペットがお世話を必要としています。このissueは自動で更新され、ペットが元気になると自動でクローズされます。',
+    since: (date) => `${date}から。`,
+    recovered: (name, mood) => `🎉 ${name}が元気になりました (今は${mood})。このissueをクローズします。お世話ありがとう!`,
+    footer: 'LegacyPetが作成しました。ペットが回復するまでミュートするにはこのissueをクローズしてください。アラートを止めるには`alerts: false`を設定してね。',
+  },
+  chart: {
+    title: (name, days) => `${name} · 直近${days}日`,
+    empty: 'まだ履歴が足りません。グラフは毎日少しずつ埋まっていくよ。',
   },
 };
