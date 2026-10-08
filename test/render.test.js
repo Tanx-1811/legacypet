@@ -111,3 +111,12 @@ test('the park gets scenery too and stays a reasonable size', () => {
   assertValidSvg(svg, 'park');
   assert.match(svg, /lp-spin/);
 });
+
+test('scene animations never hit the card chrome', () => {
+  // The reef's rising bubbles once shared `.lp-bubble` with the speech bubble, which then floated away.
+  const svg = renderCard(buildPet({ snapshot: mockSnapshot({ mood: 'happy', now: NOW }), now: NOW, options: { species: 'octopus', holiday: null } }));
+  for (const cls of ['lp-bubble', 'lp-tail', 'lp-card', 'lp-thought', 'lp-track', 'lp-seg']) {
+    assert.doesNotMatch(svg, new RegExp(`\.${cls}\{animation`), `.${cls} must not be animated`);
+  }
+  assert.match(svg, /class="lp-bubbling/);
+});

@@ -2,9 +2,15 @@
 // and tells the owner about anything newer in the job summary, so people pinned to the
 // floating `@v1` tag hear about new features (and the rare workflow change they need).
 // Keep VERSION in sync with package.json (a test checks it).
-export const VERSION = '1.2.0';
+export const VERSION = '1.2.1';
 
 export const CHANGELOG = [
+  {
+    version: '1.2.1',
+    items: [
+      '🐛 Fixed: the speech bubble on the card (and the name tags in the Pet Park) floated up and faded every few seconds',
+    ],
+  },
   {
     version: '1.2.0',
     items: [

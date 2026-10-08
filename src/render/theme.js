@@ -148,7 +148,7 @@ const STATIC_CSS = `
 .lp-wave{animation:lp-wave 3s ease-in-out infinite}
 .lp-tide{animation:lp-tide 4s ease-in-out infinite}
 .lp-ripple{animation:lp-ripple 3s ease-out infinite both}
-.lp-bubble{animation:lp-bubble 5s ease-in infinite both}
+.lp-bubbling{animation:lp-bubble 5s ease-in infinite both}
 .lp-swim{animation:lp-swim 14s linear infinite}
 .lp-roll{animation:lp-roll 9s linear infinite}
 .lp-ray{animation:lp-ray 5s ease-in-out infinite}

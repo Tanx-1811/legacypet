@@ -4,6 +4,13 @@ Every release of LegacyPet. `@v1` always points to the newest 1.x release, so pe
 the first run on a new version also lists these notes in the job summary.
 Releases that need a change to your workflow file say so.
 
+## 1.2.1 (2026-10-08)
+
+### Fixed
+
+- 🐛 The speech bubble on the card and the name tags in the Pet Park floated up and faded every few seconds.
+  They shared a CSS class with the reef's rising bubbles. (Since 1.1.0.)
+
 ## 1.2.0 (2026-10-08)
 
 ### New
