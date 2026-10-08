@@ -5,7 +5,7 @@ export const escapeXml = (value) => String(value).replace(/[&<>"']/g, (c) => XML
 // Chinese, Japanese and Korean: wide characters that can wrap anywhere (no spaces between words).
 const CJK = '\u1100-\u115f\u2e80-\u303e\u3041-\u33ff\u3400-\u4dbf\u4e00-\u9fff\ua960-\ua97f\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe4f\uff00-\uff60\uffe0-\uffe6';
 const IS_CJK = new RegExp(`[${CJK}]`);
-const TOKENS = new RegExp(`\s+|[${CJK}]|[^\s${CJK}]+`, 'g');
+const TOKENS = new RegExp(`\\s+|[${CJK}]|[^\\s${CJK}]+`, 'g');
 // Punctuation that must not start a line in CJK text.
 const NO_LINE_START = /^[、。，．！？!?）」』〕ー…・〜]/;
 

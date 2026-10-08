@@ -59,7 +59,30 @@ function composeEgg(pet, palette) {
   const base = gridToPixels(EGG, shell);
   const cracks = EGG_CRACK.slice(0, Math.round(pet.hatchProgress * EGG_CRACK.length));
   for (const [x, y] of cracks) base.push({ x, y, c: palette.o });
-  return { base, eyesOpen: [], eyesClosed: null, gear: [], bbox: bboxOf(base) };
+  return { base, eyesOpen: [], eyesClosed: null, gear: [], aura: [], bbox: bboxOf(base) };
+}
+
+const AURA_COLORS = ['#ffd23f', '#fff3a6'];
+
+// The super-form aura: two glowing rings that hug the pet's silhouette.
+function auraPixels(body) {
+  const filled = new Set(body.map((p) => `${p.x},${p.y}`));
+  const rings = [];
+  let edge = filled;
+  for (const color of AURA_COLORS) {
+    const next = new Set();
+    for (const key of edge) {
+      const [x, y] = key.split(',').map(Number);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const k = `${x + dx},${y + dy}`;
+        if (!filled.has(k)) next.add(k);
+      }
+    }
+    for (const k of next) filled.add(k);
+    rings.push(...[...next].map((k) => { const [x, y] = k.split(',').map(Number); return { x, y, c: color }; }));
+    edge = next;
+  }
+  return rings;
 }
 
 // Layers the species body, its expression and accessories into pixel lists.
@@ -86,5 +109,6 @@ export function composePet(pet) {
   const glasses = faceGear(pet.accessories?.face, species.eyes);
   const gear = pet.accessories?.hat ? hatPixels(pet.accessories.hat, species.hat) : [];
 
-  return { base: [...body, ...cheeks, ...mouth, ...glasses], eyesOpen, eyesClosed, gear, bbox: bboxOf(body) };
+  const aura = pet.aura ? auraPixels([...body, ...gear]) : [];
+  return { base: [...body, ...cheeks, ...mouth, ...glasses], eyesOpen, eyesClosed, gear, aura, bbox: bboxOf(body) };
 }

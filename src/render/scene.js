@@ -145,7 +145,8 @@ function petGroup(s, comp) {
   const { pet, rng, cx, footY, ox, oy, px } = s;
   const [cls, dur] = pet.mood === 'egg' ? ['lp-wobble', 4 - 2.5 * pet.hatchProgress] : ANIM[pet.mood] ?? ANIM.happy;
   const blink = sec(rng.range(3.2, 5.6));
-  let inner = rectsFromPixels(comp.base, px, ox, oy);
+  let inner = comp.aura.length ? `<g class="lp-aura">${rectsFromPixels(comp.aura, px, ox, oy)}</g>` : '';
+  inner += rectsFromPixels(comp.base, px, ox, oy);
   if (comp.eyesClosed) {
     inner += `<g class="lp-blink-open" style="animation-duration:${blink}">${rectsFromPixels(comp.eyesOpen, px, ox, oy)}</g>`;
     inner += `<g class="lp-blink-closed" style="animation-duration:${blink}">${rectsFromPixels(comp.eyesClosed, px, ox, oy)}</g>`;
@@ -285,7 +286,8 @@ export function renderActor(pet, frame) {
   const body = shadow
     + petGroup(s, comp)
     + moodFx(s)
-    + (pet.shiny && pet.mood !== 'egg' ? sparkles(s, 4, ['#ffe066', '#ffffff']) : '');
+    + (pet.shiny && pet.mood !== 'egg' ? sparkles(s, 4, ['#ffe066', '#ffffff']) : '')
+    + (pet.aura && pet.mood !== 'egg' ? sparkles(s, 5, ['#ffd23f', '#fff3a6', '#ffffff']) : '');
   return { body, s };
 }
 
