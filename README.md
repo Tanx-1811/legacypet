@@ -307,6 +307,9 @@ Comment on any issue or pull request and your pet answers in the thread, in its 
 | `/pet` | its card, how it feels, its vitals and a full checkup |
 | `/pet pat` | a happy wiggle 💕 |
 | `/pet checkup` | just the checkup |
+| `/pet trophies` | its trophy shelf, with unlock dates and what's still locked |
+| `/pet vacation 14` | off to the beach for 14 days ([vacation mode](#vacation-mode)). Maintainers only |
+| `/pet back` | ends the vacation early. Maintainers only |
 | `/pet help` | the list of commands |
 
 It needs the `issue_comment` trigger and `issues: write` / `pull-requests: write` (already in the [example workflow](examples/legacypet.yml)).
@@ -331,6 +334,47 @@ why your pet feels the way it does, and what would help.
 ! 💬 3 community issues are waiting for a first reply. The oldest is #12 (87 days).
 ! 🕸️ 19 issues or PRs have been untouched for 30+ days. Triage or close them.
 · 🧼 Community profile is at 62%. Add the missing README, license, CONTRIBUTING or code of conduct.
+```
+
+## Vacation mode
+
+Maintainers deserve time off, and a pet shouldn't starve because you went hiking.
+
+```yaml
+- uses: Tanx-1811/legacypet@v1
+  with:
+    vacation: until 2027-01-05   # or 2026-12-20..2027-01-05
+```
+
+Or just comment `/pet vacation 14` on any issue (`/pet back` to return early). While you're away:
+
+- hunger stops, and **vacation days never count**, even after you're back
+- the pet moves to the beach in sunglasses and says so, so visitors know the repo isn't abandoned
+- no care alerts, no nagging about unanswered issues
+
+<img src="docs/gallery/care/vacation.svg" width="110" alt="A cat in sunglasses on the beach">
+
+A vacation lasts at most 60 days, so it can't hide a repo that really was left behind.
+
+## Care alerts
+
+Opt in with `alerts: true` and the pet opens **one** issue when it needs you: CI stays red, or it turned into a zombie.
+The issue carries the card and the checkup, updates itself while the problem lasts, and when the pet recovers it says thanks and closes itself.
+
+- It waits for two runs in a row, so a single flaky build doesn't open anything.
+- Close the issue yourself and it stays quiet until the pet recovers.
+- Pick which moods count: `alerts: sick, zombie, hungry, sad`.
+- Needs `issues: write` (already in the [example workflow](examples/legacypet.yml)). The `alert-issue` output gives you the issue number for Slack or Discord notifications.
+
+## Stats chart
+
+`pet-stats.svg` shows the last 30 days of fullness, health, joy and energy, with the mood of each day underneath.
+A snapshot tells you how the repo is doing today; the chart tells you which way it's going.
+
+<img src="docs/gallery/care/stats.svg" width="520" alt="30 days of vitals: a CI scare mid-month, then a release">
+
+```md
+![stats](https://raw.githubusercontent.com/OWNER/REPO/legacypet/pet-stats.svg)
 ```
 
 ## Pet Park
@@ -373,11 +417,13 @@ The default token can read your public repos. To include private ones, pass a pe
 | `ignore-checks` | | Comma-separated check names that shouldn't affect health |
 | `keepalive` | `true` | Stop GitHub from pausing the schedule after 60 quiet days (needs `actions: write`) |
 | `commands` | `true` | Answer [`/pet` commands](#talk-to-your-pet-pet) in issue and PR comments |
+| `vacation` | | `until 2027-01-05` or `2026-12-20..2027-01-05`. See [vacation mode](#vacation-mode) |
+| `alerts` | `false` | `true` (sick + zombie), or a list of `sick`, `zombie`, `hungry`, `sad`. See [care alerts](#care-alerts) |
 | `dry-run` | `false` | Render without publishing |
 | `repository` | current repo | Visit another repo's pet |
 | `github-token` | `github.token` | Token used for the API |
 
-**Outputs:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `svg-path`.
+**Outputs:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `on-vacation`, `alert-issue`, `svg-path`.
 For example, ping your team only when the pet *just* got sick:
 
 ```yaml

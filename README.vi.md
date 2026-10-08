@@ -104,6 +104,26 @@ jobs:
 
 Xong! Thú cưng sống trên nhánh riêng `legacypet`, nên lịch sử nhánh chính vẫn sạch.
 
+### 🏖️ Chế độ đi nghỉ
+
+Maintainer cũng cần nghỉ ngơi. Đặt `vacation: until 2027-01-05` trong workflow, hoặc comment `/pet vacation 14` vào issue bất kỳ (`/pet back` để về sớm).
+Trong lúc bạn vắng nhà, thú ngừng đói và **những ngày nghỉ không bao giờ bị tính**. Nó ra biển đeo kính râm để người ghé repo biết dự án không bị bỏ rơi.
+Mỗi kỳ nghỉ tối đa 60 ngày.
+
+<img src="docs/gallery/care/vacation.svg" width="110" alt="Mèo đeo kính râm trên bãi biển">
+
+### 🚨 Báo động chăm sóc
+
+Bật `alerts: true` thì khi thú bị ốm (CI đỏ) hoặc thành zombie, nó mở **một** issue kèm phiếu khám sức khỏe, tự cập nhật trong lúc còn bệnh và tự đóng khi khỏe lại.
+Phải hai lần chạy liên tiếp mới mở, nên một lần build chập chờn sẽ không làm phiền bạn. Tự tay đóng issue thì nó im lặng cho tới khi thú khỏe.
+Chọn tâm trạng muốn báo: `alerts: sick, zombie, hungry, sad`.
+
+### 📈 Biểu đồ 30 ngày
+
+`pet-stats.svg` vẽ độ no, sức khỏe, niềm vui và năng lượng trong 30 ngày qua, kèm tâm trạng từng ngày, để bạn thấy repo đang đi lên hay đi xuống.
+
+<img src="docs/gallery/care/stats.svg" width="520" alt="Biểu đồ chỉ số 30 ngày">
+
 ### Chọn kiểu hiển thị
 
 | File | Trông thế nào | Dùng cho |
@@ -209,6 +229,9 @@ Bình luận trong bất kỳ issue hay pull request nào, thú sẽ trả lời
 | `/pet` | Thẻ, tâm trạng, chỉ số và kết quả khám sức khỏe |
 | `/pet pat` | Xoa đầu 💕 |
 | `/pet checkup` | Chỉ phần khám sức khỏe |
+| `/pet trophies` | Kệ cúp, kèm ngày mở khóa và các cúp còn khóa |
+| `/pet vacation 14` | Đi biển 14 ngày (chỉ maintainer) |
+| `/pet back` | Về nhà sớm (chỉ maintainer) |
 | `/pet help` | Danh sách lệnh |
 
 Cần trigger `issue_comment` và quyền `issues: write` / `pull-requests: write` (đã có sẵn trong workflow mẫu ở trên).
@@ -254,9 +277,11 @@ Nhánh `legacypet` còn có biểu đồ tâm trạng 14 ngày gần nhất và 
 | `theme` | `auto` | `auto` theo chế độ sáng/tối của người xem, hoặc `light`, `dark` |
 | `park` | | Vẽ thêm `park.svg`: `auto` hoặc danh sách repo |
 | `commands` | `true` | Trả lời lệnh `/pet` trong issue và PR |
+| `vacation` | | Đi nghỉ: `until 2027-01-05` hoặc `2026-12-20..2027-01-05` (tối đa 60 ngày) |
+| `alerts` | `false` | `true` (ốm + zombie) hoặc danh sách `sick`, `zombie`, `hungry`, `sad`. Cần `issues: write` |
 | `keepalive` | `true` | Không để GitHub tạm dừng lịch chạy sau 60 ngày im ắng (cần `actions: write`) |
 
-**Output:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `svg-path`.
+**Output:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `on-vacation`, `alert-issue`, `svg-path`.
 Ví dụ, chỉ báo cho team khi thú *vừa* bị ốm:
 
 ```yaml
