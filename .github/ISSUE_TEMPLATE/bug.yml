@@ -8,6 +8,23 @@ body:
       label: Repository
       description: The repo whose pet misbehaves (if public)
       placeholder: owner/name
+  - type: input
+    id: version
+    attributes:
+      label: LegacyPet version
+      description: Shown in the job summary, and as `version` in `pet.json` on the `legacypet` branch.
+      placeholder: 1.1.0
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where is the problem?
+      options:
+        - The pet's look (card, mini, badge, park)
+        - What it says (speech, diary, checkup, translation)
+        - The /pet command
+        - The action fails or doesn't publish
+        - The CLI or the playground
+        - Something else
   - type: textarea
     id: what
     attributes:

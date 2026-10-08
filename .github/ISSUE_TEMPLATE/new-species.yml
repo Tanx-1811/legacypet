@@ -13,8 +13,13 @@ body:
     id: trait
     attributes:
       label: Trait idea
-      description: Every species bends one rule. Cacti hunger 4× slower, ducks shrug off failing CI… What does yours do?
+      description: Every species bends one rule. Cacti hunger 4× slower, ducks shrug off failing CI, ninja foxes feed on commit streaks… What does yours do? Please suggest original characters, not copyrighted ones.
       placeholder: Axolotls regenerate, so they recover from "sick" twice as fast.
+  - type: dropdown
+    id: home
+    attributes:
+      label: Where would it live?
+      options: [meadow, garden, pond, beach, reef, jungle, desert, somewhere new (describe it below)]
   - type: textarea
     id: art
     attributes:

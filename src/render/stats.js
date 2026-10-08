@@ -19,11 +19,11 @@ const CSS = `
 .lp-label{font:400 10px ${FONT};fill:var(--lp-muted)}
 .lp-grid{stroke:var(--lp-track);stroke-width:1}
 .lp-emoji{font:400 10px ${FONT}}
-.lp-line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:lp-draw 1.6s ease-out forwards}
+.lp-line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;animation:lp-draw 1.6s ease-out both}
 .lp-dot{animation:lp-pop 1.6s ease-out both}
-@keyframes lp-draw{to{stroke-dashoffset:0}}
+@keyframes lp-draw{from{stroke-dashoffset:var(--lp-len)}to{stroke-dashoffset:0}}
 @keyframes lp-pop{0%,80%{opacity:0}100%{opacity:1}}
-@media (prefers-reduced-motion:reduce){.lp-line{animation:none;stroke-dashoffset:0}.lp-dot{animation:none}}
+@media (prefers-reduced-motion:reduce){.lp-line,.lp-dot{animation:none}}
 `.replace(/\n/g, '');
 
 // A 30-day chart of the pet's vitals from pet.json's history, with the mood of each day underneath.
@@ -52,11 +52,13 @@ export function renderStats(pet, history = [], { theme = 'auto', days = 30 } = {
       for (const h of points) {
         const value = h.vitals[i];
         if (value == null || (prev && daysBetween(prev, h.date) > 1.5)) runs.push([]);
-        if (value != null) runs[runs.length - 1].push(`${r1(xOf(h.date))},${r1(yOf(value))}`);
+        if (value != null) runs[runs.length - 1].push([r1(xOf(h.date)), r1(yOf(value))]);
         prev = h.date;
       }
       for (const run of runs.filter((r) => r.length > 1)) {
-        body += `<polyline points="${run.join(' ')}" pathLength="1" stroke="${COLORS[key]}" class="lp-line" style="animation-delay:${i * 0.15}s"/>`;
+        // Drawn in with a dash as long as the line itself, sliding into place.
+        const len = Math.ceil(run.slice(1).reduce((sum, [x, y], k) => sum + Math.hypot(x - run[k][0], y - run[k][1]), 0));
+        body += `<polyline points="${run.map((pt) => pt.join(',')).join(' ')}" stroke="${COLORS[key]}" class="lp-line" style="stroke-dasharray:${len};--lp-len:${len};animation-delay:${i * 0.15}s"/>`;
       }
       const last = points[points.length - 1];
       if (last.vitals[i] != null) body += `<circle cx="${r1(xOf(last.date))}" cy="${r1(yOf(last.vitals[i]))}" r="3" fill="${COLORS[key]}" class="lp-dot"/>`;

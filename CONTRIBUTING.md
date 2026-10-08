@@ -21,6 +21,8 @@ node src/cli.js demo --species cat --mood party   # try one pet
    - `mouth`: the top-left pixel of a 4-wide mouth. Add `mouthStyle: 'beak'` plus `a`/`A` colors for a beak.
    - `cheeks`: the left pixel of each 2×1 blush.
    - `hat`: `[center column, top row of the head]`. Hats sit on that row.
+   - `home`: where it lives: `meadow`, `garden`, `pond`, `beach`, `reef`, `jungle` or `desert` (see `src/render/scenery.js`).
+   - `shinyKeep` (optional): palette letters that keep their color on a shiny pet, like a cape or a gem.
 4. Give it a `trait`: one rule it bends. The options in `modifiers` are
    `hungerRate`, `ciPenalty`, `issuePenalty`, `releaseJoy`, `teamEnergy`, `streakEnergy`, `ciEnergyFloor`,
    `inboxJoy`, `healthFloor`, `xpRate` and `starJoy` (see `src/engine/vitals.js`).
@@ -34,7 +36,9 @@ Tips: draw in a monospace editor, keep it to about 6 colors, and make sure the s
 
 ## Translate
 
-Copy `src/i18n/en.js` to `src/i18n/<code>.js`, translate it, and register it in `src/i18n/index.js`.
+Copy `src/i18n/en.js` to `src/i18n/<code>.js`, translate it, and register it in `src/i18n/index.js`:
+add it to `TRANSLATIONS` and give it a native name in `LANG_NAMES` (the CLI help and the playground list it from there).
+Then add it to the `lang` description in `action.yml` and the language list in both READMEs.
 Lines can be plain strings or functions of `v` (see `speechVars` in `src/engine/speech.js` for every variable).
 Keep the speech bubble short: two lines of about 36 characters (CJK characters count double).
 Keys you leave out fall back to English, and `node --test` lists any that are missing.

@@ -15,6 +15,7 @@
     "action.yml",
     "README.md",
     "README.vi.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
@@ -35,7 +36,9 @@
     "svg",
     "repo-health",
     "maintainers",
-    "gamification"
+    "gamification",
+    "chatops",
+    "i18n"
   ],
   "repository": {
     "type": "git",
