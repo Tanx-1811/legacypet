@@ -6,7 +6,7 @@ import { parseArgs } from 'node:util';
 import {
   buildPet, checkup, collectPark, collectSnapshot, createClient, insertSnippet, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
   parseRemote, PLAYGROUND, renderBadge, renderCard, renderFiles, renderMini, renderPark, resolveParkRepos,
-  snippetFor, HOMES, ITEMS, PATHS, RANKS, renderStats, SPECIES_IDS, terminalArt, workflowYaml,
+  snippetFor, HOMES, adoptRepo, hasPet, listRepos, parseSelection, ITEMS, PATHS, RANKS, renderStats, SPECIES_IDS, terminalArt, workflowYaml,
 } from './index.js';
 
 const HELP = `
@@ -14,6 +14,7 @@ const HELP = `
 
 Usage
   legacypet init                  Adopt a pet: add the workflow and put the pet in README.md
+  legacypet adopt [owner]         Pick any of your repos from a list and adopt pets in all of them (no clone)
   legacypet render <owner/repo>   Visit a real repo, draw its pet and give it a checkup
   legacypet park <owner> [repos]  Draw a Pet Park with an owner's repos (default: their top 6)
   legacypet demo                  Draw a pet from made-up data
@@ -29,6 +30,7 @@ Options
   --token <token>  GitHub token (default: $GITHUB_TOKEN)
 
   init:    --repo <owner/name>  --style card|mini|badge|park  --park auto|<repos>  --force  --private
+  adopt:   --repos "1,3" | "app,lib" | all  --all (include forks)  --style  --force   (token: $GITHUB_TOKEN or gh)
   park:    --size <1-8>
   demo:    --mood ${MOODS.join('|')}  --stage egg|baby|adult|elder  --shiny  --aura  --level-up  --commits <n>  --holiday <id>
   render, demo:  --vacation "until 2027-01-05"  preview the pet on vacation
@@ -63,12 +65,23 @@ const { values: opts, positionals } = parseArgs({
     size: { type: 'string', default: '6' },
     force: { type: 'boolean' },
     private: { type: 'boolean' },
+    repos: { type: 'string' },
+    all: { type: 'boolean' },
     help: { type: 'boolean', short: 'h' },
   },
 });
 
 const CHECK_ICON = { good: '✔', warn: '!', bad: '✖', tip: '·' };
 const token = () => opts.token ?? process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
+
+// Falls back to the GitHub CLI's login, so `gh auth login` is all the setup `adopt` needs.
+function ghToken() {
+  try {
+    return execFileSync('gh', ['auth', 'token'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || null;
+  } catch {
+    return null;
+  }
+}
 
 const write = (dir, file, content) => {
   mkdirSync(dir, { recursive: true });
@@ -126,10 +139,68 @@ function gitRemote() {
   }
 }
 
+const ago = (iso) => {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (!iso || Number.isNaN(days)) return '';
+  if (days < 1) return 'today';
+  if (days < 60) return `${days}d ago`;
+  return days < 730 ? `${Math.round(days / 30)}mo ago` : `${Math.round(days / 365)}y ago`;
+};
+
+// Pick repos from a list and adopt a pet in each one through the API: no clone, no push.
+async function adopt(owner) {
+  const auth = token() ?? ghToken();
+  if (!auth) {
+    throw new Error('adopt writes to your repos, so it needs a token. Run `gh auth login` (then `gh auth refresh -s workflow`), or set GITHUB_TOKEN.');
+  }
+  const client = createClient({ token: auth });
+  console.log(`📂 Listing ${owner ? `${owner}'s` : 'your'} repos…`);
+  const all = await listRepos(client, { owner });
+  const repos = all.filter((r) => !r.archived && (opts.all || !r.fork) && r.canPush !== false).slice(0, 50);
+  if (!repos.length) throw new Error('No repos you can push to were found. Pass an owner (legacypet adopt my-org) or --all to include forks.');
+  const pets = await Promise.all(repos.map((r) => hasPet(client, r.fullName).catch(() => false)));
+
+  const width = String(repos.length).length;
+  repos.forEach((r, i) => {
+    const marks = `${pets[i] ? '🐾' : '  '}${r.isPrivate ? '🔒' : '  '}`;
+    const meta = [r.stars ? `★${r.stars}` : '', r.language ?? '', ago(r.pushedAt)].filter(Boolean).join(' · ');
+    console.log(`  ${String(i + 1).padStart(width)}. ${marks} ${r.fullName.padEnd(36)} ${meta}`);
+  });
+  console.log('\n  🐾 already has a pet   🔒 private');
+
+  let answer = opts.repos;
+  if (!answer) {
+    if (!process.stdin.isTTY) throw new Error('Pick repos with --repos "1,3" or --repos "app,lib" when not running in a terminal.');
+    const { createInterface } = await import('node:readline/promises');
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    answer = await rl.question('\nWhich ones? (e.g. 1,3,5-7 · all · names) ');
+    rl.close();
+  }
+  const picked = parseSelection(answer, repos).map((i) => repos[i]);
+  if (!picked.length) return console.log('Nothing picked. Your repos stay pet-free for now.');
+
+  const options = { lang: opts.lang, species: opts.species, scenery: opts.scenery, name: opts.name };
+  let failed = 0;
+  for (const repo of picked) {
+    try {
+      const done = await adoptRepo(client, repo, { options, style: opts.style ?? 'card', force: opts.force });
+      const said = { created: 'added', updated: 'updated', exists: 'already there', skipped: 'skipped' };
+      console.log(`✔ ${repo.fullName}: workflow ${said[done.workflow]}, README ${said[done.readme]}`);
+    } catch (err) {
+      failed++;
+      console.log(`✖ ${repo.fullName}: ${err.message.split('\n')[0]}`);
+      if (err.hint === 'workflow-scope') console.log('   Your token can\'t write workflow files. Run `gh auth refresh -s workflow`, or use a token with the "workflow" scope.');
+    }
+  }
+  const ok = picked.length - failed;
+  if (ok) console.log(`\n🥚 ${ok} egg${ok > 1 ? 's' : ''} on the way. Each pet hatches by itself about a minute from now.`);
+  if (failed) process.exitCode = 1;
+}
+
 async function init() {
   const fullName = opts.repo ?? gitRemote();
   if (!fullName || !fullName.includes('/')) {
-    throw new Error('Could not find a GitHub remote. Run this inside your repo, or pass --repo owner/name');
+    throw new Error('Could not find a GitHub remote. Run this inside your repo, pass --repo owner/name, or run `legacypet adopt` to pick repos from a list');
   }
   const [owner, name] = fullName.split('/');
   const isProfile = owner.toLowerCase() === name.toLowerCase();
@@ -306,6 +377,7 @@ async function main() {
   const [command, ...args] = positionals;
   if (opts.help || !command || command === 'help') return console.log(HELP);
   if (command === 'init') return init();
+  if (command === 'adopt') return adopt(args[0]);
   if (command === 'render') return render(args[0]);
   if (command === 'park') return park(args[0], args.slice(1));
   if (command === 'demo') return demo();
