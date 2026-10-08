@@ -7,6 +7,8 @@
 Một con thú pixel sống trong README, cảm nhận đúng tình trạng dự án của bạn:
 ăn bằng commit, khỏe nhờ CI xanh, vui khi issue được trả lời.
 
+[![Thú của chính dự án](https://raw.githubusercontent.com/Tanx-1811/legacypet/legacypet/pet-badge.svg)](https://github.com/Tanx-1811/legacypet/blob/legacypet/DIARY.md)
+
 [English](README.md) · [Tiếng Việt](README.vi.md) · **[🔮 Xem trước thú của repo bạn](https://tanx-1811.github.io/legacypet/)**
 
 <img src="docs/gallery/hero/hero-vi.svg" alt="Bánh Bao Đói Meo, một con mèo đang đói" width="520">
