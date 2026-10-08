@@ -95,7 +95,7 @@ test('/pet commands are parsed from comments, never from bots', () => {
   const event = (login, type = 'User', action = 'created') => ({
     action, issue: { number: 7 }, comment: { id: 99, body: '/pet pat', user: { login, type } },
   });
-  assert.deepEqual(commandFromEvent('issue_comment', event('octocat')), { command: 'pat', issue: 7, commentId: 99, user: 'octocat' });
+  assert.deepEqual(commandFromEvent('issue_comment', event('octocat')), { command: 'pat', issue: 7, commentId: 99, user: 'octocat', maintainer: false });
   assert.equal(commandFromEvent('issue_comment', event('github-actions[bot]', 'Bot')), null);
   assert.equal(commandFromEvent('issue_comment', event('octocat', 'User', 'edited')), null);
   assert.equal(commandFromEvent('push', event('octocat')), null);

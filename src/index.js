@@ -22,6 +22,8 @@ export { collectSnapshot } from './github/collect.js';
 export { loadPrevious, publishFiles } from './github/publish.js';
 export { collectPark, resolveParkRepos } from './github/park.js';
 export { answerCommand, commandFromEvent, commandReply, parseCommand } from './github/command.js';
+export { ALERT_MOODS, alertIssue, parseAlerts, syncAlert } from './github/alerts.js';
+export { activeVacation, parseVacation, resolveVacations } from './engine/vacation.js';
 export { mockSnapshot } from './mock.js';
 export { CHANGELOG, VERSION, whatsNew } from './whatsnew.js';
 export { renderCard, renderMini, renderBadge, renderStats };

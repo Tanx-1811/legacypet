@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import {
   answerCommand, buildPet, checkup, collectPark, collectSnapshot, commandFromEvent, createClient, HOMEPAGE, loadPrevious,
   MOOD_EMOJI, moodStrip, nextState, parkSummary, petUrls, publishFiles, renderFiles, renderPark, resolveParkRepos, snippetFor,
-  VERSION, whatsNew,
+  VERSION, whatsNew, activeVacation, parseAlerts, syncAlert,
 } from './index.js';
 import { strings } from './i18n/index.js';
 
@@ -81,6 +81,10 @@ function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prev
     '',
     `📈 ${moodStrip(nextState(pet, prevState).history)}`,
     '',
+    pet.vacation ? `🏖️ ${tr.checkup.vacation(pet.vacation.until)}
+` : '',
+    pet.alert && !pet.alert.muted ? `🚨 Care alert: #${pet.alert.issue}
+` : '',
     pet.newAchievements.length ? `🏆 New: ${pet.achievements.filter((a) => a.isNew).map((a) => `${a.emoji} ${tr.achievements[a.id]}`).join(', ')}\n` : '',
     news ?? '',
     '### 🩺 Checkup',
@@ -106,6 +110,8 @@ function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prev
     '```',
     '',
     dryRun ? '' : `![pet](${park ? urls.park : urls.card})`,
+    dryRun ? '' : `
+![stats](${urls.stats})`,
     '',
     `<sub>Made with [LegacyPet](${HOMEPAGE})</sub>`,
   ].join('\n');
@@ -156,7 +162,16 @@ async function main() {
   const keepDiary = flag('diary', true);
   const outputDir = input('output-dir', 'legacypet-out');
   const ignoreChecks = [process.env.GITHUB_JOB, ...input('ignore-checks').split(',').map((s) => s.trim())];
-  const options = { species: input('species', 'auto'), scenery: input('scenery', 'auto'), name: input('name'), lang: input('lang', 'en') };
+  const options = {
+    species: input('species', 'auto'), scenery: input('scenery', 'auto'), name: input('name'), lang: input('lang', 'en'),
+    vacation: input('vacation'),
+  };
+  const alertMoods = parseAlerts(input('alerts', 'false'));
+  // `/pet vacation 14` and `/pet back` change the pet's memory, so only maintainers may use them.
+  const request = comment?.request;
+  if (request?.maintainer && (request.command === 'vacation' || request.command === 'back')) {
+    options.vacationCommand = { name: request.command, days: request.days };
+  }
 
   const client = createClient({ token });
   const now = new Date();
@@ -173,6 +188,21 @@ async function main() {
   }
 
   const pet = buildPet({ snapshot, prevState: previous.state, options, now });
+  const wasOnVacation = Boolean(activeVacation(previous.state?.vacations ?? [], pet.date));
+  if (pet.vacation) console.log(`🏖️ On vacation until ${pet.vacation.until}: hunger is paused.`);
+
+  // Care alerts run before publishing so pet.json remembers the issue they opened.
+  if (alertMoods && !dryRun) {
+    try {
+      pet.alert = await syncAlert(client, {
+        owner, repo, pet, snapshot, moods: alertMoods, prev: previous.state?.alert, prevMood: previous.state?.lastMood,
+        cardUrl: `${petUrls(pet.repo.fullName, branch).card}?d=${pet.date}`,
+      });
+      if (pet.alert && !pet.alert.muted) console.log(`🚨 Care alert: #${pet.alert.issue}`);
+    } catch (err) {
+      warn(`Could not update the care alert (${err.status ?? err.message}). Alerts need \`issues: write\` in the workflow permissions.`);
+    }
+  }
 
   // Pet Park: visit several repos (e.g. from a profile README repo) and draw them together.
   let parkPets = [];
@@ -218,7 +248,7 @@ async function main() {
   if (comment?.request) {
     try {
       const cardUrl = dryRun ? null : `${petUrls(pet.repo.fullName, branch).card}?run=${process.env.GITHUB_RUN_ID ?? Date.now()}`;
-      await answerCommand(client, { owner, repo, request: comment.request, pet, snapshot, cardUrl });
+      await answerCommand(client, { owner, repo, request: comment.request, pet, snapshot, cardUrl, wasOnVacation });
       console.log(`💬 Answered /pet ${comment.request.command} on #${comment.request.issue}`);
     } catch (err) {
       warn(`Could not answer the /pet command (${err.status ?? err.message}). Add \`issues: write\` and \`pull-requests: write\` to the workflow permissions.`);
@@ -234,6 +264,8 @@ async function main() {
     'mood-changed': Boolean(previousMood) && previousMood !== pet.mood,
     aura: pet.aura,
     'new-trophies': pet.newAchievements.join(','),
+    'on-vacation': Boolean(pet.vacation),
+    'alert-issue': pet.alert && !pet.alert.muted ? pet.alert.issue : '',
   });
   writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prevState: previous.state, news });
 }

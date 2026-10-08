@@ -72,7 +72,7 @@ test('renderFiles produces the branch contents', () => {
   const snapshot = mockSnapshot({ mood: 'happy', now: NOW });
   const pet = buildPet({ snapshot, now: NOW, options: { holiday: null } });
   const files = renderFiles(pet, snapshot);
-  assert.deepEqual(files.map((f) => f.path).sort(), ['DIARY.md', 'README.md', 'pet-badge.svg', 'pet-mini.svg', 'pet-shields.json', 'pet.json', 'pet.svg']);
+  assert.deepEqual(files.map((f) => f.path).sort(), ['DIARY.md', 'README.md', 'pet-badge.svg', 'pet-mini.svg', 'pet-shields.json', 'pet-stats.svg', 'pet.json', 'pet.svg']);
   const state = JSON.parse(files.find((f) => f.path === 'pet.json').content);
   assert.equal(state.lastMood, 'happy');
   assert.equal(state.history[0].date, '2026-10-08');
