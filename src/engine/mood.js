@@ -21,7 +21,7 @@ export function deriveMood({ snapshot, facts, vitals, growth, modifiers, prevSta
   if ((prevState?.lastStage === 'egg' && growth.stage !== 'egg') || happenedToday('hatched')) events.push('hatched');
   if (growth.stage === 'egg') return { mood: 'egg', events };
 
-  const isZombie = facts.daysSinceCommit * m.hungerRate >= THRESHOLDS.zombieDays;
+  const isZombie = (facts.hungerDays ?? facts.daysSinceCommit) * m.hungerRate >= THRESHOLDS.zombieDays;
   if ((prevState?.lastMood === 'zombie' && !isZombie) || happenedToday('revived')) events.push('revived');
   if (prevState?.lastMood === 'sick' && vitals.health >= THRESHOLDS.sick) events.push('recovered');
   if (isZombie) return { mood: 'zombie', events };

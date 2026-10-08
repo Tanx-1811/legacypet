@@ -90,7 +90,7 @@ export function computeVitals(snapshot, facts, modifiers, now) {
   if (m.streakEnergy) energy += m.streakEnergy * Math.min(facts.streak, 6);
   if (m.ciEnergyFloor && snapshot.ci?.state === 'passing') energy = Math.max(energy, m.ciEnergyFloor);
   return {
-    fullness: clamp(100 * Math.exp(-(facts.daysSinceCommit * m.hungerRate) / 21)),
+    fullness: clamp(100 * Math.exp(-((facts.hungerDays ?? facts.daysSinceCommit) * m.hungerRate) / 21)),
     health: Math.max(healthFromCi(snapshot.ci, m.ciPenalty), m.healthFloor),
     joy: clamp(joy),
     energy: clamp(energy),

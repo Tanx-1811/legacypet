@@ -36,7 +36,7 @@ export const HATS = {
   },
 };
 
-export const GEAR_COLORS = { monocle: '#ffd23f', glasses: '#4c6ef5' };
+export const GEAR_COLORS = { monocle: '#ffd23f', glasses: '#4c6ef5', shades: '#1b1b2f', glint: '#8fa6d6' };
 
 export const BOWLS = {
   full: ['...kKkKkk...', '.kKkkKkKkKk.', 'oooooooooooo', '.obbbbbbbbo.', '..oooooooo..'],

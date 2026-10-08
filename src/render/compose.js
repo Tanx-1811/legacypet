@@ -47,6 +47,18 @@ function faceGear(kind, eyes) {
   return [];
 }
 
+// Vacation shades: dark lenses over both eyes with a glint, joined by a bridge.
+function sunglasses(eyes) {
+  const [[lx, ly], [rx]] = eyes;
+  const out = [];
+  for (const x0 of [lx, rx]) {
+    for (let dx = -1; dx <= 2; dx++) for (let dy = 0; dy <= 1; dy++) out.push({ x: x0 + dx, y: ly + dy, c: GEAR_COLORS.shades });
+    out.push({ x: x0, y: ly, c: GEAR_COLORS.glint });
+  }
+  for (let x = lx + 3; x <= rx - 2; x++) out.push({ x, y: ly, c: GEAR_COLORS.shades });
+  return out;
+}
+
 function hatPixels(kind, [cx, top]) {
   const hat = HATS[kind];
   if (!hat) return [];
@@ -108,6 +120,8 @@ export function composePet(pet) {
   // Glasses go under the eyes (eyes must stay readable), hats on top of everything.
   const glasses = faceGear(pet.accessories?.face, species.eyes);
   const gear = pet.accessories?.hat ? hatPixels(pet.accessories.hat, species.hat) : [];
+  // Shades sit on top of the eyes: that's the point of them.
+  if (pet.accessories?.face === 'sunglasses') gear.unshift(...sunglasses(species.eyes));
 
   const aura = pet.aura ? auraPixels([...body, ...gear]) : [];
   return { base: [...body, ...cheeks, ...mouth, ...glasses], eyesOpen, eyesClosed, gear, aura, bbox: bboxOf(body) };
