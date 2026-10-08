@@ -41,6 +41,11 @@ export default {
     superForm: 'Siêu hình thái', responder: 'Phản hồi thần tốc', anniversary: 'Kỷ niệm',
   },
   lines: {
+    vacation: [
+      (v) => `Đi nghỉ tới ${v.until} 🌴 Hẹn gặp lại!`,
+      (v) => `Ra biển chơi tới ${v.until} 🏖️ Không cần commit đâu`,
+      'Vắng nhà. Kem chống nắng bật, thông báo tắt 😎',
+    ],
     revived: [(v) => `TA SỐNG LẠI RỒI!! Cảm ơn đã quay về ${v.repoName} 💚`, 'Commiiit... ơ khoan, có đồ ăn thật này? Hồi sinh!'],
     hatched: [(v) => `*rắc* Xin chào thế giới! Mình là ${v.name}! 🐣`, 'Mình nở rồi! Cho mình ăn commit đi!'],
     birthday: [(v) => `${v.repoName} tròn ${v.years} tuổi hôm nay! 🎂`, 'Sinh nhật vui vẻ! Thổi nến nào 🎂'],
@@ -92,6 +97,12 @@ export default {
     },
   },
   command: {
+    vacation: (until, days) => `🏖️ Đi biển tới **${until}**! Mình tạm ngưng đói trong ${days} ngày, và những ngày này sẽ không bị tính khi bạn quay lại.`,
+    back: 'Chào mừng trở lại! 👋 Hết kỳ nghỉ, bát của mình đã sẵn sàng đón commit.',
+    notOnVacation: 'Mình đâu có đi nghỉ, nhưng cảm ơn đã hỏi thăm nha! 😊',
+    maintainersOnly: (name) => `Chỉ maintainer mới dùng được \`/pet ${name}\`. Nhưng ai cũng có thể \`/pet pat\` xoa đầu mình 💕`,
+    trophies: (n, total) => `Kệ cúp: ${n} trên ${total}`,
+    locked: 'Chưa mở khóa',
     pat: ['*ngoe nguẩy* Cảm ơn đã xoa đầu! 💕', 'Xoa đầu thích lắm. Commit còn thích hơn 😋', (v) => `${v.name} cũng thương bạn! 💖`],
     checkup: 'Khám sức khỏe',
     commands: 'Lệnh',
@@ -100,6 +111,9 @@ export default {
       status: 'mình thấy thế nào và vì sao',
       pat: 'xoa đầu mình',
       checkup: 'chỉ phần khám sức khỏe',
+      trophies: 'kệ cúp của mình',
+      vacation: 'tạm ngưng đói N ngày, ví dụ `/pet vacation 14` (maintainer)',
+      back: 'kết thúc kỳ nghỉ sớm (maintainer)',
       help: 'danh sách này',
     },
   },
@@ -108,6 +122,7 @@ export default {
     summary: (n, health, care) => `${n} bé · sức khỏe ${health}% · ${care ? `${care} bé cần chăm` : 'bé nào cũng ổn'}`,
   },
   checkup: {
+    vacation: (until) => `Đang đi nghỉ tới ${until}. Cơn đói tạm dừng và những ngày này không bị tính.`,
     fed: (d) => (d < 1 ? 'Hôm nay đã được ăn. Giữ phong độ nhé!' : `Commit gần nhất cách đây ${d} ngày.`),
     feed: (d) => `${d} ngày chưa có commit. Push gì cũng được, sửa lỗi chính tả thôi cũng đủ cho nó ăn.`,
     ciPassing: 'CI trên nhánh chính đang xanh.',
@@ -125,6 +140,7 @@ export default {
     archived: 'Repo đã lưu trữ nên bé đang ngủ đông yên bình.',
   },
   diary: {
+    vacation: (until) => `đi nghỉ tới ${until} 🏖️`,
     title: (name) => `# 📔 Nhật ký của ${name}`,
     intro: (repo) => `Thú cưng của **${repo}** viết mỗi ngày. Mục mới nhất ở trên cùng.`,
     day: (n) => `Ngày ${n}`,
@@ -132,5 +148,21 @@ export default {
     fasted: 'hôm nay nhịn đói',
     treat: (user, pr) => `được @${user} cho bánh (#${pr})`,
     unlocked: (list) => `mở khóa ${list}`,
+  },
+  alert: {
+    title: {
+      sick: (name) => `🤒 ${name} bị ốm: CI đang đỏ`,
+      zombie: (name, days) => `🧟 ${name} đã thành zombie: ${days} ngày không có commit`,
+      hungry: (name, days) => `🍖 ${name} đang đói: ${days} ngày không có commit`,
+      sad: (name) => `🥺 ${name} đang buồn: nhiều issue chờ phản hồi`,
+    },
+    intro: 'Thú cưng của bạn cần được chăm sóc. Issue này tự cập nhật và tự đóng khi thú khỏe lại.',
+    since: (date) => `Từ ngày ${date}.`,
+    recovered: (name, mood) => `🎉 ${name} đã khỏe hơn (giờ đang ${mood}). Đóng issue này nhé. Cảm ơn bạn đã chăm sóc!`,
+    footer: 'Do LegacyPet mở. Đóng issue này để tắt nhắc cho tới khi thú khỏe lại, hoặc đặt `alerts: false` để tắt hẳn.',
+  },
+  stats: {
+    title: (name, days) => `${name} · ${days} ngày qua`,
+    empty: 'Chưa đủ dữ liệu. Biểu đồ sẽ đầy dần theo từng ngày.',
   },
 };

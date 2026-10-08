@@ -68,7 +68,8 @@ const ENTRY = /^- \*\*(\d{4}-\d{2}-\d{2})\*\*/;
 export function diaryEntry(pet, snapshot) {
   const tr = strings(pet.lang);
   const parts = [tr.diary.day(Math.floor(pet.facts.ageDays) + 1), `${MOOD_EMOJI[pet.mood]} ${tr.moods[pet.mood]}`];
-  parts.push(pet.facts.commits1 > 0 ? tr.diary.ate(pet.facts.commits1) : tr.diary.fasted);
+  if (pet.facts.commits1 > 0) parts.push(tr.diary.ate(pet.facts.commits1));
+  else parts.push(pet.vacation ? tr.diary.vacation(pet.vacation.until) : tr.diary.fasted);
   const treat = snapshot.treats?.[0];
   if (treat && Date.parse(pet.generatedAt) - Date.parse(treat.mergedAt) < 86_400_000) {
     parts.push(tr.diary.treat(treat.user, treat.number));
