@@ -105,24 +105,27 @@ function tree(s, fx, scale = 1) {
   const colors = pet.mood === 'zombie' ? { t: '#5b4a3f' } : leafColors(s);
   const tw = rows[0].length * p;
   const body = px(rows, colors, p, -tw / 2, -rows.length * p);
-  return at(x + w * fx, groundY + p, body, 'lp-sway-soft', anim(5 + fx * 3));
+  return at(x + w * fx, groundY + p, body, 'lp-sway-soft lp-prop', anim(5 + fx * 3));
 }
+
+const WINDMILL = ['.rrrr.', 'rrrrrr', '.wwww.', '.wddw.', '.wwww.', '.wwww.', 'wwwwww', 'wwddww', 'wwddww'];
 
 const meadow = {
   far(s) {
     const { groundY, h, mini, rng, x, w } = s;
-    let out = ridge(s, { base: groundY, amp: h * 0.2, step: mini ? 4 : 6, cls: 'lp-far', scale: 30 });
-    // A windmill on the far hill, its blades turning in the wind.
-    const p = mini ? 1 : 1.5;
-    const wx = x + w * (w > 400 ? 0.62 : 0.14);
-    const wy = groundY - h * 0.16;
-    const blades = [0, 90, 180, 270].map((deg) => `<rect x="-${r1(p)}" y="-${r1(11 * p)}" width="${r1(2 * p)}" height="${r1(10 * p)}" fill="#f4f1ea" transform="rotate(${deg})"/>`).join('');
-    out += `<g class="lp-prop"><rect x="${r1(wx - 2 * p)}" y="${r1(wy)}" width="${r1(4 * p)}" height="${r1(h * 0.16)}" fill="#c9b8a6"/><rect x="${r1(wx - 3 * p)}" y="${r1(wy - p)}" width="${r1(6 * p)}" height="${r1(2 * p)}" fill="#9c5b45"/>`
-      + at(wx, wy, blades, 'lp-spin', `animation-duration:${sec(rng.range(5, 7))}`) + '</g>';
-    out += ridge(s, { base: groundY, amp: h * 0.09, step: mini ? 4 : 6, cls: 'lp-mid', scale: 18 });
+    let out = ridge(s, { base: groundY, amp: h * 0.3, step: mini ? 4 : 6, cls: 'lp-far', scale: 18 });
+    // A windmill on the far hill, its sails turning in the wind.
+    const p = mini ? 1.5 : 2;
+    const wx = x + w * (w > 400 ? 0.62 : 0.12);
+    const base = groundY - h * 0.08;
+    const top = base - WINDMILL.length * p;
+    const sails = [45, 135, 225, 315].map((deg) => `<g transform="rotate(${deg})"><rect x="${r1(-p / 2)}" y="${r1(-11 * p)}" width="${p}" height="${r1(11 * p)}" fill="#7a5a3b"/><rect x="${r1(p / 2)}" y="${r1(-10 * p)}" width="${r1(2 * p)}" height="${r1(7 * p)}" fill="#f4f1ea"/></g>`).join('');
+    out += `<g class="lp-prop">${px(WINDMILL, { r: '#c8553d', w: '#efe6d8', d: '#7a5a3b' }, p, wx - 3 * p, top)}`
+      + at(wx, top + 1.5 * p, sails + `<rect x="${-p}" y="${-p}" width="${2 * p}" height="${2 * p}" fill="#5a3a22"/>`, 'lp-spin', `animation-duration:${sec(rng.range(5, 7))}`) + '</g>';
+    out += ridge(s, { base: groundY, amp: h * 0.12, step: mini ? 4 : 6, cls: 'lp-mid', scale: 12 });
     return out;
   },
-  props: (s) => tree(s, s.w > 400 ? 0.97 : 0.86) + (s.w > 400 ? tree(s, 0.02, 0.8) : ''),
+  props: (s) => (s.w > 400 ? tree(s, 0.97) + tree(s, 0.02, 0.8) : tree(s, 0.87, 1.35)),
   front: (s) => butterflies(s, 2),
   birds: '#3a4a5c',
 };
@@ -304,11 +307,13 @@ const jungle = {
     const { groundY, h, mini, x, w, rng } = s;
     let out = ridge(s, { base: groundY, amp: h * 0.3, step: mini ? 3 : 4, cls: 'lp-far', scale: 7 });
     // A waterfall tumbling off a cliff, with a puff of spray at its foot.
-    const cx = x + w * (w > 400 ? 0.5 : 0.72);
-    const top = groundY - h * 0.38;
+    const cx = x + w * (w > 400 ? 0.5 : 0.74);
+    const top = groundY - h * 0.4;
     const fw = mini ? 8 : 12;
-    out += `<rect x="${r1(cx - fw)}" y="${r1(top - 4)}" width="${fw * 2}" height="${r1(groundY - top + 4)}" class="lp-mid"/>`;
-    out += `<rect x="${r1(cx - fw / 2)}" y="${r1(top)}" width="${fw}" height="${r1(groundY - top)}" class="lp-water"/>`;
+    // A stepped rocky cliff with the falls pouring over its lip.
+    out += `<path d="M${r1(cx - fw * 1.6)} ${groundY}V${r1(top + 10)}H${r1(cx - fw * 1.1)}V${r1(top - 3)}H${r1(cx + fw * 1.1)}V${r1(top + 6)}H${r1(cx + fw * 1.7)}V${groundY}Z" class="lp-mid"/>`;
+    out += `<rect x="${r1(cx - fw / 2)}" y="${r1(top - 3)}" width="${fw}" height="${r1(groundY - top + 3)}" class="lp-water"/>`;
+    out += `<rect x="${r1(cx - fw / 2 - 2)}" y="${r1(top - 4)}" width="${fw + 4}" height="2" class="lp-water2"/>`;
     for (let i = 0; i < 6; i++) {
       out += at(cx - fw / 2 + rng.range(1, fw - 2), top + rng.range(0, groundY - top - 20), `<rect width="1.5" height="${mini ? 5 : 8}" class="lp-water2"/>`, 'lp-flow', anim(rng.range(0.8, 1.3), rng.range(0, 1.3)));
     }
@@ -423,14 +428,20 @@ function shootingStars(s) {
   return out;
 }
 
+// Northern lights: thin curtains of light whose tops follow a slow wave, each shimmering on its own.
 function aurora(s) {
-  const { x, y, w, h } = s;
-  const band = (dy, color, delay) => {
-    let d = `M${x} ${r1(y + h * dy)}`;
-    for (let gx = 0; gx <= w; gx += 20) d += `Q${r1(x + gx + 10)} ${r1(y + h * dy + (gx / 20) % 2 * 16 - 8)} ${r1(x + gx + 20)} ${r1(y + h * dy)}`;
-    return at(0, 0, `<path d="${d}" fill="none" stroke="${color}" stroke-width="${r1(h * 0.06)}" stroke-linecap="round"/>`, 'lp-aurora', anim(6, delay));
-  };
-  return band(0.14, '#5effc4', 0) + band(0.22, '#b388ff', 3);
+  const { x, y, w, h, rng, mini } = s;
+  const step = mini ? 3 : 4;
+  const ph = rng.range(0, 6.28);
+  let out = '';
+  for (let gx = 0; gx < w; gx += step) {
+    const wave = Math.sin(gx / 28 + ph);
+    const top = y + h * (0.1 + 0.06 * wave);
+    const len = h * (0.12 + 0.07 * Math.cos(gx / 17 + ph));
+    const color = wave > 0.3 ? '#b388ff' : '#5effc4';
+    out += `<rect x="${r1(x + gx)}" y="${r1(top)}" width="${step - 1}" height="${r1(len)}" fill="${color}" class="lp-aurora" style="${anim(rng.range(3, 6), rng.range(0, 6))}"/>`;
+  }
+  return out;
 }
 
 function rainbow(s) {

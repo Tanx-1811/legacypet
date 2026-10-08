@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   answerCommand, buildPet, checkup, collectPark, collectSnapshot, commandFromEvent, createClient, HOMEPAGE, loadPrevious,
   MOOD_EMOJI, moodStrip, nextState, parkSummary, petUrls, publishFiles, renderFiles, renderPark, resolveParkRepos, snippetFor,
+  VERSION, whatsNew,
 } from './index.js';
 import { strings } from './i18n/index.js';
 
@@ -27,7 +28,40 @@ function setOutputs(outputs) {
   appendFileSync(process.env.GITHUB_OUTPUT, `${lines.join('\n')}\n`);
 }
 
-function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prevState }) {
+// The workflow file that is running right now, to see whether it already has what new features need.
+async function currentWorkflow(client, owner, repo) {
+  const match = /\.github\/workflows\/([^@]+)@/.exec(process.env.GITHUB_WORKFLOW_REF ?? '');
+  if (!match || process.env.GITHUB_REPOSITORY?.toLowerCase() !== `${owner}/${repo}`.toLowerCase()) return null;
+  try {
+    const file = await client.get(`/repos/${owner}/${repo}/contents/.github/workflows/${encodeURIComponent(match[1])}`);
+    return Buffer.from(file.content ?? '', 'base64').toString('utf8');
+  } catch {
+    return null;
+  }
+}
+
+// Tells the owner about releases since the pet's last run: an annotation on the run page
+// and a section in the job summary. Pinned to `@v1`, they get the code automatically;
+// this is how they hear about it, and about workflow changes a feature needs.
+async function announceUpdates(client, { owner, repo, prevState }) {
+  const fresh = whatsNew(prevState);
+  if (!fresh.length) return '';
+  const yaml = fresh.some((e) => e.workflow) ? await currentWorkflow(client, owner, repo) : null;
+  const todo = fresh.filter((e) => e.workflow && yaml != null && !e.workflow.test(yaml));
+  command('notice', `🐾 LegacyPet updated to v${VERSION}: ${fresh.flatMap((e) => e.items).length} new things. See the job summary.${todo.length ? ' One step is needed to unlock everything.' : ''}`);
+  return [
+    `### 🆕 What's new in LegacyPet v${VERSION}`,
+    '',
+    ...fresh.flatMap((e) => e.items.map((item) => `- ${item}`)),
+    '',
+    ...(todo.length
+      ? ['> [!TIP]', ...todo.map((e) => `> ${e.workflow.why}`),
+        '> Update your workflow from [the example](https://github.com/Tanx-1811/legacypet/blob/main/examples/legacypet.yml), or run `npx github:Tanx-1811/legacypet init --force`.', '']
+      : []),
+  ].join('\n');
+}
+
+function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prevState, news }) {
   if (!process.env.GITHUB_STEP_SUMMARY) return;
   const tr = strings(pet.lang);
   const v = pet.vitals;
@@ -48,6 +82,7 @@ function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prev
     `📈 ${moodStrip(nextState(pet, prevState).history)}`,
     '',
     pet.newAchievements.length ? `🏆 New: ${pet.achievements.filter((a) => a.isNew).map((a) => `${a.emoji} ${tr.achievements[a.id]}`).join(', ')}\n` : '',
+    news ?? '',
     '### 🩺 Checkup',
     '',
     ...checkup(pet, snapshot).map((item) => `- ${CHECK_ICON[item.level]} ${item.icon} ${item.text}`),
@@ -190,6 +225,7 @@ async function main() {
     }
   }
 
+  const news = await announceUpdates(client, { owner, repo, prevState: previous.state });
   const previousMood = previous.state?.lastMood ?? '';
   setOutputs({
     mood: pet.mood, name: pet.name, level: pet.level, species: pet.speciesId,
@@ -199,7 +235,7 @@ async function main() {
     aura: pet.aura,
     'new-trophies': pet.newAchievements.join(','),
   });
-  writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prevState: previous.state });
+  writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prevState: previous.state, news });
 }
 
 main().catch((err) => {

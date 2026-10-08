@@ -22,6 +22,7 @@ export { loadPrevious, publishFiles } from './github/publish.js';
 export { collectPark, resolveParkRepos } from './github/park.js';
 export { answerCommand, commandFromEvent, commandReply, parseCommand } from './github/command.js';
 export { mockSnapshot } from './mock.js';
+export { CHANGELOG, VERSION, whatsNew } from './whatsnew.js';
 export { renderCard, renderMini, renderBadge };
 export { renderPark, parkSummary } from './render/park.js';
 export { terminalArt } from './render/terminal.js';

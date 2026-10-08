@@ -1,4 +1,5 @@
 import { strings } from '../i18n/index.js';
+import { VERSION } from '../whatsnew.js';
 import { MOOD_EMOJI } from './mood.js';
 
 const round1 = (n) => Math.round(n * 10) / 10;
@@ -13,6 +14,7 @@ export function nextState(pet, prevState = null) {
   return {
     schema: 1,
     generator: 'legacypet',
+    version: VERSION,
     generatedAt: pet.generatedAt,
     repo: pet.repo.fullName,
     born: prevState?.born ?? pet.date,
