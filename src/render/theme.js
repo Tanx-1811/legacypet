@@ -159,6 +159,7 @@ const STATIC_CSS = `
 .lp-bulb{animation:lp-bulb 1.2s steps(1) infinite}
 .lp-twinkle-soft{animation:lp-twinkle-soft 2.5s ease-in-out infinite}
 .lp-new{animation:lp-float 1.6s ease-in-out infinite}
+.lp-lvup{font:700 11px ${FONT};stroke:#3d2c00;stroke-width:2.5px;paint-order:stroke;stroke-linejoin:round}
 .lp-aura{opacity:.8;animation:lp-aura 1.1s ease-in-out infinite}
 @keyframes lp-aura{0%,100%{opacity:.45}50%{opacity:.95}}
 @keyframes lp-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}

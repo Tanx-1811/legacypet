@@ -18,11 +18,11 @@ export function describe(pet) {
   const tr = strings(pet.lang);
   const v = pet.vitals;
   const vitals = STATS.filter(([key]) => v[key] != null).map(([key]) => `${tr.stats[key]} ${v[key]}%`).join(', ');
-  return `${pet.displayName}: ${tr.level(pet.level)} ${tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])}, ${tr.moods[pet.mood]}. ${vitals}. “${pet.speech}”`;
+  return `${pet.displayName}: ${tr.level(pet.level)} (${tr.ranks[pet.rank.id]}) ${tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])}, ${tr.moods[pet.mood]}. ${vitals}. “${pet.speech}”`;
 }
 
 function subline(pet, tr) {
-  const parts = [tr.level(pet.level), tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])];
+  const parts = [`${pet.rank.emoji} ${tr.level(pet.level)}`, tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])];
   if (pet.shiny) parts.push(`✨ ${tr.shiny}`);
   const withTrait = [...parts, tr.traits[pet.species.trait]].join(' · ');
   return textWidth(withTrait) <= 42 ? withTrait : truncate(parts.join(' · '), 42);
@@ -86,7 +86,7 @@ export function renderCard(pet, { theme = 'auto' } = {}) {
     `<text x="${X}" y="34" class="lp-name">${esc(truncate(pet.displayName, 28))}</text>`,
     `<text x="${X}" y="52" class="lp-sub">${esc(subline(pet, tr))}</text>`,
     `<rect x="${X}" y="58" width="${R - X}" height="3" rx="1.5" class="lp-track"/>`,
-    `<rect x="${X}" y="58" width="${Math.max(3, Math.round((R - X) * pet.xp))}" height="3" rx="1.5" class="lp-xp"/>`,
+    `<rect x="${X}" y="58" width="${Math.max(3, Math.round((R - X) * pet.xp))}" height="3" rx="1.5" class="lp-xp" style="fill:${pet.rank.color}"/>`,
     bubble(pet),
     stats(pet, tr),
     trophies(pet, tr),

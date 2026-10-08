@@ -1,5 +1,7 @@
 import * as A from '../sprites/accessories.js';
 import { createRng, hashString } from '../util/rng.js';
+import { strings } from '../i18n/index.js';
+import { escapeXml } from '../util/text.js';
 import { composePet } from './compose.js';
 import { FLAME, MOVE_MOODS, MOVES, moveCss, moveOf } from './moves.js';
 import { rectsFromPixels, stamp } from './pixels.js';
@@ -304,6 +306,16 @@ export const skyDefs = (uid, { x, y, w, h, rx }) =>
   `<linearGradient id="${uid}-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="lp-sky1"/><stop offset="1" class="lp-sky2"/></linearGradient>`
   + `<clipPath id="${uid}-clip"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}"/></clipPath>`;
 
+// The day the pet levels up, a banner floats over its head (in its rank's color on a rank-up).
+function levelUpFx(s) {
+  const { pet, cx, headTop, mini } = s;
+  if (pet.mood === 'egg' || !pet.events?.includes('levelUp')) return '';
+  const tr = strings(pet.lang);
+  const text = pet.events.includes('rankUp') ? `${pet.rank.emoji} ${tr.levelUpBanner}` : tr.levelUpBanner;
+  const color = pet.events.includes('rankUp') ? pet.rank.color : '#ffd23f';
+  return at(cx, headTop - (mini ? 4 : 8), `<text text-anchor="middle" class="lp-lvup" style="fill:${color}${mini ? ';font-size:9px' : ''}">${escapeXml(text)}</text>`, 'lp-rise', 'animation-duration:2.6s');
+}
+
 // The pet with its shadow and mood effects, standing with its feet at (cx, footY).
 // `frame` is the box it lives in (x, y, w, h, groundY, groundH), used by effects like confetti.
 export function renderActor(pet, frame) {
@@ -319,7 +331,8 @@ export function renderActor(pet, frame) {
     + petGroup(s, comp)
     + moodFx(s)
     + (pet.shiny && pet.mood !== 'egg' ? sparkles(s, 4, ['#ffe066', '#ffffff']) : '')
-    + (pet.aura && pet.mood !== 'egg' ? sparkles(s, 5, ['#ffd23f', '#fff3a6', '#ffffff']) : '');
+    + (pet.aura && pet.mood !== 'egg' ? sparkles(s, 5, ['#ffd23f', '#fff3a6', '#ffffff']) : '')
+    + levelUpFx(s);
   return { body, s };
 }
 

@@ -71,6 +71,8 @@ export function diaryEntry(pet, snapshot) {
   const parts = [tr.diary.day(Math.floor(pet.facts.ageDays) + 1), `${MOOD_EMOJI[pet.mood]} ${tr.moods[pet.mood]}`];
   if (pet.facts.commits1 > 0) parts.push(tr.diary.ate(pet.facts.commits1));
   else parts.push(pet.vacation ? tr.diary.vacation(pet.vacation.until) : tr.diary.fasted);
+  if (pet.events.includes('rankUp')) parts.push(tr.diary.rankUp(pet.level, `${pet.rank.emoji} ${tr.ranks[pet.rank.id]}`));
+  else if (pet.events.includes('levelUp')) parts.push(tr.diary.levelUp(pet.level));
   const treat = snapshot.treats?.[0];
   if (treat && Date.parse(pet.generatedAt) - Date.parse(treat.mergedAt) < 86_400_000) {
     parts.push(tr.diary.treat(treat.user, treat.number));
