@@ -9,6 +9,7 @@ export const CHANGELOG = [
     version: '1.1.0',
     items: [
       '🦸 6 new species, the hero squad: ninja, mecha, dragon, bunny, bat and hero, each with a brand-new trait',
+      '🏞️ Every species has a home (meadow, garden, pond, beach, reef, jungle, desert). Move it with `scenery`',
       '🌍 5 new languages: 日本語 (ja), 中文 (zh), 한국어 (ko), Español (es), Français (fr)',
       '💥 Super form: 7 ecstatic days in a row unlock a golden aura and a trophy',
       '🏆 New trophies: Super Form, First Responder and Anniversary',
