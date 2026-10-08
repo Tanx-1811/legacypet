@@ -76,7 +76,7 @@ test('adoptRepo commits the workflow and the pet in the README', async () => {
 
 test('adoptRepo leaves an existing workflow alone unless forced, and flags missing scope', async () => {
   const existing = { sha: 'w1', encoding: 'base64', content: b64('name: LegacyPet\n') };
-  const snippet = '<!-- legacypet:start -->\nx\n<!-- legacypet:end -->';
+  const snippet = `<!-- legacypet:start -->\n${snippetFor('me/app')}\n<!-- legacypet:end -->`;
   const { client, calls } = fakeGitHub({
     [`GET /repos/me/app/contents/${WORKFLOW_PATH}`]: () => [200, existing],
     'GET /repos/me/app/readme': () => [200, { path: 'README.md', sha: 'r1', encoding: 'base64', content: b64(`# App\n\n${snippet}\n`) }],

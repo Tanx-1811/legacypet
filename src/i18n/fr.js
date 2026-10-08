@@ -269,7 +269,7 @@ export default {
     stale: (n) => `${n} ${plural(n, 'issue ou PR dort', 'issues ou PR dorment')} depuis plus de 30 jours. À trier ou à fermer.`,
     issuesFine: 'Les issues et pull requests sont bien suivies.',
     noRelease: 'Pas encore de release. En publier une lance la fête 🎉',
-    release: (tag, d) => `Dernière release ${tag}, il y a ${d} ${plural(d, 'jour', 'jours')}.`,
+    release: (tag, d) => (d < 1 ? `Dernière release ${tag}, publiée aujourd'hui.` : `Dernière release ${tag}, il y a ${d} ${plural(d, 'jour', 'jours')}.`),
     hygiene: (score) => `Le profil communautaire est à ${score}%. Ajoute ce qui manque: README, licence, CONTRIBUTING ou code de conduite.`,
     hygieneFull: 'Profil communautaire à 100%. Impeccable!',
     streak: (n) => `${n} jours de commits d'affilée. Ne casse pas la série!`,

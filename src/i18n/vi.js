@@ -248,7 +248,7 @@ export default {
     stale: (n) => `${n} issue/PR bị bỏ quên hơn 30 ngày. Phân loại hoặc đóng bớt đi.`,
     issuesFine: 'Issue và PR đều được chăm sóc tốt.',
     noRelease: 'Chưa có release nào. Ra một bản là có tiệc ngay 🎉',
-    release: (tag, d) => `Bản phát hành mới nhất ${tag}, cách đây ${d} ngày.`,
+    release: (tag, d) => (d < 1 ? `Bản phát hành mới nhất ${tag}, vừa ra hôm nay.` : `Bản phát hành mới nhất ${tag}, cách đây ${d} ngày.`),
     hygiene: (score) => `Hồ sơ cộng đồng đạt ${score}%. Thêm README, license, CONTRIBUTING hoặc quy tắc ứng xử còn thiếu.`,
     hygieneFull: 'Hồ sơ cộng đồng đạt 100%. Sạch bong!',
     streak: (n) => `Chuỗi ${n} ngày commit liên tục. Đừng để đứt nhé!`,

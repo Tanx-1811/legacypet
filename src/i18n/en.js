@@ -253,7 +253,7 @@ export default {
     stale: (n) => `${n} ${plural(n, 'issue or PR has', 'issues or PRs have')} been untouched for 30+ days. Triage or close them.`,
     issuesFine: 'Issues and pull requests are well looked after.',
     noRelease: 'No release yet. Publishing one throws a party 🎉',
-    release: (tag, d) => `Latest release ${tag}, ${d} ${plural(d, 'day', 'days')} ago.`,
+    release: (tag, d) => (d < 1 ? `Latest release ${tag}, shipped today.` : `Latest release ${tag}, ${d} ${plural(d, 'day', 'days')} ago.`),
     hygiene: (score) => `Community profile is at ${score}%. Add the missing README, license, CONTRIBUTING or code of conduct.`,
     hygieneFull: 'Community profile is 100%. Spotless!',
     streak: (n) => `${n}-day commit streak. Don't break it!`,

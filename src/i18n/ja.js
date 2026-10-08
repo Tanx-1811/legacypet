@@ -250,7 +250,7 @@ export default {
     stale: (n) => `${n}件のissue/PRが30日以上放置されています。トリアージするかクローズしましょう。`,
     issuesFine: 'issueとプルリクエストはしっかりお世話されています。',
     noRelease: 'まだリリースがありません。リリースするとパーティーが始まるよ 🎉',
-    release: (tag, d) => `最新リリースは${tag}、${d}日前。`,
+    release: (tag, d) => (d < 1 ? `最新リリースは${tag}、今日出たばかり。` : `最新リリースは${tag}、${d}日前。`),
     hygiene: (score) => `コミュニティプロフィールは${score}%。足りないREADME、ライセンス、CONTRIBUTING、行動規範を追加しましょう。`,
     hygieneFull: 'コミュニティプロフィールは100%。ピカピカ!',
     streak: (n) => `${n}日連続コミット中。途切れさせないでね!`,

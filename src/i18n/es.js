@@ -259,7 +259,7 @@ export default {
     stale: (n) => `${n} ${plural(n, 'issue o PR lleva', 'issues o PRs llevan')} más de 30 días sin actividad. Revísalos o ciérralos.`,
     issuesFine: 'Los issues y pull requests están bien atendidos.',
     noRelease: 'Aún no hay ninguna versión. Publicar una arma la fiesta 🎉',
-    release: (tag, d) => `Última versión ${tag}, hace ${d} ${plural(d, 'día', 'días')}.`,
+    release: (tag, d) => (d < 1 ? `Última versión ${tag}, publicada hoy.` : `Última versión ${tag}, hace ${d} ${plural(d, 'día', 'días')}.`),
     hygiene: (score) => `El perfil de comunidad está al ${score}%. Añade lo que falte: README, licencia, CONTRIBUTING o código de conducta.`,
     hygieneFull: 'El perfil de comunidad está al 100%. ¡Impecable!',
     streak: (n) => `Racha de ${n} días con commits. ¡No la rompas!`,

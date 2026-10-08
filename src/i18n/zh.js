@@ -251,7 +251,7 @@ export default {
     stale: (n) => `有 ${n} 个 issue 或 PR 超过 30 天无人处理。请分类或关闭它们。`,
     issuesFine: 'Issue 和 pull request 都被照顾得很好。',
     noRelease: '还没有发布过版本。发布一个就能开派对 🎉',
-    release: (tag, d) => `最新版本 ${tag}，发布于 ${d} 天前。`,
+    release: (tag, d) => (d < 1 ? `最新版本 ${tag}，今天刚发布。` : `最新版本 ${tag}，发布于 ${d} 天前。`),
     hygiene: (score) => `社区资料完整度 ${score}%。补上缺少的 README、license、CONTRIBUTING 或行为准则吧。`,
     hygieneFull: '社区资料完整度 100%，一尘不染！',
     streak: (n) => `已连续提交 ${n} 天，别断了哦！`,

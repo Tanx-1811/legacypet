@@ -251,7 +251,7 @@ export default {
     stale: (n) => `이슈/PR ${n}개가 30일 넘게 방치됐어요. 분류하거나 닫아 주세요.`,
     issuesFine: '이슈와 PR이 잘 관리되고 있어요.',
     noRelease: '아직 릴리스가 없어요. 하나 내면 파티가 열려요 🎉',
-    release: (tag, d) => `최신 릴리스는 ${tag}, ${d}일 전이에요.`,
+    release: (tag, d) => (d < 1 ? `최신 릴리스는 ${tag}, 오늘 나왔어요.` : `최신 릴리스는 ${tag}, ${d}일 전이에요.`),
     hygiene: (score) => `커뮤니티 프로필이 ${score}%예요. 빠진 README, 라이선스, CONTRIBUTING, 행동 강령을 추가해 주세요.`,
     hygieneFull: '커뮤니티 프로필 100%. 티끌 하나 없어요!',
     streak: (n) => `${n}일 연속 커밋 중이에요. 끊기지 않게 해요!`,
