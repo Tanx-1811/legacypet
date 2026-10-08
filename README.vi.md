@@ -334,6 +334,11 @@ Danh sách đầy đủ, công thức tính chỉ số và CLI có trong [README
 
 **Có làm rối lịch sử commit không?** Không. Thú sống trên nhánh riêng, mỗi lần chạy nhánh đó được thay bằng đúng một commit.
 
+**Repo private dùng được không?** Được. Action chạy ngay trong repo nên token mặc định đọc được nó.
+Chỉ khác link ảnh: `raw.githubusercontent.com` không phục vụ file private, nên hãy dùng `https://github.com/OWNER/REPO/blob/legacypet/pet.svg?raw=true`, GitHub sẽ hiện ảnh cho mọi người có quyền xem repo.
+`init` và nút **Adopt** trên website tự chọn link này cho bạn (thêm `--private` nếu `init` đoán sai).
+Badge shields.io và việc nhúng thú ra ngoài GitHub thì không chạy với repo private, vì bên ngoài không ai đọc được nó.
+
 **Làm sao nhận tính năng mới?** `@v1` luôn trỏ tới bản 1.x mới nhất, nên bạn được cập nhật tự động ở lần chạy kế tiếp.
 Lần đầu chạy bản mới, trang Actions hiện thông báo và job summary liệt kê **có gì mới**.
 Nếu tính năng cần sửa file workflow (như `/pet` cần trigger `issue_comment`), summary sẽ nói rõ.

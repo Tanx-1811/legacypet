@@ -495,7 +495,10 @@ In a terminal with true color, it draws the pet right in your shell.
 
 **Will it spam my commit history?** No. The pet lives on its own branch, which is replaced by a single commit on every run.
 
-**Private repos?** Yes. Use `https://github.com/OWNER/REPO/blob/legacypet/pet.svg?raw=true` as the image URL so GitHub serves it to people who have access.
+**Private repos?** Yes. The action runs inside your repo, so its default token can read it.
+Only the image URL changes: `raw.githubusercontent.com` won't serve private files, so use `https://github.com/OWNER/REPO/blob/legacypet/pet.svg?raw=true`, which GitHub shows to everyone with access.
+`init` and the **Adopt** button on the website pick this URL for you (pass `--private` if `init` guesses wrong).
+Shields.io badges and embedding the pet outside GitHub can't work for a private repo, since nothing outside can read it.
 
 **Why does it need `actions: write`?** GitHub pauses scheduled workflows in repos with no activity for 60 days. That would freeze a neglected pet before it ever turns into a zombie. LegacyPet re-enables its own workflow on each run. Remove the permission and set `keepalive: false` if you'd rather not.
 
