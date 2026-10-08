@@ -1,0 +1,112 @@
+import { DAY, daysBetween, utcDayIndex } from '../util/time.js';
+
+export const THRESHOLDS = {
+  hungry: 30,
+  sick: 45,
+  sad: 40,
+  sleepy: 15,
+  ecstatic: 80,
+  zombieDays: 180,
+  partyDays: 3,
+};
+
+const clamp = (value, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, Math.round(value)));
+
+const DEFAULT_MODIFIERS = { hungerRate: 1, ciPenalty: 1, issuePenalty: 1, releaseJoy: 0, teamEnergy: 0 };
+
+export const withDefaults = (modifiers = {}) => ({ ...DEFAULT_MODIFIERS, ...modifiers });
+
+// Consecutive UTC days with at least one commit. A streak survives until the
+// end of the day after the last commit, so a morning run doesn't break it.
+export function commitStreak(dates, now) {
+  const days = new Set(dates.map((d) => utcDayIndex(d)));
+  let day = utcDayIndex(now);
+  if (!days.has(day)) day -= 1;
+  let streak = 0;
+  while (days.has(day)) {
+    streak += 1;
+    day -= 1;
+  }
+  return streak;
+}
+
+export function computeFacts(snapshot, now) {
+  const { repo, commits, issues } = snapshot;
+  const nowMs = now.getTime();
+  const recent = commits.recent ?? [];
+  const within = (days) => recent.filter((c) => nowMs - new Date(c.date).getTime() <= days * DAY).length;
+  const authors30 = new Set(
+    recent.filter((c) => !c.bot && c.author && nowMs - new Date(c.date).getTime() <= 30 * DAY).map((c) => c.author),
+  );
+  return {
+    ageDays: Math.max(0, daysBetween(repo.createdAt, now)),
+    daysSinceCommit: Math.max(0, daysBetween(commits.lastDate ?? repo.createdAt, now)),
+    commits1: within(1),
+    commits7: within(7),
+    commits14: within(14),
+    commits30: within(30),
+    streak: commitStreak(recent.map((c) => c.date), now),
+    activeAuthors30: authors30.size,
+    totalCommits: commits.total ?? null,
+    stars: repo.stars ?? 0,
+    contributors: snapshot.contributors?.total ?? null,
+    openIssues: issues ? issues.open : null,
+    openPRs: issues ? issues.openPRs : null,
+  };
+}
+
+function healthFromCi(ci, penalty) {
+  if (!ci || ci.state === 'unknown') return 70;
+  if (ci.state === 'pending') return 85;
+  if (ci.state === 'passing') return 100;
+  const ratio = ci.total ? ci.failing / ci.total : 1;
+  return clamp(100 - penalty * (60 + 35 * ratio), 5);
+}
+
+function joyFromIssues(issues, penalty) {
+  if (!issues) return 75;
+  const total = issues.open + issues.openPRs;
+  if (total === 0) return 95;
+  const staleRatio = (issues.stale + issues.stalePRs) / total;
+  const neglected = Math.min(issues.unanswered.length, 5);
+  return clamp(100 - penalty * (50 * staleRatio + 8 * neglected), 5);
+}
+
+// All vitals are 0–100. Each one maps to a real maintenance habit:
+//   fullness ← how recently you committed      health ← CI on the default branch
+//   joy      ← whether issues & PRs get love   energy ← commits in the last two weeks
+//   hygiene  ← GitHub's community profile score (README, license, CoC…)
+export function computeVitals(snapshot, facts, modifiers, now) {
+  const m = withDefaults(modifiers);
+  let joy = joyFromIssues(snapshot.issues, m.issuePenalty);
+  if (m.releaseJoy && snapshot.release && daysBetween(snapshot.release.publishedAt, now) <= 14) {
+    joy = clamp(joy + m.releaseJoy);
+  }
+  let energy = 100 * (1 - Math.exp(-facts.commits14 / 6));
+  if (m.teamEnergy) energy += m.teamEnergy * Math.max(0, facts.activeAuthors30 - 1);
+  return {
+    fullness: clamp(100 * Math.exp(-(facts.daysSinceCommit * m.hungerRate) / 21)),
+    health: healthFromCi(snapshot.ci, m.ciPenalty),
+    joy,
+    energy: clamp(energy),
+    hygiene: snapshot.community?.health ?? null,
+  };
+}
+
+// Level grows with the square root of all-time commits: Lv.11 at 100, Lv.32 at 1,000.
+export function computeGrowth(facts) {
+  const total = facts.totalCommits;
+  if (total == null) return { level: 1, xp: 0, stage: 'adult', hatchProgress: 1 }; // commits unreadable
+  const root = Math.sqrt(total);
+  const level = Math.min(99, Math.floor(root) + 1);
+  let stage = 'adult';
+  if (total < 5) stage = 'egg';
+  else if (total < 50 || facts.ageDays < 30) stage = 'baby';
+  else if (facts.ageDays >= 3 * 365 && total >= 300) stage = 'elder';
+  return {
+    level,
+    xp: level >= 99 ? 1 : root - Math.floor(root),
+    stage,
+    hatchProgress: Math.min(1, total / 5),
+  };
+}

@@ -1,0 +1,31 @@
+// A species is a 16×16 pixel grid plus a few anchors that tell the renderer
+// where to stamp eyes, mouth, cheeks and hats. See CONTRIBUTING.md to add one.
+export default {
+  id: 'blob',
+  trait: 'adaptable',
+  modifiers: {},
+  food: 'kibble',
+  palette: { o: '#1f3b2c', b: '#7ee081', l: '#c8f7c5', s: '#4fb86a' },
+  grid: [
+    '................',
+    '................',
+    '................',
+    '......oooo......',
+    '....oollbboo....',
+    '...olllbbbbbo...',
+    '..olbbbbbbbbbo..',
+    '..obbbbbbbbbbo..',
+    '.obbbbbbbbbbbbo.',
+    '.obbbbbbbbbbbbo.',
+    '.obbbbbbbbbbbbo.',
+    '.obbbbbbbbbbbso.',
+    '.osbbbbbbbbbsso.',
+    '..ossbbbbbbsso..',
+    '...oooooooooo...',
+    '................',
+  ],
+  eyes: [[4, 8], [10, 8]],
+  mouth: [6, 11],
+  cheeks: [[2, 10], [12, 10]],
+  hat: [8, 3],
+};

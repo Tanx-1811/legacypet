@@ -1,0 +1,51 @@
+// The pet talks about what is really happening in the repo.
+// Strong moods and events speak first; calmer days mix in data-aware tidbits.
+
+export function speechVars(pet, snapshot) {
+  const { facts } = pet;
+  const oldest = snapshot.issues?.unanswered?.[0];
+  const treat = snapshot.treats?.[0];
+  return {
+    name: pet.name,
+    repo: snapshot.repo.fullName,
+    repoName: snapshot.repo.name,
+    days: Math.floor(facts.daysSinceCommit),
+    commits7: facts.commits7,
+    streak: facts.streak,
+    stale: (snapshot.issues?.stale ?? 0) + (snapshot.issues?.stalePRs ?? 0),
+    issue: oldest?.number,
+    issueDays: oldest?.days,
+    treatUser: treat?.user,
+    treatPr: treat?.number,
+    tag: snapshot.release?.tag,
+    years: Math.max(1, Math.round(facts.ageDays / 365.25)),
+    check: snapshot.ci?.failingNames?.[0],
+    toHatch: Math.max(1, 5 - facts.totalCommits),
+  };
+}
+
+export function chooseSpeech(pet, snapshot, tr, rng) {
+  const v = speechVars(pet, snapshot);
+  const say = (line) => (typeof line === 'function' ? line(v) : line);
+  const pick = (lines) => say(rng.pick(lines));
+  const { lines } = tr;
+  const { mood, events, holiday } = pet;
+
+  if (events.includes('revived')) return pick(lines.revived);
+  if (events.includes('hatched')) return pick(lines.hatched);
+  if (mood === 'hibernating' || mood === 'egg') return pick(lines.moods[mood]);
+  if (mood === 'zombie') return pick(holiday === 'halloween' ? lines.holiday.halloweenZombie : lines.moods.zombie);
+  if (mood === 'sick') return pick(v.check ? lines.ciFailing : lines.moods.sick);
+  if (holiday && lines.holiday[holiday]) return pick(lines.holiday[holiday]);
+  if (events.includes('birthday')) return pick(lines.birthday);
+  if (events.includes('release') && v.tag) return pick(lines.release);
+
+  // A hungry pet talks about food; a content one has room for small talk.
+  const chatty = mood === 'happy' || mood === 'ecstatic';
+  const pool = [...lines.moods[mood]];
+  if (v.issue && (chatty || mood === 'sad' || mood === 'sleepy')) pool.push(...lines.issueNudge);
+  if (v.treatUser && (chatty || mood === 'party')) pool.push(...lines.treat);
+  if (v.streak >= 3 && chatty) pool.push(...lines.streak);
+  if (snapshot.ci?.state === 'unknown' && (chatty || mood === 'sleepy')) pool.push(...lines.noCi);
+  return pick(pool);
+}

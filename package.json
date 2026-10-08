@@ -1,0 +1,46 @@
+{
+  "name": "legacypet",
+  "version": "0.1.0",
+  "description": "A pixel pet that lives in your README and thrives when your repo is cared for.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "bin": {
+    "legacypet": "src/cli.js"
+  },
+  "files": [
+    "src",
+    "action.yml",
+    "README.md",
+    "README.vi.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "gallery": "node src/cli.js gallery --out docs/gallery",
+    "demo": "node src/cli.js demo",
+    "playground": "node scripts/serve.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "github-action",
+    "readme",
+    "virtual-pet",
+    "tamagotchi",
+    "pixel-art",
+    "svg",
+    "repo-health",
+    "maintainers",
+    "gamification"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tanx-1811/legacypet.git"
+  },
+  "homepage": "https://github.com/Tanx-1811/legacypet#readme",
+  "license": "MIT"
+}

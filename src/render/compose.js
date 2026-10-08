@@ -1,0 +1,90 @@
+import { HATS, GEAR_COLORS } from '../sprites/accessories.js';
+import { EGG, EGG_CRACK } from '../sprites/egg.js';
+import { BEAKS, EYES, FACE_COLORS, MOOD_FACES, MOUTHS } from '../sprites/faces.js';
+import { desaturate, mix, shiftHue } from '../util/color.js';
+import { bboxOf, gridToPixels } from './pixels.js';
+
+const SHINY_HUE = 150;
+
+export function resolvePalette(species, { shiny, mood }) {
+  const keep = new Set(species.shinyKeep ?? []);
+  const palette = {};
+  for (const [key, color] of Object.entries(species.palette)) {
+    let c = color;
+    if (shiny && !keep.has(key)) c = shiftHue(c, SHINY_HUE);
+    if (mood === 'zombie') c = desaturate(mix(c, '#8fae7a', 0.45), 0.35);
+    else if (mood === 'sick' && key !== 'o') c = mix(c, '#c5e17a', 0.22);
+    palette[key] = c;
+  }
+  return palette;
+}
+
+function placeEye(pattern, [x, y], index, colorOf) {
+  const p = pattern.perEye ? pattern.perEye[index] : pattern;
+  const width = p.rows[0].length;
+  const ox = index === 0 ? x : x - (width - 2);
+  return gridToPixels(p.rows, colorOf, ox, y + (p.dy ?? 0), index === 1 && Boolean(p.mirror));
+}
+
+function ring(x, y, color) {
+  return [
+    [x, y - 1], [x + 1, y - 1], [x, y + 2], [x + 1, y + 2],
+    [x - 1, y], [x - 1, y + 1], [x + 2, y], [x + 2, y + 1],
+  ].map(([px, py]) => ({ x: px, y: py, c: color }));
+}
+
+function faceGear(kind, eyes) {
+  if (kind === 'monocle') {
+    const [x, y] = eyes[1];
+    return [...ring(x, y, GEAR_COLORS.monocle), { x: x + 2, y: y + 3, c: GEAR_COLORS.monocle }, { x: x + 2, y: y + 4, c: GEAR_COLORS.monocle }];
+  }
+  if (kind === 'glasses') {
+    const [[lx, ly], [rx]] = eyes;
+    const bridge = [];
+    for (let x = lx + 3; x <= rx - 2; x++) bridge.push({ x, y: ly, c: GEAR_COLORS.glasses });
+    return [...ring(lx, ly, GEAR_COLORS.glasses), ...ring(rx, ly, GEAR_COLORS.glasses), ...bridge];
+  }
+  return [];
+}
+
+function hatPixels(kind, [cx, top]) {
+  const hat = HATS[kind];
+  if (!hat) return [];
+  const width = hat.rows[0].length;
+  return gridToPixels(hat.rows, hat.colors, cx - width / 2, top - hat.rows.length + 1 + (hat.dy ?? 0));
+}
+
+function composeEgg(pet, palette) {
+  const shell = { o: palette.o, b: mix(palette.b, '#ffffff', 0.72), l: '#ffffff', s: palette.b };
+  const base = gridToPixels(EGG, shell);
+  const cracks = EGG_CRACK.slice(0, Math.round(pet.hatchProgress * EGG_CRACK.length));
+  for (const [x, y] of cracks) base.push({ x, y, c: palette.o });
+  return { base, eyesOpen: [], eyesClosed: null, gear: [], bbox: bboxOf(base) };
+}
+
+// Layers the species body, its expression and accessories into pixel lists.
+export function composePet(pet) {
+  const { species } = pet;
+  const palette = resolvePalette(species, pet);
+  if (pet.mood === 'egg') return composeEgg(pet, palette);
+
+  const face = MOOD_FACES[pet.mood] ?? MOOD_FACES.happy;
+  const colorOf = (ch) => {
+    if (ch === 'o' || ch === 'a' || ch === 'A') return palette[ch];
+    return FACE_COLORS[ch] ?? palette[ch];
+  };
+
+  const body = gridToPixels(species.grid, palette);
+  const cheeks = face.cheeks
+    ? species.cheeks.flatMap(([x, y]) => [{ x, y, c: FACE_COLORS[face.cheeks] }, { x: x + 1, y, c: FACE_COLORS[face.cheeks] }])
+    : [];
+  const mouthRows = species.mouthStyle === 'beak' ? BEAKS[face.mouth] : MOUTHS[face.mouth];
+  const mouth = gridToPixels(mouthRows, colorOf, species.mouth[0], species.mouth[1]);
+  const eyesOpen = species.eyes.flatMap((anchor, i) => placeEye(EYES[face.eyes], anchor, i, colorOf));
+  const eyesClosed = face.blink ? species.eyes.flatMap((anchor, i) => placeEye(EYES.closed, anchor, i, colorOf)) : null;
+  // Glasses go under the eyes (eyes must stay readable), hats on top of everything.
+  const glasses = faceGear(pet.accessories?.face, species.eyes);
+  const gear = pet.accessories?.hat ? hatPixels(pet.accessories.hat, species.hat) : [];
+
+  return { base: [...body, ...cheeks, ...mouth, ...glasses], eyesOpen, eyesClosed, gear, bbox: bboxOf(body) };
+}

@@ -1,0 +1,29 @@
+name: 🥚 Species request
+description: Suggest a new pet (or draw one yourself!)
+labels: [species, good first issue]
+body:
+  - type: input
+    id: species
+    attributes:
+      label: Species
+      placeholder: e.g. Axolotl
+    validations:
+      required: true
+  - type: textarea
+    id: trait
+    attributes:
+      label: Trait idea
+      description: Every species bends one rule. Cacti hunger 4× slower, ducks shrug off failing CI… What does yours do?
+      placeholder: Axolotls regenerate, so they recover from "sick" twice as fast.
+  - type: textarea
+    id: art
+    attributes:
+      label: Pixel art (optional)
+      description: A 16×16 grid using `.` for transparent and one letter per color. See CONTRIBUTING.md.
+      render: text
+  - type: checkboxes
+    id: draw
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd like to open the PR myself

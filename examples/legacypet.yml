@@ -1,0 +1,27 @@
+# Copy this file to .github/workflows/legacypet.yml in your repository.
+name: LegacyPet
+
+on:
+  schedule:
+    - cron: '17 */6 * * *' # check on the pet four times a day
+  release:
+    types: [published] # throw a party the moment you ship
+  workflow_dispatch: # "Run workflow" button for impatient owners
+
+permissions:
+  contents: write # publish the pet to the `legacypet` branch
+  actions: write # keep the schedule alive while the repo sleeps
+  issues: read
+  pull-requests: read
+  checks: read
+  statuses: read
+
+jobs:
+  legacypet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Tanx-1811/legacypet@v1
+        with:
+          lang: en # or vi
+          # species: cactus  # auto | blob | cat | duck | crab | octopus | snake | cactus
+          # name: Mochi      # leave empty and the repo names its own pet

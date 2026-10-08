@@ -1,0 +1,109 @@
+// Lines are strings or functions of `v` (see engine/speech.js for every variable).
+const plural = (n, one, many) => (n === 1 ? one : many);
+
+export default {
+  code: 'en',
+  species: {
+    blob: 'Slime', cat: 'Cat', duck: 'Rubber Duck', crab: 'Crab',
+    octopus: 'Octopus', snake: 'Snake', cactus: 'Cactus',
+  },
+  traits: {
+    adaptable: 'Adaptable', independent: 'Independent', debugger: 'Debugger', molting: 'Molting',
+    multitasker: 'Multitasker', patient: 'Patient', drought: 'Drought-proof',
+  },
+  stages: { egg: 'Egg', baby: 'Baby', adult: 'Adult', elder: 'Elder' },
+  kind: (stage, species) => `${stage} ${species}`,
+  moods: {
+    ecstatic: 'ecstatic', happy: 'happy', party: 'partying', hungry: 'hungry', sleepy: 'sleepy',
+    sad: 'sad', sick: 'sick', zombie: 'undead', hibernating: 'hibernating', egg: 'unhatched',
+  },
+  titles: {
+    ecstatic: 'the Radiant', happy: 'the Cheerful', party: 'the Festive', hungry: 'the Starving',
+    sleepy: 'the Drowsy', sad: 'the Lonely', sick: 'the Feverish', zombie: 'the Undead',
+    hibernating: 'the Dreaming', egg: 'the Unhatched',
+  },
+  displayName: (name, title) => `${name} ${title}`,
+  stats: { fullness: 'Fullness', health: 'Health', joy: 'Joy', energy: 'Energy', hygiene: 'Hygiene' },
+  level: (n) => `Lv.${n}`,
+  shiny: 'Shiny',
+  noAchievements: 'No trophies yet. Keep shipping!',
+  fed: (days) => {
+    if (days < 1) return 'fed today';
+    if (days < 2) return 'fed yesterday';
+    return `last fed ${Math.floor(days)}d ago`;
+  },
+  achievements: {
+    hatched: 'Hatched', lazarus: 'Back from the Dead', survivor: 'Survivor', shiny: 'Shiny!',
+    streak7: 'On Fire', streak30: 'Comet', centurion: 'Centurion', shipper: 'Shipper',
+    stars100: 'Rising Star', stars1k: 'Superstar', team: 'Squad', spotless: 'Spotless',
+    inboxZero: 'Inbox Zero', elder: 'Wise Elder',
+  },
+  lines: {
+    revived: [(v) => `I'M ALIVE!! Thanks for coming back to ${v.repoName} 💚`, 'Braaai... wait, fresh commits? I feel ALIVE!'],
+    hatched: [(v) => `*crack* Hello, world! I'm ${v.name}! 🐣`, 'I hatched! Please feed me commits!'],
+    birthday: [(v) => `${v.repoName} turns ${v.years} today! 🎂`, (v) => `Happy birthday to us! ${v.years} ${plural(v.years, 'year', 'years')} of code 🎂`],
+    release: [(v) => `${v.tag} just shipped! Party time! 🎉`, (v) => `New release ${v.tag}! Pop the confetti 🎊`],
+    holiday: {
+      halloween: ['Trick or treat? I prefer commits 🎃', 'Spooky season! My hat is a feature, not a bug 🎃'],
+      halloweenZombie: ['Halloween is MY day. A commit would still be nice 🎃'],
+      christmas: ['All I want for Christmas is a green CI 🎄', 'Merry merged-mas! 🎄'],
+      newyear: ['New year, new commits! 🎆', 'Resolution: fewer TODOs, more tests 🎆'],
+      tet: ['Happy Lunar New Year! Lucky money = merged PRs 🧧', 'Chúc mừng năm mới! May your CI stay green 🧧'],
+      programmers: ["Happy Programmers' Day! Day 256 = 0x100 🎉"],
+    },
+    ciFailing: [(v) => `My tummy hurts... "${v.check}" is failing 🤒`, (v) => `CI is red. Could someone check "${v.check}"?`],
+    noCi: ['No CI? I have never seen a doctor 🩺'],
+    issueNudge: [
+      (v) => `Psst... issue #${v.issue} has waited ${v.issueDays} days for a reply`,
+      (v) => `#${v.issue} is lonely. ${v.issueDays} days and no reply 👀`,
+    ],
+    treat: [(v) => `@${v.treatUser} fed me a treat (#${v.treatPr}) 🍪`, (v) => `Thanks @${v.treatUser} for the snack in #${v.treatPr}!`],
+    streak: [(v) => `${v.streak}-day commit streak! Unstoppable 🔥`],
+    moods: {
+      ecstatic: ['Best. Maintainer. Ever. 💖', 'Green CI, fresh commits, happy issues. Bliss!', (v) => `${v.commits7} commits this week. I'm so full!`],
+      happy: ['Nom nom, thanks for the commits!', (v) => `Life is good in ${v.repoName}.`, 'Every commit is a snack. Keep them coming!'],
+      party: ['Party mode! 🎉', 'Confetti everywhere!'],
+      hungry: [
+        (v) => `${v.days} days without commits... I'd eat a typo fix`,
+        'So hungry... even a README tweak would do',
+        (v) => `My bowl has been empty for ${v.days} days 🥺`,
+      ],
+      sleepy: ['Quiet week... *yawn*', 'Wake me up when you push 💤'],
+      sad: [(v) => `${v.stale} issues feel ignored... me too`, 'Could someone triage? I feel lonely'],
+      sick: ['*cough* ...tests... failing...'],
+      zombie: ['Braaains... I mean, commiiits...', (v) => `Last fed ${v.days} days ago. I have seen things.`, 'Is anyone... still... maintaining this?'],
+      hibernating: ['This repo is archived. Hibernating... Zzz', 'Archived and at peace. Thanks for everything 💤'],
+      egg: [(v) => `*wobble* ${v.toHatch} more ${plural(v.toHatch, 'commit', 'commits')} until I hatch!`, '*tap tap* Is somebody out there?'],
+    },
+  },
+  park: {
+    title: (owner) => `${owner}'s Pet Park`,
+    summary: (n, health, care) => `${n} ${plural(n, 'pet', 'pets')} · park health ${health}% · ${care ? `${care} ${plural(care, 'needs', 'need')} care` : 'everyone is fine'}`,
+  },
+  checkup: {
+    fed: (d) => (d < 1 ? 'Fed today. Keep it up!' : `Last commit ${d} ${plural(d, 'day', 'days')} ago.`),
+    feed: (d) => `${d} days since the last commit. Push anything, even a typo fix, to feed it.`,
+    ciPassing: 'CI is green on the default branch.',
+    ciFailing: (names) => `CI is failing (${names}). Fix it to cure the fever.`,
+    ciPending: 'CI is still running on the latest commit.',
+    noCi: 'No CI found. Add a GitHub Actions workflow so your pet can see a doctor.',
+    unanswered: (n, issue, days) => `${n} community ${plural(n, 'issue is', 'issues are')} waiting for a first reply. The oldest is #${issue} (${days} days).`,
+    stale: (n) => `${n} ${plural(n, 'issue or PR has', 'issues or PRs have')} been untouched for 30+ days. Triage or close them.`,
+    issuesFine: 'Issues and pull requests are well looked after.',
+    noRelease: 'No release yet. Publishing one throws a party 🎉',
+    release: (tag, d) => `Latest release ${tag}, ${d} ${plural(d, 'day', 'days')} ago.`,
+    hygiene: (score) => `Community profile is at ${score}%. Add the missing README, license, CONTRIBUTING or code of conduct.`,
+    hygieneFull: 'Community profile is 100%. Spotless!',
+    streak: (n) => `${n}-day commit streak. Don't break it!`,
+    archived: 'This repo is archived, so your pet is hibernating peacefully.',
+  },
+  diary: {
+    title: (name) => `# 📔 ${name}'s Diary`,
+    intro: (repo) => `Written every day by the pet of **${repo}**. Newest entries first.`,
+    day: (n) => `Day ${n}`,
+    ate: (n) => `ate ${n} ${plural(n, 'commit', 'commits')}`,
+    fasted: 'no food today',
+    treat: (user, pr) => `got a treat from @${user} (#${pr})`,
+    unlocked: (list) => `unlocked ${list}`,
+  },
+};

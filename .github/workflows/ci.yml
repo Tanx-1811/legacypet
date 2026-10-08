@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node --test
+      - name: Gallery renders
+        run: node src/cli.js gallery --out /tmp/gallery
+
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the action in dry-run mode
+        id: pet
+        uses: ./
+        with:
+          dry-run: 'true'
+      - run: echo "Our pet is ${{ steps.pet.outputs.mood }} at level ${{ steps.pet.outputs.level }}"

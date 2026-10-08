@@ -1,0 +1,70 @@
+name: 'LegacyPet'
+description: 'Adopt a pixel pet that lives in your README and thrives when your repo is cared for.'
+author: 'Tanx-1811'
+branding:
+  icon: 'heart'
+  color: 'purple'
+
+inputs:
+  github-token:
+    description: 'Token used to read repo health and publish the pet. Needs contents: write.'
+    default: '${{ github.token }}'
+  repository:
+    description: 'owner/name of the repo to visit. Defaults to the current repository.'
+    default: '${{ github.repository }}'
+  branch:
+    description: 'Branch the pet lives on. It is rewritten on every run, so pick a dedicated one.'
+    default: 'legacypet'
+  species:
+    description: 'auto, blob, cat, duck, crab, octopus, snake or cactus. "auto" lets the repo choose.'
+    default: 'auto'
+  name:
+    description: 'Custom pet name. Leave empty and the repo names its own pet.'
+    default: ''
+  lang:
+    description: 'Language for the speech bubble, card and diary: en or vi.'
+    default: 'en'
+  theme:
+    description: 'auto (follows the viewer: day in light mode, night in dark mode), light or dark.'
+    default: 'auto'
+  diary:
+    description: 'Keep a DIARY.md on the pet branch with one entry per day.'
+    default: 'true'
+  park:
+    description: 'Also draw a Pet Park (park.svg): "auto" for your top repos, or a list like "repo-a, other-owner/repo-b". Great in a profile README repo.'
+    default: ''
+  park-size:
+    description: 'How many pets "auto" puts in the park (1-8).'
+    default: '6'
+  ignore-checks:
+    description: 'Comma-separated check names to ignore when judging CI health.'
+    default: ''
+  output-dir:
+    description: 'Also write the generated files to this local directory.'
+    default: 'legacypet-out'
+  keepalive:
+    description: "Re-enable this workflow on every run so GitHub's 60-day inactivity rule can't pause the pet. Needs actions: write."
+    default: 'true'
+  dry-run:
+    description: 'Render the pet without publishing it.'
+    default: 'false'
+
+outputs:
+  mood:
+    description: 'ecstatic, happy, party, hungry, sleepy, sad, sick, zombie, hibernating or egg'
+  name:
+    description: "The pet's name"
+  level:
+    description: 'Level, from 1 to 99'
+  species:
+    description: 'Species id'
+  stage:
+    description: 'egg, baby, adult or elder'
+  speech:
+    description: 'What the pet is saying today'
+  svg-path:
+    description: 'Local path of the rendered card'
+
+runs:
+  using: 'node24'
+  main: 'src/action.js'
