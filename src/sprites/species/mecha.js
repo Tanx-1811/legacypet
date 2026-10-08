@@ -2,6 +2,7 @@
 export default {
   id: 'mecha',
   trait: 'reactor',
+  home: 'desert',
   modifiers: { ciEnergyFloor: 40 },
   food: 'kibble',
   palette: {

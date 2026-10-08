@@ -12,8 +12,9 @@ import { computeFacts, computeGrowth, computeVitals } from './vitals.js';
 // Turns a repo snapshot (plus the pet's memory from last run) into everything
 // needed to draw it. Pure: the same inputs always give the same pet.
 //
-// options: species, name, lang, plus preview-only overrides
-//          (shiny, mood, stage, holiday, season, aura) used by the gallery and demos.
+// options: species, name, lang, scenery (the pet's home; auto = the species' own),
+//          plus preview-only overrides (shiny, mood, stage, holiday, season, aura)
+//          used by the gallery and demos.
 export function buildPet({ snapshot, prevState = null, options = {}, now = new Date() }) {
   const lang = resolveLang(options.lang);
   const tr = strings(lang);
@@ -40,6 +41,7 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
   const auraDays = blissStreak(mood, date, prevState?.history);
   const aura = options.aura ?? auraDays >= AURA_DAYS;
   const shiny = options.shiny ?? isShiny(fullName);
+  const home = options.scenery && options.scenery !== 'auto' ? options.scenery : species.home;
   const name = options.name?.trim() || petName(fullName);
   const accessories = chooseAccessories({ mood, holiday, events, growth, facts, vitals, species });
   const achievements = evaluateAchievements(
@@ -59,6 +61,7 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
     species,
     speciesId: species.id,
     shiny,
+    home,
     stage: growth.stage,
     level: growth.level,
     xp: growth.xp,

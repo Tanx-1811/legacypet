@@ -2,6 +2,7 @@
 export default {
   id: 'ninja',
   trait: 'shadowClone',
+  home: 'jungle',
   modifiers: { streakEnergy: 4 },
   food: 'kibble',
   palette: {

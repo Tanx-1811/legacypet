@@ -2,6 +2,7 @@
 export default {
   id: 'dragon',
   trait: 'ancient',
+  home: 'desert',
   modifiers: { xpRate: 1.5 },
   food: 'kibble',
   palette: {

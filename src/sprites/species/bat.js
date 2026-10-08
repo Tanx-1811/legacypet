@@ -2,6 +2,7 @@
 export default {
   id: 'bat',
   trait: 'vigilant',
+  home: 'jungle',
   modifiers: { inboxJoy: 15 },
   food: 'kibble',
   palette: {

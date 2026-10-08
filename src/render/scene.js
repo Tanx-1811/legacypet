@@ -2,6 +2,7 @@ import * as A from '../sprites/accessories.js';
 import { createRng } from '../util/rng.js';
 import { composePet } from './compose.js';
 import { rectsFromPixels, stamp } from './pixels.js';
+import { farFx, frontFx, homeOf, propsFx, SANDY, SCENERY, skyFx } from './scenery.js';
 
 const PX = {
   card: { egg: 6, baby: 5, adult: 7, elder: 7 },
@@ -36,6 +37,7 @@ function at(x, y, content, cls = '', style = '') {
 function sky(s) {
   const { pet, rng, x, y, w, h, mini } = s;
   const p = mini ? 2 : 3;
+  if (SCENERY[s.home].noSky) return '';
   const alwaysNight = pet.mood === 'hibernating';
   let night = stamp(A.MOON.rows, A.MOON.colors, p, x + w - (mini ? 22 : 32), y + (mini ? 10 : 14));
   for (let i = 0; i < 7; i++) {
@@ -97,14 +99,15 @@ function ground(s) {
   const { pet, rng, x, w, groundY, groundH, mini } = s;
   let out = `<rect x="${x}" y="${groundY}" width="${w}" height="${groundH}" class="lp-ground"/>`;
   out += `<rect x="${x}" y="${groundY}" width="${w}" height="2" class="lp-ground2"/>`;
-  for (let gx = x + 5; gx < x + w - 6; gx += rng.int(12, 22)) {
+  const grassy = !SANDY.has(s.home);
+  for (let gx = x + 5; grassy && gx < x + w - 6; gx += rng.int(12, 22)) {
     out += `<rect x="${gx}" y="${groundY - 3}" width="2" height="3" class="lp-ground2"/>`;
     out += `<rect x="${gx + 3}" y="${groundY - 5}" width="2" height="5" class="lp-ground2"/>`;
   }
   for (let i = 0; i < (mini ? 3 : 5); i++) {
     out += `<rect x="${r1(x + rng.range(6, w - 10))}" y="${r1(groundY + rng.range(10, groundH - 5))}" width="3" height="2" class="lp-ground2"/>`;
   }
-  const blooming = (pet.season === 'spring' || pet.season === 'summer') && !['zombie', 'sick', 'hibernating', 'hungry'].includes(pet.mood);
+  const blooming = grassy && (pet.season === 'spring' || pet.season === 'summer') && !['zombie', 'sick', 'hibernating', 'hungry'].includes(pet.mood);
   if (blooming) {
     for (let i = 0; i < 3; i++) {
       const fx = r1(x + rng.range(6, w - 10));
@@ -248,7 +251,7 @@ function sparkles(s, count, colors) {
 
 function weather(s) {
   const { pet, rng, x, y, w, mini, pp } = s;
-  if (pet.mood === 'zombie') return '';
+  if (pet.mood === 'zombie' || SCENERY[s.home].noWeather) return '';
   const season = pet.mood === 'hibernating' || pet.holiday === 'christmas' ? 'winter' : pet.season;
   const drift = (content, dur, delay) => at(x + rng.range(0, w - 8), y, content, 'lp-drift', `animation-duration:${sec(dur)};animation-delay:-${sec(delay)}`);
   let out = '';
@@ -266,7 +269,7 @@ function weather(s) {
 
 // Sky, ground and weather, shared by single-pet scenes and the Pet Park.
 // `s` needs: pet (for mood, season, holiday), rng, x, y, w, h, groundY, groundH, mini, pp.
-export const backdrop = { sky, holidaySky, ground, weather };
+export const backdrop = { sky, skyFx, holidaySky, farFx, ground, propsFx, frontFx, weather };
 
 export const skyDefs = (uid, { x, y, w, h, rx }) =>
   `<linearGradient id="${uid}-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="lp-sky1"/><stop offset="1" class="lp-sky2"/></linearGradient>`
@@ -298,6 +301,7 @@ export function renderScene(pet, { x, y, w, h, uid, variant = 'card' }) {
   const groundY = y + h - groundH;
   const actor = renderActor(pet, {
     rng: createRng(`${pet.repo.fullName}|${pet.date}|${variant}`),
+    home: homeOf(pet),
     x, y, w, h, groundY, groundH, mini,
     cx: Math.round(x + w * 0.42),
     footY: groundY + Math.round(groundH * 0.2),
@@ -308,11 +312,15 @@ export function renderScene(pet, { x, y, w, h, uid, variant = 'card' }) {
     `<g clip-path="url(#${uid}-clip)">`,
     `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#${uid}-sky)"/>`,
     sky(s),
+    skyFx(s),
     holidaySky(s),
+    farFx(s),
     ground(s),
+    propsFx(s),
     decor(s),
     bowl(s),
     actor.body,
+    frontFx(s),
     weather(s),
     '</g>',
   ].join('');

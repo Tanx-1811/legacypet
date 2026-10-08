@@ -16,13 +16,13 @@ inputs:
     description: 'Branch the pet lives on. It is rewritten on every run, so pick a dedicated one.'
     default: 'legacypet'
   species:
-    description: 'auto, blob, cat, duck, crab, octopus, snake or cactus. "auto" lets the repo choose.'
+    description: 'auto, blob, cat, duck, crab, octopus, snake, cactus, ninja, mecha, dragon, bunny, bat or hero. "auto" lets the repo choose.'
     default: 'auto'
   name:
     description: 'Custom pet name. Leave empty and the repo names its own pet.'
     default: ''
   lang:
-    description: 'Language for the speech bubble, card and diary: en or vi.'
+    description: 'Language for the speech bubble, card and diary: en, vi, ja, zh, ko, es or fr.'
     default: 'en'
   theme:
     description: 'auto (follows the viewer: day in light mode, night in dark mode), light or dark.'
@@ -45,6 +45,9 @@ inputs:
   keepalive:
     description: "Re-enable this workflow on every run so GitHub's 60-day inactivity rule can't pause the pet. Needs actions: write."
     default: 'true'
+  commands:
+    description: 'Answer /pet commands in issue and PR comments (needs the issue_comment trigger and issues: write).'
+    default: 'true'
   dry-run:
     description: 'Render the pet without publishing it.'
     default: 'false'
@@ -64,6 +67,14 @@ outputs:
     description: 'What the pet is saying today'
   svg-path:
     description: 'Local path of the rendered card'
+  previous-mood:
+    description: 'The mood on the previous run (empty on the first run)'
+  mood-changed:
+    description: 'true when the mood differs from the previous run'
+  aura:
+    description: 'true when the pet is in its super form (7 ecstatic days in a row)'
+  new-trophies:
+    description: 'Comma-separated ids of trophies unlocked on this run'
 
 runs:
   using: 'node24'

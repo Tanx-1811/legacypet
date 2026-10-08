@@ -1,9 +1,9 @@
 // GitHub Action entry point. Reads inputs from INPUT_* env vars (no @actions/core needed).
-import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  buildPet, checkup, collectPark, collectSnapshot, createClient, HOMEPAGE, loadPrevious, MOOD_EMOJI,
-  parkSummary, petUrls, publishFiles, renderFiles, renderPark, resolveParkRepos, snippetFor,
+  answerCommand, buildPet, checkup, collectPark, collectSnapshot, commandFromEvent, createClient, HOMEPAGE, loadPrevious,
+  MOOD_EMOJI, moodStrip, nextState, parkSummary, petUrls, publishFiles, renderFiles, renderPark, resolveParkRepos, snippetFor,
 } from './index.js';
 import { strings } from './i18n/index.js';
 
@@ -27,7 +27,7 @@ function setOutputs(outputs) {
   appendFileSync(process.env.GITHUB_OUTPUT, `${lines.join('\n')}\n`);
 }
 
-function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets }) {
+function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prevState }) {
   if (!process.env.GITHUB_STEP_SUMMARY) return;
   const tr = strings(pet.lang);
   const v = pet.vitals;
@@ -44,6 +44,8 @@ function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets }) {
     `| ${head.map((k) => tr.stats[k]).join(' | ')} |`,
     `| ${head.map(() => '---').join(' | ')} |`,
     `| ${head.map((k) => v[k]).join(' | ')} |`,
+    '',
+    `📈 ${moodStrip(nextState(pet, prevState).history)}`,
     '',
     pet.newAchievements.length ? `🏆 New: ${pet.achievements.filter((a) => a.isNew).map((a) => `${a.emoji} ${tr.achievements[a.id]}`).join(', ')}\n` : '',
     '### 🩺 Checkup',
@@ -88,7 +90,26 @@ async function keepAlive(client, owner, repo) {
   }
 }
 
+// On `issue_comment` events the action only wakes up for `/pet` commands.
+function commentEvent() {
+  const name = process.env.GITHUB_EVENT_NAME;
+  if (name !== 'issue_comment') return null;
+  let event = null;
+  try {
+    event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+  } catch {
+    event = null;
+  }
+  return { request: commandFromEvent(name, event) };
+}
+
 async function main() {
+  const comment = commentEvent();
+  if (comment && (!comment.request || !flag('commands', true))) {
+    console.log('💬 Not a /pet command. Nothing to do.');
+    return;
+  }
+
   const repository = input('repository', process.env.GITHUB_REPOSITORY ?? '');
   const [owner, repo] = repository.split('/');
   if (!owner || !repo) throw new Error(`"repository" must look like owner/name, got "${repository}"`);
@@ -159,11 +180,26 @@ async function main() {
 
   if (!dryRun && flag('keepalive', true)) await keepAlive(client, owner, repo);
 
+  if (comment?.request) {
+    try {
+      const cardUrl = dryRun ? null : `${petUrls(pet.repo.fullName, branch).card}?run=${process.env.GITHUB_RUN_ID ?? Date.now()}`;
+      await answerCommand(client, { owner, repo, request: comment.request, pet, snapshot, cardUrl });
+      console.log(`💬 Answered /pet ${comment.request.command} on #${comment.request.issue}`);
+    } catch (err) {
+      warn(`Could not answer the /pet command (${err.status ?? err.message}). Add \`issues: write\` and \`pull-requests: write\` to the workflow permissions.`);
+    }
+  }
+
+  const previousMood = previous.state?.lastMood ?? '';
   setOutputs({
     mood: pet.mood, name: pet.name, level: pet.level, species: pet.speciesId,
     stage: pet.stage, speech: pet.speech, 'svg-path': join(outputDir, 'pet.svg'),
+    'previous-mood': previousMood,
+    'mood-changed': Boolean(previousMood) && previousMood !== pet.mood,
+    aura: pet.aura,
+    'new-trophies': pet.newAchievements.join(','),
   });
-  writeSummary(pet, snapshot, { branch, published, dryRun, parkPets });
+  writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prevState: previous.state });
 }
 
 main().catch((err) => {

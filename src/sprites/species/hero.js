@@ -2,6 +2,7 @@
 export default {
   id: 'hero',
   trait: 'steel',
+  home: 'meadow',
   modifiers: { healthFloor: 40 },
   food: 'kibble',
   palette: {

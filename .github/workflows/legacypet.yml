@@ -7,17 +7,20 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write
   actions: write
-  issues: read
-  pull-requests: read
+  issues: write
+  pull-requests: write
   checks: read
   statuses: read
 
 jobs:
   legacypet:
+    if: github.event_name != 'issue_comment' || startsWith(github.event.comment.body, '/pet')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

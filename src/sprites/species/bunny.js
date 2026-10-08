@@ -2,6 +2,7 @@
 export default {
   id: 'bunny',
   trait: 'starlight',
+  home: 'garden',
   modifiers: { starJoy: 2 },
   food: 'kibble',
   palette: {

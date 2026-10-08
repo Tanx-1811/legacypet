@@ -36,7 +36,7 @@ export function renderPark(pets, { owner, lang = 'en', theme = 'auto' } = {}) {
   const footY = groundY + 12;
   const rng = createRng(`park|${owner}|${list[0].date}`);
   const scenery = { mood: 'happy', season: list[0].season, holiday: list[0].holiday, species: {}, repo: { fullName: `${owner}/park` } };
-  const s = { pet: scenery, rng, x, y, w, h, groundY, groundH, mini: false, pp: 3 };
+  const s = { pet: scenery, home: 'meadow', rng, x, y, w, h, groundY, groundH, mini: false, pp: 3 };
   const slot = (w - 40) / list.length;
   const tagW = Math.min(slot - 12, 124);
   const cols = Math.floor((tagW - 10) / 6.6);
@@ -69,16 +69,20 @@ export function renderPark(pets, { owner, lang = 'en', theme = 'auto' } = {}) {
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="${uid}-t ${uid}-d">`,
     `<title id="${uid}-t">${esc(title)}</title>`,
     `<desc id="${uid}-d">${esc(`${sub}. ${desc}`)}</desc>`,
-    `<style>${buildCss({ theme, mood: 'happy' })}</style>`,
+    `<style>${buildCss({ theme, mood: 'happy', home: 'meadow' })}</style>`,
     `<defs>${skyDefs(uid, { x, y, w, h, rx: 10 })}</defs>`,
     `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" class="lp-card"/>`,
     `<g clip-path="url(#${uid}-clip)">`,
     `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#${uid}-sky)"/>`,
     backdrop.sky(s),
+    backdrop.skyFx(s),
     backdrop.holidaySky(s),
+    backdrop.farFx(s),
     backdrop.ground(s),
+    backdrop.propsFx(s),
     behind ? `<g class="lp-px">${behind}</g>` : '',
     actors,
+    backdrop.frontFx(s),
     tags,
     backdrop.weather(s),
     `<text x="${x + 16}" y="${y + 26}" class="lp-name">${esc(truncate(title, 60))}</text>`,

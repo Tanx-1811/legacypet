@@ -7,21 +7,25 @@ on:
   release:
     types: [published] # throw a party the moment you ship
   workflow_dispatch: # "Run workflow" button for impatient owners
+  issue_comment:
+    types: [created] # talk to your pet: /pet, /pet pat, /pet checkup
 
 permissions:
   contents: write # publish the pet to the `legacypet` branch
   actions: write # keep the schedule alive while the repo sleeps
-  issues: read
-  pull-requests: read
+  issues: write # answer /pet in issues
+  pull-requests: write # ...and in pull requests
   checks: read
   statuses: read
 
 jobs:
   legacypet:
+    if: github.event_name != 'issue_comment' || startsWith(github.event.comment.body, '/pet')
     runs-on: ubuntu-latest
     steps:
       - uses: Tanx-1811/legacypet@v1
         with:
-          lang: en # or vi
-          # species: cactus  # auto | blob | cat | duck | crab | octopus | snake | cactus
+          lang: en # en | vi | ja | zh | ko | es | fr
+          # species: ninja   # auto | blob | cat | duck | crab | octopus | snake | cactus
+          #                  # | ninja | mecha | dragon | bunny | bat | hero
           # name: Mochi      # leave empty and the repo names its own pet
