@@ -16,10 +16,14 @@ Releases that need a change to your workflow file say so.
 - 🏆 **`/pet trophies`**: the trophy shelf, with unlock dates and what's still locked.
 - 🌄 **Livelier scenes**: rainbows, shooting stars, northern lights, party bunting, zombie fog, Halloween bats,
   Christmas lights and a snowman, and a blooming mai branch at Tết.
+- 🏅 **Levels and ranks**: every level-up is an event, with a LEVEL UP! banner over the pet, its own speech line and a diary entry.
+  Levels are grouped into 7 ranks (🌱 Rookie, 🥉 Bronze, 🥈 Silver, 🥇 Gold, 💠 Platinum, 💎 Diamond, 👑 Legend), shown on the card
+  and the badge, and each rank tints the XP bar. `/pet level` shows what the next level and rank take.
+  New trophies: Veteran (Lv.25), Master (Lv.50) and Max Level (Lv.99).
 - 🕺 **Signature moves**: on good days every species shows off its own move every few seconds: the slime squishes,
   the crab sidesteps, the ninja dashes and leaves two shadow clones, the mecha hovers on its jets, the bunny twirls,
   the bat does a backflip and the super pup takes off. Off when the pet feels bad, and with reduced motion.
-- 📤 **New outputs**: `on-vacation`, `alert-issue`.
+- 📤 **New outputs**: `on-vacation`, `alert-issue`, `level-up`, `rank`.
 
 ### Workflow
 

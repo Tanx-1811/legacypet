@@ -244,6 +244,7 @@ Bình luận trong bất kỳ issue hay pull request nào, thú sẽ trả lời
 | `/pet` | Thẻ, tâm trạng, chỉ số và kết quả khám sức khỏe |
 | `/pet pat` | Xoa đầu 💕 |
 | `/pet checkup` | Chỉ phần khám sức khỏe |
+| `/pet level` | Cấp, hạng, thanh XP và số commit cần để lên cấp, lên hạng |
 | `/pet trophies` | Kệ cúp, kèm ngày mở khóa và các cúp còn khóa |
 | `/pet vacation 14` | Đi biển 14 ngày (chỉ maintainer) |
 | `/pet back` | Về nhà sớm (chỉ maintainer) |
@@ -272,10 +273,31 @@ Mỗi lần chạy, action viết vào job summary lý do con thú đang vui hay
 ví dụ *"3 issue từ cộng đồng đang chờ phản hồi đầu tiên. Lâu nhất là #12 (87 ngày)"*.
 Nhánh `legacypet` còn có biểu đồ tâm trạng 14 ngày gần nhất và nhật ký `DIARY.md`.
 
+## 🏅 Cấp và hạng
+
+Cấp là `√(tổng số commit) + 1`: Lv.11 ở 100 commit, Lv.32 ở 1.000 commit.
+Mỗi lần lên cấp là một sự kiện: chữ **LÊN CẤP!** bay trên đầu thú, nó khoe trong bong bóng thoại, nhật ký ghi lại và action bật output `level-up`.
+Các cấp được chia thành 7 hạng, hiện cạnh cấp trên thẻ và badge, thanh XP đổi màu theo hạng:
+
+| Hạng | Cấp | Số commit |
+| --- | --- | --- |
+| 🌱 Tân binh | 1–9 | 0+ |
+| 🥉 Đồng | 10–19 | 81+ |
+| 🥈 Bạc | 20–34 | 361+ |
+| 🥇 Vàng | 35–49 | 1.156+ |
+| 💠 Bạch kim | 50–69 | 2.401+ |
+| 💎 Kim cương | 70–89 | 4.761+ |
+| 👑 Huyền thoại | 90–99 | 7.921+ |
+
+Lên hạng thì có chữ riêng mang màu của hạng mới. Gõ `/pet level` để xem còn bao nhiêu commit nữa là lên cấp và lên hạng.
+Rồng Thần tính mỗi commit bằng 1,5 nên leo hạng nhanh hơn.
+
+<img src="docs/gallery/ranks/rank-up-vi.svg" width="520" alt="Thỏ Phép Thuật lên hạng Bạc">
+
 ## Còn gì nữa?
 
 - 🎂 Lớn lên: Trứng → Bé (có mầm cây) → Trưởng thành → Lão làng (đeo kính một tròng)
-- 🏆 17 cúp vĩnh viễn: Bốc lửa (chuỗi 7 ngày), Hồi sinh, Siêu sao (kèm vương miện), Siêu hình thái, Phản hồi thần tốc, Kỷ niệm…
+- 🏆 20 cúp vĩnh viễn: Bốc lửa (chuỗi 7 ngày), Hồi sinh, Siêu sao (kèm vương miện), Siêu hình thái, Kỳ cựu (Lv.25), Bậc thầy (Lv.50), Cấp tối đa (Lv.99)…
 - 🍂 Theo mùa: hoa xuân, đom đóm hè, lá thu, tuyết đông. Ở dark mode thì thành ban đêm có trăng sao, sao băng và cực quang mùa đông
 - 🧧 Ngày lễ: Tết có đèn lồng, pháo hoa và cành mai vàng rụng cánh, Halloween có mũ phù thủy và đàn dơi, Giáng sinh có mũ ông già Noel, người tuyết và dây đèn nhấp nháy
 - 💬 Lời thoại theo dữ liệu thật: *"Này... issue #12 chờ phản hồi 87 ngày rồi đó"*
@@ -296,7 +318,7 @@ Nhánh `legacypet` còn có biểu đồ tâm trạng 14 ngày gần nhất và 
 | `alerts` | `false` | `true` (ốm + zombie) hoặc danh sách `sick`, `zombie`, `hungry`, `sad`. Cần `issues: write` |
 | `keepalive` | `true` | Không để GitHub tạm dừng lịch chạy sau 60 ngày im ắng (cần `actions: write`) |
 
-**Output:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `on-vacation`, `alert-issue`, `svg-path`.
+**Output:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `level-up`, `rank`, `on-vacation`, `alert-issue`, `svg-path`.
 Ví dụ, chỉ báo cho team khi thú *vừa* bị ốm:
 
 ```yaml

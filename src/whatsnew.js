@@ -13,8 +13,9 @@ export const CHANGELOG = [
       '📈 `pet-stats.svg`: a 30-day chart of fullness, health, joy and energy with the mood of each day',
       '🏆 New commands: `/pet trophies`, plus `/pet vacation [days]` and `/pet back` for maintainers',
       '🌄 Livelier scenes: rainbows, shooting stars, northern lights, bunting, fog, bats, string lights and a blooming mai branch at Tết',
+      '🏅 Levels and ranks: a LEVEL UP! banner on every level-up, 7 ranks from 🌱 Rookie to 👑 Legend, `/pet level`, and Veteran, Master and Max Level trophies',
       '🕺 Signature moves: on good days every species shows off its own move (the ninja leaves shadow clones, the mecha fires its jets, the bat does a backflip…)',
-      '📤 New outputs: `on-vacation`, `alert-issue`',
+      '📤 New outputs: `on-vacation`, `alert-issue`, `level-up`, `rank`',
     ],
   },
   {

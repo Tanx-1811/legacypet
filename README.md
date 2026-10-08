@@ -264,6 +264,29 @@ Want your pet somewhere else? Set `scenery: beach` (or `--scenery beach` in the 
 **Egg** (under 5 commits) → **Baby** with a sprout (under 50 commits or a month old) → **Adult** → **Elder** with a monocle (3 years and 300+ commits).
 The level is `√(all-time commits) + 1`, so Lv.11 at 100 commits and Lv.32 at 1,000.
 
+### 🏅 Levels and ranks
+
+Every level-up is an event: a **LEVEL UP!** banner floats over the pet, it brags about it in the speech bubble,
+the diary writes it down and the action sets the `level-up` output. Levels are grouped into seven ranks,
+shown next to the level on the card and the badge. Each rank tints the XP bar.
+
+| Rank | Levels | Commits |
+| --- | --- | --- |
+| 🌱 Rookie | 1–9 | 0+ |
+| 🥉 Bronze | 10–19 | 81+ |
+| 🥈 Silver | 20–34 | 361+ |
+| 🥇 Gold | 35–49 | 1,156+ |
+| 💠 Platinum | 50–69 | 2,401+ |
+| 💎 Diamond | 70–89 | 4,761+ |
+| 👑 Legend | 90–99 | 7,921+ |
+
+<img src="docs/gallery/ranks/rookie.svg"> <img src="docs/gallery/ranks/bronze.svg"> <img src="docs/gallery/ranks/silver.svg"> <img src="docs/gallery/ranks/gold.svg"> <img src="docs/gallery/ranks/platinum.svg"> <img src="docs/gallery/ranks/diamond.svg"> <img src="docs/gallery/ranks/legend.svg">
+
+A rank-up gets its own banner in the rank's color. Comment `/pet level` to see how many commits the next level and the next rank take.
+The spirit dragon counts every commit for 1.5, so it climbs the ranks faster.
+
+<img src="docs/gallery/ranks/rank-up.svg" width="520" alt="A spirit dragon ranking up to Gold">
+
 ## Trophies
 
 Trophies are permanent. Once earned, they stay on the card even if the streak breaks.
@@ -287,6 +310,9 @@ Trophies are permanent. Once earned, they stay on the card even if the streak br
 | 💥 | Super Form | Stay ecstatic 7 days in a row |
 | 💌 | First Responder | Every community issue answered, with 5+ open |
 | 🎂 | Anniversary | Celebrate the repo's birthday |
+| 🎖️ | Veteran | Reach Lv.25 |
+| 🏅 | Master | Reach Lv.50 |
+| 🏆 | Max Level | Reach Lv.99 |
 
 ## Seasons, holidays and night mode
 
@@ -322,6 +348,7 @@ Comment on any issue or pull request and your pet answers in the thread, in its 
 | `/pet` | its card, how it feels, its vitals and a full checkup |
 | `/pet pat` | a happy wiggle 💕 |
 | `/pet checkup` | just the checkup |
+| `/pet level` | its level, rank and XP bar, and how many commits the next level and rank take |
 | `/pet trophies` | its trophy shelf, with unlock dates and what's still locked |
 | `/pet vacation 14` | off to the beach for 14 days ([vacation mode](#vacation-mode)). Maintainers only |
 | `/pet back` | ends the vacation early. Maintainers only |
@@ -438,7 +465,7 @@ The default token can read your public repos. To include private ones, pass a pe
 | `repository` | current repo | Visit another repo's pet |
 | `github-token` | `github.token` | Token used for the API |
 
-**Outputs:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `on-vacation`, `alert-issue`, `svg-path`.
+**Outputs:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `level-up`, `rank`, `on-vacation`, `alert-issue`, `svg-path`.
 For example, ping your team only when the pet *just* got sick:
 
 ```yaml
