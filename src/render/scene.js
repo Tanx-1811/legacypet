@@ -1,5 +1,5 @@
 import * as A from '../sprites/accessories.js';
-import { createRng } from '../util/rng.js';
+import { createRng, hashString } from '../util/rng.js';
 import { composePet } from './compose.js';
 import { FLAME, MOVE_MOODS, MOVES, moveCss, moveOf } from './moves.js';
 import { rectsFromPixels, stamp } from './pixels.js';
@@ -159,14 +159,17 @@ function petGroup(s, comp) {
   }
   inner += rectsFromPixels(comp.gear, px, ox, oy);
   // Rotations and squashes pivot on the pet's feet: translate there, animate, translate back.
+  // The ninja's shadow clones reuse the drawn pet through <use>, so it needs an id.
+  const id = pet.mood !== 'egg' && MOVES[moveOf(pet.species)].effect === 'clones'
+    ? ` id="lp${hashString(`${pet.repo.fullName}|${pet.date}|${s.mini ? 'mini' : 'card'}|pet`).toString(36)}"` : '';
   const body = `<g class="${cls}" style="animation-duration:${sec(dur)}">`
-    + `<g transform="translate(${-cx} ${-footY})" class="lp-px">${inner}</g></g>`;
+    + `<g${id} transform="translate(${-cx} ${-footY})" class="lp-px">${inner}</g></g>`;
   return `<g transform="translate(${cx} ${footY})">${signatureMove(s, comp, body)}</g>`;
 }
 
 // On good days the pet shows off its species' signature move every few seconds (see moves.js).
 function signatureMove(s, comp, body) {
-  const { pet, cx, footY, ox, oy, px, bw, mini } = s;
+  const { pet, px, bw, mini } = s;
   if (pet.mood === 'egg' || !MOVE_MOODS.has(pet.mood)) return body;
   const id = moveOf(pet.species);
   const move = MOVES[id];
@@ -177,10 +180,9 @@ function signatureMove(s, comp, body) {
   let before = '';
   let under = '';
   if (move.effect === 'clones') {
-    const ghost = rectsFromPixels([...comp.base, ...comp.eyesOpen, ...comp.gear], px, ox, oy);
+    const ref = /id="([^"]+)"/.exec(body)?.[1];
     const dx = Math.round(bw * 0.6);
-    before = `<g class="lp-fx-clones lp-px" style="${clock}">`
-      + `<g transform="translate(${-cx - dx} ${-footY})">${ghost}</g><g transform="translate(${-cx + dx} ${-footY})">${ghost}</g></g>`;
+    if (ref) before = `<g class="lp-fx-clones" style="${clock}"><use href="#${ref}" x="${-dx}"/><use href="#${ref}" x="${dx}"/></g>`;
   } else if (move.effect === 'flames') {
     const fp = Math.max(2, Math.round(px * (mini ? 0.6 : 0.7)));
     const flame = (x) => stamp(FLAME.rows, FLAME.colors, fp, x - 2 * fp, -fp);
