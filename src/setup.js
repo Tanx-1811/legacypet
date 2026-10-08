@@ -12,9 +12,14 @@ export function parseRemote(url) {
   return match ? `${match[1]}/${match[2]}` : null;
 }
 
-export function snippetFor(fullName, style = 'card', branch = 'legacypet') {
+// raw.githubusercontent.com answers 404 for private repos, so those READMEs point at
+// github.com/…/blob/…?raw=true instead: GitHub serves it to anyone who can see the repo.
+export function snippetFor(fullName, style = 'card', branch = 'legacypet', { isPrivate = false } = {}) {
   const file = FILES[style] ?? FILES.card;
-  return `[![LegacyPet](https://raw.githubusercontent.com/${fullName}/${branch}/${file})](https://github.com/${fullName}/blob/${branch}/DIARY.md)`;
+  const src = isPrivate
+    ? `https://github.com/${fullName}/blob/${branch}/${file}?raw=true`
+    : `https://raw.githubusercontent.com/${fullName}/${branch}/${file}`;
+  return `[![LegacyPet](${src})](https://github.com/${fullName}/blob/${branch}/DIARY.md)`;
 }
 
 export function workflowYaml({ lang = 'en', species = 'auto', scenery = 'auto', name = '', park = '' } = {}) {

@@ -92,6 +92,13 @@ test('insertSnippet adds the pet under the title and updates it in place', () =>
   assert.ok(insertSnippet('No heading here', snippet).startsWith('<!-- legacypet:start -->'));
 });
 
+test('snippetFor serves private repos through github.com', () => {
+  assert.match(snippetFor('me/app'), /raw\.githubusercontent\.com\/me\/app\/legacypet\/pet\.svg/);
+  const secret = snippetFor('me/app', 'mini', 'legacypet', { isPrivate: true });
+  assert.match(secret, /\(https:\/\/github\.com\/me\/app\/blob\/legacypet\/pet-mini\.svg\?raw=true\)/);
+  assert.ok(!secret.includes('raw.githubusercontent.com'));
+});
+
 test('resolveParkRepos: explicit lists and auto selection', async () => {
   const repos = [
     { name: 'me', full_name: 'me/me', fork: false, stargazers_count: 99, pushed_at: '2026-10-01' },
