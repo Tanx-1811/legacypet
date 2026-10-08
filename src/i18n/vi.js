@@ -161,7 +161,7 @@ export default {
     recovered: (name, mood) => `🎉 ${name} đã khỏe hơn (giờ đang ${mood}). Đóng issue này nhé. Cảm ơn bạn đã chăm sóc!`,
     footer: 'Do LegacyPet mở. Đóng issue này để tắt nhắc cho tới khi thú khỏe lại, hoặc đặt `alerts: false` để tắt hẳn.',
   },
-  stats: {
+  chart: {
     title: (name, days) => `${name} · ${days} ngày qua`,
     empty: 'Chưa đủ dữ liệu. Biểu đồ sẽ đầy dần theo từng ngày.',
   },

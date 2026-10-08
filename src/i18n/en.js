@@ -165,7 +165,7 @@ export default {
     recovered: (name, mood) => `🎉 ${name} feels better (${mood} now). Closing this. Thanks for taking care of it!`,
     footer: 'Opened by LegacyPet. Close this issue to mute it until the pet recovers, or set `alerts: false` to turn alerts off.',
   },
-  stats: {
+  chart: {
     title: (name, days) => `${name} · last ${days} days`,
     empty: 'Not enough history yet. The chart fills in day by day.',
   },
