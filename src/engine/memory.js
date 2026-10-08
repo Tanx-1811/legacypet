@@ -45,6 +45,16 @@ export function nextState(pet, prevState = null) {
   };
 }
 
+// The last `days` moods as emoji, oldest first: a tiny mood chart for READMEs and summaries.
+export function moodStrip(history = [], days = 14) {
+  return [...history]
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+    .slice(0, days)
+    .reverse()
+    .map((h) => MOOD_EMOJI[h.mood] ?? '·')
+    .join('');
+}
+
 const ENTRY = /^- \*\*(\d{4}-\d{2}-\d{2})\*\*/;
 
 export function diaryEntry(pet, snapshot) {
