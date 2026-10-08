@@ -23,10 +23,6 @@ Releases that need a change to your workflow file say so.
   keyboard shortcuts and choices that carry over between views.
 - 📤 **New outputs**: `path`, `quest-stars`, `quests-done`, `wearing`. The CLI demo takes `--wear` and `--path`.
 
-### Fixed
-
-- The speech bubble (and the name tags in the Pet Park) no longer float away: they shared a class with the reef's rising bubbles.
-
 ### Changed
 
 - The command hint under each `/pet` reply lists just the command names; `/pet help` explains them.
@@ -34,6 +30,13 @@ Releases that need a change to your workflow file say so.
 ### Workflow
 
 Nothing to change. `wear` is optional.
+
+## 1.2.1 (2026-10-08)
+
+### Fixed
+
+- 🐛 The speech bubble on the card and the name tags in the Pet Park floated up and faded every few seconds.
+  They shared a CSS class with the reef's rising bubbles. (Since 1.1.0.)
 
 ## 1.2.0 (2026-10-08)
 

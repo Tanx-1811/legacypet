@@ -18,6 +18,12 @@ export const CHANGELOG = [
     ],
   },
   {
+    version: '1.2.1',
+    items: [
+      '🐛 Fixed: the speech bubble on the card (and the name tags in the Pet Park) floated up and faded every few seconds',
+    ],
+  },
+  {
     version: '1.2.0',
     items: [
       '🏖️ Vacation mode: set `vacation: until 2027-01-05` (or comment `/pet vacation 14`). Hunger pauses, the pet goes to the beach in sunglasses, and the days away never count',
