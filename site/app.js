@@ -94,8 +94,8 @@ function toast(text, kind = '') {
   const box = $('#toasts');
   const el = h(`div.toast${kind ? `.${kind}` : ''}`, { role: 'status' }, text);
   box.append(el);
-  while (box.children.length > 4) box.firstChild.remove();
-  setTimeout(() => el.remove(), 3600);
+  while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => el.remove(), 3000);
 }
 
 function select(options, value, onchange, label) {
@@ -346,7 +346,7 @@ function questList(pet, L) {
   if (!q?.list.length) return h('p.muted', L.command.quests.none);
   return h('div', q.list.map((item) => h(`div.quest${item.done ? '.done' : ''}`,
     h('span.em', item.emoji),
-    h('span.txt', L.quests[item.id](item.goal), item.isNew ? ' 🆕' : ''),
+    h('span.txt', L.quests[item.id](item.goal), item.isNew ? h('span.new-tag', '🆕') : null),
     h('span.n', item.done ? '✔' : `${item.progress}/${item.goal}`),
     h(`div.meter${item.done ? '.good' : ''}`, h('i', { style: { width: `${Math.round((item.progress / item.goal) * 100)}%` } })))));
 }
@@ -490,7 +490,7 @@ function viewSim(root) {
     h('div.sim-head',
       h('div', h('h2', T.title), h('p.lead', { style: { margin: 0 } }, T.lead)),
       h('div.row', h('span.small.muted', T.start), startSel, resetBtn)),
-    h('div.grid2',
+    h('div.grid2.sim-grid',
       h('div.stack',
         h('section.panel.stage',
           h('div.row', { style: { justifyContent: 'space-between' } }, els.day, els.status),
@@ -506,9 +506,9 @@ function viewSim(root) {
             h('button', { type: 'button', onclick: () => next(7) }, T.week),
             els.auto,
             h('label.field.wide', { style: { gridColumn: '1 / -1' } }, T.habits, habitSel)),
-          h('p.small.muted', { style: { margin: 0 } }, `⌨️ ${T.keys}`)),
-        controls),
-      h('section.panel', els.tabs, els.panel)),
+          h('p.small.muted', { style: { margin: 0 } }, `⌨️ ${T.keys}`))),
+      // Today's plan sits next to the pet, so the effect of a slider is visible at a glance.
+      h('div.stack', controls, h('section.panel', els.tabs, els.panel))),
     h('section.panel', { style: { marginTop: '16px' } }, h('h3', `🎨 ${t().adopt.look}`), lookFields(() => update())));
 
   // Side panel: quests, evolution, wardrobe, trophies, diary, chart and a /pet console.
@@ -537,14 +537,14 @@ function viewSim(root) {
       const scores = LP.pathScores({ snapshot, facts: pet.facts, history: w.state?.history ?? [] });
       const max = Math.max(1, ...Object.values(scores));
       const watched = new Set((w.state?.history ?? []).filter((x) => x.date < pet.date).map((x) => x.date)).size;
-      box.append(
+      box.append(...[
         h('p', { style: { marginTop: 0 } }, pet.path ? h('b', T.evolved(`${pet.path.emoji} ${L.paths[pet.path.id]}`)) : T.notYet(LP.EVOLVE_AFTER_DAYS)),
         pet.path ? null : h('div.small.muted', { style: { marginBottom: '10px' } }, T.watched(Math.min(watched, LP.EVOLVE_AFTER_DAYS), LP.EVOLVE_AFTER_DAYS)),
         h('div.scores', LP.PATHS.map((p) => h(`div.score${pet.path?.id === p.id ? '.lead' : ''}`,
           h('span', `${p.emoji} ${L.paths[p.id]}`),
           h('div.meter', h('i', { style: { width: `${Math.round((scores[p.id] / max) * 100)}%`, background: p.color } })),
           h('b', scores[p.id].toFixed(2))))),
-        h('ul.small.muted', { style: { paddingLeft: '18px', marginBottom: 0 } }, LP.PATHS.map((p) => h('li', `${p.emoji} ${L.paths[p.id]}: ${L.pathHints[p.id]}`))));
+        h('ul.small.muted', { style: { paddingLeft: '18px', marginBottom: 0 } }, LP.PATHS.map((p) => h('li', `${p.emoji} ${L.paths[p.id]}: ${L.pathHints[p.id]}`)))].filter(Boolean));
     } else if (tab === 'wardrobe') {
       const worn = new Set(pet.wardrobe.worn);
       const unlocked = new Set(pet.wardrobe.unlocked);
@@ -797,6 +797,18 @@ function viewPark(root) {
   return { redraw: draw };
 }
 
+// The workflow inputs, from the choices made anywhere in the playground.
+function adoptOptions(cfg = store.cfg) {
+  return {
+    lang: cfg.lang, species: cfg.species, scenery: cfg.scenery, name: cfg.name, wear: cfg.wear.join(', '),
+    alerts: cfg.alerts.join(', '), vacation: cfg.vacation ? `until ${cfg.vacation}` : '', park: cfg.style === 'park' ? 'auto' : '',
+  };
+}
+
+// The last repo list the picker loaded: Adopt reuses it to fill in names, branches and privacy.
+const picker = { owner: '', repos: null };
+const pickedRepo = (fullName) => picker.repos?.find((r) => r.fullName.toLowerCase() === String(fullName).toLowerCase());
+
 // ----- Adopt: everything needed to install it, from the choices made anywhere ---
 function viewAdopt(root) {
   const T = t().adopt;
@@ -804,8 +816,16 @@ function viewAdopt(root) {
   const L = () => tr();
   const preview = h('div.shots');
   const steps = h('div.steps');
-  const repo = h('input', { type: 'text', value: store.cfg.repo, placeholder: T.repoPlaceholder, class: 'mono' });
-  repo.oninput = () => { store.cfg.repo = repo.value.trim(); save(); draw(); };
+  // Suggests the repos the picker already listed, and knows their privacy.
+  const repo = h('input', { type: 'text', value: store.cfg.repo, placeholder: T.repoPlaceholder, class: 'mono', list: 'picked-repos' });
+  const repoList = h('datalist', { id: 'picked-repos' }, (picker.repos ?? []).map((r) => h('option', { value: r.fullName })));
+  repo.oninput = () => {
+    store.cfg.repo = repo.value.trim();
+    const known = pickedRepo(store.cfg.repo);
+    if (known) { store.cfg.private = known.isPrivate; privateBox.checked = known.isPrivate; }
+    save();
+    draw();
+  };
   const vacation = h('input', { type: 'date', value: store.cfg.vacation });
   vacation.onchange = () => { store.cfg.vacation = vacation.value; save(); draw(); };
   const wearBox = h('div.tiles');
@@ -837,14 +857,11 @@ function viewAdopt(root) {
       cfg.lang !== 'en' && `--lang ${cfg.lang}`, cfg.species !== 'auto' && `--species ${cfg.species}`, cfg.scenery !== 'auto' && `--scenery ${cfg.scenery}`,
       cfg.name && `--name "${cfg.name.replace(/"/g, '')}"`, cfg.style !== 'card' && `--style ${cfg.style}`, cfg.private && '--private',
     ].filter(Boolean);
-    const options = {
-      lang: cfg.lang, species: cfg.species, scenery: cfg.scenery, name: cfg.name, wear: cfg.wear.join(', '),
-      alerts: cfg.alerts.join(', '), vacation: cfg.vacation ? `until ${cfg.vacation}` : '', park: cfg.style === 'park' ? 'auto' : '',
-    };
+    const options = adoptOptions(cfg);
     const yaml = LP.workflowYaml(options);
     const commands = LP.COMMANDS.map((c) => `/pet${c === 'status' ? '' : ` ${c}`}  ${lang.command.usage[c]}`).join('\n');
     // One click: GitHub's "new file" page with the workflow filled in (see adoptUrl in src/setup.js).
-    const known = hatch.snapshot && !hatch.mood && hatch.snapshot.repo.fullName === cfg.repo ? hatch.snapshot.repo.defaultBranch : 'main';
+    const known = hatch.snapshot && !hatch.mood && hatch.snapshot.repo.fullName === cfg.repo ? hatch.snapshot.repo.defaultBranch : (pickedRepo(cfg.repo)?.defaultBranch ?? 'main');
     const ready = /^[\w.-]+\/[\w.-]+$/.test(cfg.repo);
     steps.replaceChildren(
       h('div.step', h('h3', T.oneClick),
@@ -860,7 +877,7 @@ function viewAdopt(root) {
   root.append(h('h2', T.title), h('p.lead', T.lead),
     h('div.grid2',
       h('div.stack',
-        h('section.panel.stack', h('label.field', T.repo, repo), h('h3', { style: { margin: '6px 0 0' } }, T.look), lookFields(draw), preview),
+        h('section.panel.stack', h('label.field', T.repo, repo, repoList), h('h3', { style: { margin: '6px 0 0' } }, T.look), lookFields(draw), preview),
         h('section.panel.stack', h('h3', { style: { margin: 0 } }, T.behavior), h('div.small.muted', T.wear), wearBox,
           h('div.small.muted', T.alerts), alertBox, h('label.field', T.vacation, vacation), h('label.check', privateBox, T.private))),
       h('section.panel', steps)));
