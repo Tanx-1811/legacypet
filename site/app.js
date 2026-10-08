@@ -186,7 +186,7 @@ function demoPet({ mood = 'happy', species = 'cat', fullName = 'you/your-repo', 
 }
 
 // ----- Hatch: a real repo (or a made-up mood) through the real engine ---------
-const hatch = { snapshot: null, mood: null, now: new Date(), repo: '' };
+const hatch = { snapshot: null, mood: null, now: new Date(), repo: '', blind: false };
 
 function viewHatch(root, arg) {
   const T = t().hatch;
@@ -196,8 +196,9 @@ function viewHatch(root, arg) {
   const token = h('input', { type: 'password', placeholder: T.tokenPlaceholder, autocomplete: 'off', value: ghToken });
   token.oninput = () => { ghToken = token.value.trim(); };
   const status = h('p.status', { role: 'status' });
+  const privateBtn = h('button.chip', { type: 'button', hidden: true }, T.privateButton);
   const result = h('div', { hidden: true });
-  const setStatus = (text, bad = false) => { status.textContent = text; status.className = `status${bad ? ' bad' : ''}`; };
+  const setStatus = (text, bad = false) => { status.textContent = text; status.className = `status${bad ? ' bad' : ''}`; privateBtn.hidden = true; };
 
   async function visit(raw) {
     const cleaned = raw.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '').replace(/\/+$/, '');
@@ -211,13 +212,20 @@ function viewHatch(root, arg) {
       hatch.now = new Date();
       hatch.snapshot = await LP.collectSnapshot(client(), { owner, repo, now: hatch.now });
       hatch.mood = null;
+      hatch.blind = false;
       store.cfg.repo = hatch.snapshot.repo.fullName;
+      store.cfg.private = Boolean(hatch.snapshot.repo.isPrivate);
       save();
       history.replaceState(null, '', `#/hatch/${hatch.snapshot.repo.fullName}`);
       setStatus(hatch.snapshot.warnings.length ? T.partial(hatch.snapshot.warnings.length) : '');
       draw();
     } catch (err) {
-      if (err.status === 404) setStatus(T.notFound(hatch.repo), true);
+      if (err.status === 404) {
+        setStatus(T.notFound(hatch.repo), true);
+        const name = hatch.repo;
+        privateBtn.hidden = false;
+        privateBtn.onclick = () => adoptPrivate(name);
+      }
       else if (err.status === 403 || err.status === 429) setStatus(T.rateLimit, true);
       else setStatus(err.message, true);
     } finally {
@@ -225,9 +233,27 @@ function viewHatch(root, arg) {
     }
   }
 
+  // GitHub hides private repos from anonymous visitors, so this page can't read them. The action
+  // runs inside the repo and can: hand out the workflow and a private-friendly snippet, with a
+  // made-up pet as the preview.
+  function adoptPrivate(fullName) {
+    hatch.now = new Date();
+    hatch.mood = null;
+    hatch.blind = true;
+    hatch.snapshot = LP.mockSnapshot({ mood: 'happy', now: hatch.now, fullName });
+    hatch.snapshot.repo.isPrivate = true;
+    store.cfg.repo = fullName;
+    store.cfg.private = true;
+    save();
+    history.replaceState(null, '', `#/hatch/${fullName}`);
+    setStatus(T.privateStatus(fullName));
+    draw();
+  }
+
   function demo(mood) {
     hatch.now = new Date();
     hatch.mood = mood;
+    hatch.blind = false;
     hatch.snapshot = LP.mockSnapshot({ mood, now: hatch.now, fullName: 'you/your-repo' });
     setStatus(T.demo(tr().moods[mood]));
     draw();
@@ -301,7 +327,8 @@ function viewHatch(root, arg) {
       h('div.examples', T.try, ...['rust-lang/rustlings', 'sindresorhus/awesome', 'Tanx-1811/legacypet'].map((r) => h('button.chip', { type: 'button', onclick: () => visit(r) }, r))),
       h('div.examples', T.moods, ...LP.MOODS.map((m) => h('button.chip', { type: 'button', onclick: () => demo(m) }, `${LP.MOOD_EMOJI[m]} ${tr().moods[m]}`))),
       h('details', h('summary', T.tokenSummary), token, h('div', T.tokenNote)),
-      status),
+      status,
+      privateBtn),
     result);
 
   if (arg && arg.includes('/')) visit(arg);
@@ -782,6 +809,8 @@ function viewAdopt(root) {
   const vacation = h('input', { type: 'date', value: store.cfg.vacation });
   vacation.onchange = () => { store.cfg.vacation = vacation.value; save(); draw(); };
   const wearBox = h('div.tiles');
+  const privateBox = h('input', { type: 'checkbox', checked: Boolean(store.cfg.private) });
+  privateBox.onchange = () => { store.cfg.private = privateBox.checked; save(); draw(); };
   const alertBox = h('div.row');
 
   function draw() {
@@ -806,7 +835,7 @@ function viewAdopt(root) {
     }));
     const flags = [
       cfg.lang !== 'en' && `--lang ${cfg.lang}`, cfg.species !== 'auto' && `--species ${cfg.species}`, cfg.scenery !== 'auto' && `--scenery ${cfg.scenery}`,
-      cfg.name && `--name "${cfg.name.replace(/"/g, '')}"`, cfg.style !== 'card' && `--style ${cfg.style}`,
+      cfg.name && `--name "${cfg.name.replace(/"/g, '')}"`, cfg.style !== 'card' && `--style ${cfg.style}`, cfg.private && '--private',
     ].filter(Boolean);
     const options = {
       lang: cfg.lang, species: cfg.species, scenery: cfg.scenery, name: cfg.name, wear: cfg.wear.join(', '),
@@ -820,11 +849,11 @@ function viewAdopt(root) {
     steps.replaceChildren(
       h('div.step', h('h3', T.oneClick),
         h('a.button.primary', { href: ready ? LP.adoptUrl(cfg.repo, known, options) : null, target: '_blank', rel: 'noopener', 'aria-disabled': String(!ready) }, T.oneClickButton),
-        h('p', ready ? T.oneClickNote : T.needRepo)),
+        h('p', ready ? T.oneClickNote : T.needRepo, ready && hatch.blind && hatch.snapshot?.repo.fullName === cfg.repo ? ` ${T.blindBranch}` : '')),
       h('div.step', h('h3', T.step1), h('p', T.step1Note), codeBlock(['npx github:Tanx-1811/legacypet init', ...flags].join(' '))),
       h('div.or', T.or),
       h('div.step', h('h3', T.step2), codeBlock(yaml)),
-      h('div.step', h('h3', T.step3), seg(Object.entries(T.styles), cfg.style, (v) => { cfg.style = v; save(); draw(); }, T.style), codeBlock(LP.snippetFor(fullName, cfg.style))),
+      h('div.step', h('h3', T.step3), seg(Object.entries(T.styles), cfg.style, (v) => { cfg.style = v; save(); draw(); }, T.style), codeBlock(LP.snippetFor(fullName, cfg.style, 'legacypet', { isPrivate: Boolean(cfg.private) }))),
       h('div.step', h('h3', T.commands), codeBlock(commands)));
   }
 
@@ -833,7 +862,7 @@ function viewAdopt(root) {
       h('div.stack',
         h('section.panel.stack', h('label.field', T.repo, repo), h('h3', { style: { margin: '6px 0 0' } }, T.look), lookFields(draw), preview),
         h('section.panel.stack', h('h3', { style: { margin: 0 } }, T.behavior), h('div.small.muted', T.wear), wearBox,
-          h('div.small.muted', T.alerts), alertBox, h('label.field', T.vacation, vacation))),
+          h('div.small.muted', T.alerts), alertBox, h('label.field', T.vacation, vacation), h('label.check', privateBox, T.private))),
       h('section.panel', steps)));
   draw();
   return { redraw: draw };
