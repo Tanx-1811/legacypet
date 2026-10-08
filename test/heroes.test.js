@@ -61,10 +61,22 @@ test('a week of bliss unlocks the super form', () => {
 const keysOf = (obj, prefix = '') => Object.entries(obj).flatMap(([k, v]) =>
   (v && typeof v === 'object' && !Array.isArray(v) ? keysOf(v, `${prefix}${k}.`) : [`${prefix}${k}`]));
 
-test('every language is complete and renders every mood', () => {
+test('every translation file has every English key', async () => {
+  // Checks the raw files, not LANGS: LANGS fills gaps with English, which would hide them.
   const english = keysOf(LANGS.en);
-  for (const [code, tr] of Object.entries(LANGS)) {
-    for (const key of english) assert.ok(key.split('.').reduce((o, k) => o?.[k], tr) !== undefined, `${code} misses ${key}`);
+  for (const code of Object.keys(LANGS).filter((c) => c !== 'en')) {
+    const raw = (await import(`../src/i18n/${code}.js`)).default;
+    const missing = english.filter((key) => key.split('.').reduce((o, k) => o?.[k], raw) === undefined);
+    assert.deepEqual(missing, [], `${code}.js is missing: ${missing.join(', ')}`);
+    for (const key of english) {
+      const kind = (o) => typeof key.split('.').reduce((x, k) => x?.[k], o);
+      assert.equal(kind(raw), kind(LANGS.en), `${code}.js: ${key} should be a ${kind(LANGS.en)}`);
+    }
+  }
+});
+
+test('every language renders every mood', () => {
+  for (const code of Object.keys(LANGS)) {
     for (const mood of MOODS) {
       const pet = buildPet({ snapshot: mockSnapshot({ mood, now: NOW }), now: NOW, options: { species: 'ninja', mood, lang: code, holiday: null } });
       const svg = renderCard(pet);
