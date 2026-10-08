@@ -1,16 +1,17 @@
 import { ACHIEVEMENTS } from '../engine/achievements.js';
 import { checkup } from '../engine/checkup.js';
 import { MOOD_EMOJI } from '../engine/mood.js';
+import { RANKS } from '../engine/rank.js';
 import { strings } from '../i18n/index.js';
 import { createRng } from '../util/rng.js';
 
 // `/pet` in an issue or PR comment: the pet answers in the thread.
-export const COMMANDS = ['status', 'pat', 'checkup', 'trophies', 'vacation', 'back', 'help'];
+export const COMMANDS = ['status', 'pat', 'checkup', 'level', 'trophies', 'vacation', 'back', 'help'];
 // Commands that change the pet's state, so only people who maintain the repo may use them.
 export const MAINTAINER_COMMANDS = new Set(['vacation', 'back']);
 const MAINTAINERS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
 const CHECK_ICON = { good: '✅', warn: '⚠️', bad: '❌', tip: '💡' };
-const REACTION = { status: 'eyes', pat: 'heart', checkup: '+1', trophies: 'hooray', vacation: 'rocket', back: 'heart', help: 'eyes' };
+const REACTION = { status: 'eyes', pat: 'heart', checkup: '+1', level: 'rocket', trophies: 'hooray', vacation: 'rocket', back: 'heart', help: 'eyes' };
 const COMMAND = /^\s*\/pet(?:\s+(\w+)(?:\s+(\d{1,3}))?)?\s*$/im;
 
 // Returns the command name, or null when the comment isn't for the pet.
@@ -48,7 +49,7 @@ export function commandReply(pet, snapshot, { command, user, cardUrl, maintainer
   const tr = strings(pet.lang);
   const c = tr.command;
   const header = `### ${MOOD_EMOJI[pet.mood]} ${pet.displayName}`;
-  const kind = `**${tr.level(pet.level)} ${tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])}** · ${tr.moods[pet.mood]}${pet.shiny ? ' ✨' : ''}${pet.aura ? ' 💥' : ''}`;
+  const kind = `**${pet.rank.emoji} ${tr.level(pet.level)} ${tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])}** · ${tr.moods[pet.mood]}${pet.shiny ? ' ✨' : ''}${pet.aura ? ' 💥' : ''}`;
   const help = [
     `<sub>${c.commands}: ${COMMANDS.map((name) => `\`/pet${name === 'status' ? '' : ` ${name}`}\` ${c.usage[name]}`).join(' · ')}</sub>`,
   ];
@@ -72,6 +73,18 @@ export function commandReply(pet, snapshot, { command, user, cardUrl, maintainer
     return [header, '', `> ${c.vacation(pet.vacation.until, days)}`, '', ...help].join('\n');
   }
   if (command === 'back') return [header, '', `> ${wasOnVacation ? c.back : c.notOnVacation}`, '', ...help].join('\n');
+  if (command === 'level') {
+    const { nextLevel, nextRank } = pet.progress;
+    const filled = Math.round(pet.xp * 10);
+    const ladder = RANKS.map((r) => (r.id === pet.rank.id ? `**${r.emoji} ${tr.ranks[r.id]}**` : `${r.emoji} ${tr.ranks[r.id]}`) + ` (${r.min}+)`);
+    return [
+      header, '', `#### ${pet.rank.emoji} ${c.level.title(pet.level, tr.ranks[pet.rank.id])}`, '',
+      `\`${'▰'.repeat(filled)}${'▱'.repeat(10 - filled)}\` ${Math.round(pet.xp * 100)}%`, '',
+      ...(nextLevel ? [`- ⬆️ ${c.level.nextLevel(nextLevel.commits, nextLevel.level)}`] : [`- ${c.level.maxed}`]),
+      ...(nextRank ? [`- ${nextRank.emoji} ${c.level.nextRank(nextRank.commits, tr.ranks[nextRank.id])}`] : []),
+      '', `<sub>${c.level.ladder}: ${ladder.join(' → ')}</sub>`, '', ...help,
+    ].join('\n');
+  }
   if (command === 'trophies') {
     const got = new Set(pet.achievements.map((a) => a.id));
     const shelf = pet.achievements.map((a) => `- ${a.emoji} **${tr.achievements[a.id]}** · ${a.unlockedAt}${a.isNew ? ' 🆕' : ''}`);

@@ -71,7 +71,7 @@ function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prev
   const md = [
     `## 🐾 ${pet.displayName}`,
     '',
-    `${MOOD_EMOJI[pet.mood]} **${tr.level(pet.level)} ${tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])}**, ${tr.moods[pet.mood]}${pet.shiny ? ' ✨' : ''}`,
+    `${MOOD_EMOJI[pet.mood]} **${pet.rank.emoji} ${tr.level(pet.level)} ${tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])}**, ${tr.moods[pet.mood]}${pet.shiny ? ' ✨' : ''}`,
     '',
     `> ${pet.speech}`,
     '',
@@ -222,7 +222,7 @@ async function main() {
   for (const file of files) writeFileSync(join(outputDir, file.path), file.content);
 
   const v = pet.vitals;
-  console.log(`${MOOD_EMOJI[pet.mood]} ${pet.displayName} · Lv.${pet.level} ${pet.stage} ${pet.speciesId} · ${pet.mood}`);
+  console.log(`${MOOD_EMOJI[pet.mood]} ${pet.displayName} · ${pet.rank.emoji} Lv.${pet.level} ${pet.stage} ${pet.speciesId} · ${pet.mood}`);
   console.log(`   fullness ${v.fullness} · health ${v.health} · joy ${v.joy} · energy ${v.energy}${v.hygiene != null ? ` · hygiene ${v.hygiene}` : ''}`);
   console.log(`   “${pet.speech}”`);
 
@@ -264,6 +264,8 @@ async function main() {
     'mood-changed': Boolean(previousMood) && previousMood !== pet.mood,
     aura: pet.aura,
     'new-trophies': pet.newAchievements.join(','),
+    'level-up': pet.events.includes('levelUp'),
+    rank: pet.rank.id,
     'on-vacation': Boolean(pet.vacation),
     'alert-issue': pet.alert && !pet.alert.muted ? pet.alert.issue : '',
   });

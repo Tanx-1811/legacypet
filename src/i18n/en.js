@@ -27,6 +27,11 @@ export default {
     hibernating: 'the Dreaming', egg: 'the Unhatched',
   },
   displayName: (name, title) => `${name} ${title}`,
+  ranks: {
+    rookie: 'Rookie', bronze: 'Bronze', silver: 'Silver', gold: 'Gold',
+    platinum: 'Platinum', diamond: 'Diamond', legend: 'Legend',
+  },
+  levelUpBanner: 'LEVEL UP!',
   stats: { fullness: 'Fullness', health: 'Health', joy: 'Joy', energy: 'Energy', hygiene: 'Hygiene' },
   level: (n) => `Lv.${n}`,
   shiny: 'Shiny',
@@ -42,6 +47,7 @@ export default {
     stars100: 'Rising Star', stars1k: 'Superstar', team: 'Squad', spotless: 'Spotless',
     inboxZero: 'Inbox Zero', elder: 'Wise Elder',
     superForm: 'Super Form', responder: 'First Responder', anniversary: 'Anniversary',
+    veteran: 'Veteran', master: 'Master', maxLevel: 'Max Level',
   },
   lines: {
     revived: [(v) => `I'M ALIVE!! Thanks for coming back to ${v.repoName} 💚`, 'Braaai... wait, fresh commits? I feel ALIVE!'],
@@ -68,6 +74,14 @@ export default {
       (v) => `On vacation until ${v.until} 🌴 Back soon!`,
       (v) => `Gone to the beach until ${v.until} 🏖️ No commits needed`,
       'Out of office. Sunscreen on, notifications off 😎',
+    ],
+    levelUp: [
+      (v) => `Level up! I'm Lv.${v.level} now ⬆️`,
+      (v) => `Lv.${v.level}! Every commit makes me stronger 💪`,
+    ],
+    rankUp: [
+      (v) => `Rank up! ${v.rankEmoji} ${v.rank} rank unlocked!`,
+      (v) => `${v.rankEmoji} ${v.rank} at Lv.${v.level}! Look at me shine ✨`,
     ],
     aura: [
       'POWER UP! A whole week of bliss ✨',
@@ -101,6 +115,13 @@ export default {
     },
   },
   command: {
+    level: {
+      title: (level, rank) => `Lv.${level} · ${rank} rank`,
+      nextLevel: (n, level) => `${n} more ${plural(n, 'commit', 'commits')} to Lv.${level}`,
+      nextRank: (n, rank) => `${n} more ${plural(n, 'commit', 'commits')} to ${rank}`,
+      maxed: 'Max level. A true legend 👑',
+      ladder: 'Ranks',
+    },
     pat: ['*happy wiggle* Thanks for the pat! 💕', 'Pats are nice. Commits are nicer 😋', (v) => `${v.name} loves you too! 💖`],
     checkup: 'Checkup',
     commands: 'Commands',
@@ -109,6 +130,7 @@ export default {
       status: 'how I feel and why',
       pat: 'give me a pat',
       checkup: 'just the checkup',
+      level: 'my level, my rank and what the next one takes',
       trophies: 'my trophy shelf',
       vacation: 'pause my hunger for N days, e.g. `/pet vacation 14` (maintainers)',
       back: 'end the vacation early (maintainers)',
@@ -151,6 +173,8 @@ export default {
     fasted: 'no food today',
     treat: (user, pr) => `got a treat from @${user} (#${pr})`,
     unlocked: (list) => `unlocked ${list}`,
+    levelUp: (level) => `leveled up to Lv.${level}`,
+    rankUp: (level, rank) => `reached ${rank} rank at Lv.${level}`,
     vacation: (until) => `on vacation until ${until} 🏖️`,
   },
   alert: {

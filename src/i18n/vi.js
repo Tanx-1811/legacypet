@@ -24,6 +24,11 @@ export default {
     hibernating: 'Ngủ Đông', egg: 'Chưa Nở',
   },
   displayName: (name, title) => `${name} ${title}`,
+  ranks: {
+    rookie: 'Tân binh', bronze: 'Đồng', silver: 'Bạc', gold: 'Vàng',
+    platinum: 'Bạch kim', diamond: 'Kim cương', legend: 'Huyền thoại',
+  },
+  levelUpBanner: 'LÊN CẤP!',
   stats: { fullness: 'No', health: 'Sức khỏe', joy: 'Vui', energy: 'Năng lượng', hygiene: 'Gọn gàng' },
   level: (n) => `Lv.${n}`,
   shiny: 'Lấp lánh',
@@ -39,6 +44,7 @@ export default {
     stars100: 'Ngôi sao mới', stars1k: 'Siêu sao', team: 'Biệt đội', spotless: 'Sạch bong',
     inboxZero: 'Hộp thư trống', elder: 'Lão làng thông thái',
     superForm: 'Siêu hình thái', responder: 'Phản hồi thần tốc', anniversary: 'Kỷ niệm',
+    veteran: 'Kỳ cựu', master: 'Bậc thầy', maxLevel: 'Cấp tối đa',
   },
   lines: {
     vacation: [
@@ -66,6 +72,14 @@ export default {
     ],
     treat: [(v) => `@${v.treatUser} vừa cho mình ăn bánh (#${v.treatPr}) 🍪`, (v) => `Cảm ơn @${v.treatUser} đã tiếp tế ở #${v.treatPr}!`],
     streak: [(v) => `Chuỗi ${v.streak} ngày commit liên tục! Cháy quá 🔥`],
+    levelUp: [
+      (v) => `Lên cấp! Giờ mình Lv.${v.level} rồi ⬆️`,
+      (v) => `Lv.${v.level}! Mỗi commit làm mình mạnh hơn 💪`,
+    ],
+    rankUp: [
+      (v) => `Thăng hạng! Mở khóa hạng ${v.rankEmoji} ${v.rank}!`,
+      (v) => `${v.rankEmoji} Hạng ${v.rank} ở Lv.${v.level}! Lấp lánh chưa ✨`,
+    ],
     aura: [
       'BIẾN HÌNH! Cả tuần sung sướng ✨',
       'Đây còn chưa phải hình dạng cuối cùng 💥',
@@ -97,6 +111,13 @@ export default {
     },
   },
   command: {
+    level: {
+      title: (level, rank) => `Lv.${level} · hạng ${rank}`,
+      nextLevel: (n, level) => `Còn ${n} commit nữa là lên Lv.${level}`,
+      nextRank: (n, rank) => `Còn ${n} commit nữa là lên hạng ${rank}`,
+      maxed: 'Cấp tối đa rồi. Huyền thoại thực thụ 👑',
+      ladder: 'Các hạng',
+    },
     vacation: (until, days) => `🏖️ Đi biển tới **${until}**! Mình tạm ngưng đói trong ${days} ngày, và những ngày này sẽ không bị tính khi bạn quay lại.`,
     back: 'Chào mừng trở lại! 👋 Hết kỳ nghỉ, bát của mình đã sẵn sàng đón commit.',
     notOnVacation: 'Mình đâu có đi nghỉ, nhưng cảm ơn đã hỏi thăm nha! 😊',
@@ -111,6 +132,7 @@ export default {
       status: 'mình thấy thế nào và vì sao',
       pat: 'xoa đầu mình',
       checkup: 'chỉ phần khám sức khỏe',
+      level: 'cấp, hạng của mình và cần gì để lên tiếp',
       trophies: 'kệ cúp của mình',
       vacation: 'tạm ngưng đói N ngày, ví dụ `/pet vacation 14` (maintainer)',
       back: 'kết thúc kỳ nghỉ sớm (maintainer)',
@@ -148,6 +170,8 @@ export default {
     fasted: 'hôm nay nhịn đói',
     treat: (user, pr) => `được @${user} cho bánh (#${pr})`,
     unlocked: (list) => `mở khóa ${list}`,
+    levelUp: (level) => `lên Lv.${level}`,
+    rankUp: (level, rank) => `đạt hạng ${rank} ở Lv.${level}`,
   },
   alert: {
     title: {

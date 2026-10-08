@@ -84,6 +84,10 @@ outputs:
     description: 'true when the pet is in its super form (7 ecstatic days in a row)'
   new-trophies:
     description: 'Comma-separated ids of trophies unlocked on this run'
+  level-up:
+    description: 'true when the pet gained a level on this run'
+  rank:
+    description: 'rookie, bronze, silver, gold, platinum, diamond or legend'
   on-vacation:
     description: 'true while the pet is on vacation'
   alert-issue:
