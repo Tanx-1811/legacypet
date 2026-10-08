@@ -41,6 +41,7 @@
   details input { width: 100%; margin-top: 6px; }
   #status { min-height: 1.5em; text-align: center; margin: 16px 0 0; color: var(--muted); }
   #status.bad { color: var(--bad); }
+  #private { display: block; margin: 8px auto 0; }
   .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-top: 20px; }
   .result { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; align-items: start; }
   @media (max-width: 820px) { .result { grid-template-columns: 1fr; } }
@@ -91,9 +92,10 @@
   <details>
     <summary>Hit GitHub's rate limit? Add a token</summary>
     <input id="token" type="password" placeholder="ghp_… (read-only is enough)" autocomplete="off">
-    Anonymous visitors get 60 API calls per hour (about 5 repos). The token is only sent to api.github.com and never stored.
+    Anonymous visitors get 60 API calls per hour (about 5 repos). A token that can read a private repo lets you hatch it here too. The token is only sent to api.github.com and never stored.
   </details>
   <p id="status" role="status"></p>
+  <button class="chip" id="private" type="button" hidden>🔒 It's private: adopt it anyway</button>
 </header>
 
 <main id="result" hidden>
@@ -191,6 +193,7 @@ for (const mood of MOODS) {
 function setStatus(text, bad = false) {
   $('status').textContent = text;
   $('status').className = bad ? 'bad' : '';
+  $('private').hidden = true;
 }
 
 function svgUrl(svg) {
@@ -227,6 +230,7 @@ function draw() {
   }));
 
   const fullName = state.mood ? 'OWNER/REPO' : pet.repo.fullName;
+  const isPrivate = Boolean(state.snapshot.repo.isPrivate);
   const flags = [lang !== 'en' && `--lang ${lang}`, species !== 'auto' && `--species ${species}`, scenery !== 'auto' && `--scenery ${scenery}`, name && `--name "${name.replace(/"/g, '')}"`].filter(Boolean);
   $('cmd').textContent = ['npx github:Tanx-1811/legacypet init', ...flags].join(' ');
   $('yaml').textContent = workflowYaml({ lang, species, scenery, name });
@@ -239,8 +243,9 @@ function draw() {
     adopt.href = adoptUrl(fullName, state.snapshot.repo.defaultBranch, { lang, species, scenery, name });
     adopt.removeAttribute('aria-disabled');
     $('adopt-hint').innerHTML = 'GitHub opens with the file already filled in. Press <b>Commit changes</b> and your pet hatches by itself within a minute.';
+    if (state.blind) $('adopt-hint').innerHTML += ' This assumes your default branch is <code>main</code>; switch it on GitHub if not.';
   }
-  $('snippet').textContent = snippetFor(fullName, $('style').value);
+  $('snippet').textContent = snippetFor(fullName, $('style').value, 'legacypet', { isPrivate });
   $('result').hidden = false;
 }
 
@@ -257,11 +262,16 @@ async function hatch(input) {
     const snapshot = await collectSnapshot(client, { owner, repo, now: state.now });
     state.snapshot = snapshot;
     state.mood = null;
+    state.blind = false;
     history.replaceState(null, '', `#${snapshot.repo.fullName}`);
     setStatus(snapshot.warnings.length ? `Some data was unavailable (${snapshot.warnings.length}), so the pet guessed.` : '');
     draw();
   } catch (err) {
-    if (err.status === 404) setStatus(`Couldn't find ${owner}/${repo}. Is it public?`, true);
+    if (err.status === 404) {
+      setStatus(`Couldn't see ${owner}/${repo}. If it's private, add a token below that can read it, or adopt it without a preview.`, true);
+      $('private').hidden = false;
+      $('private').onclick = () => adoptPrivate(`${owner}/${repo}`);
+    }
     else if (err.status === 403 || err.status === 429) setStatus("GitHub's hourly limit for anonymous visitors was reached. Add a token below or try again later.", true);
     else setStatus(err.message, true);
   } finally {
@@ -269,9 +279,24 @@ async function hatch(input) {
   }
 }
 
+// GitHub hides private repos from anonymous visitors, so we can't read this one. The action
+// itself runs inside the repo and can, so hand out the workflow and a private-friendly snippet,
+// with a made-up pet as the preview.
+function adoptPrivate(fullName) {
+  state.now = new Date();
+  state.mood = null;
+  state.blind = true;
+  state.snapshot = mockSnapshot({ mood: 'happy', now: state.now, fullName });
+  state.snapshot.repo.isPrivate = true;
+  history.replaceState(null, '', `#${fullName}`);
+  setStatus(`🔒 ${fullName} is hidden from this page, so the preview is made-up. The real pet hatches inside your repo.`);
+  draw();
+}
+
 function demo(mood) {
   state.now = new Date();
   state.mood = mood;
+  state.blind = false;
   state.snapshot = mockSnapshot({ mood, now: state.now, fullName: 'you/your-repo' });
   setStatus(`Demo: a ${mood} pet with made-up data. Type your repo above to see the real one.`);
   draw();

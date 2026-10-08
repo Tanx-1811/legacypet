@@ -28,7 +28,7 @@ Options
   --out <dir>      output directory (default: legacypet-out)
   --token <token>  GitHub token (default: $GITHUB_TOKEN)
 
-  init:    --repo <owner/name>  --style card|mini|badge|park  --park auto|<repos>  --force
+  init:    --repo <owner/name>  --style card|mini|badge|park  --park auto|<repos>  --force  --private
   park:    --size <1-8>
   demo:    --mood ${MOODS.join('|')}  --stage egg|baby|adult|elder  --shiny  --aura  --level-up  --commits <n>  --holiday <id>
   render, demo:  --vacation "until 2027-01-05"  preview the pet on vacation
@@ -59,6 +59,7 @@ const { values: opts, positionals } = parseArgs({
     park: { type: 'string' },
     size: { type: 'string', default: '6' },
     force: { type: 'boolean' },
+    private: { type: 'boolean' },
     help: { type: 'boolean', short: 'h' },
   },
 });
@@ -142,7 +143,20 @@ async function init() {
     console.log(`✔ Created ${workflow}`);
   }
 
-  const snippet = snippetFor(fullName, style);
+  // Peek at the repo first: for the preview, and to know whether the README needs private-friendly
+  // image URLs. A 404 on a repo we just read from `git remote` almost always means private + no token.
+  let peek = null;
+  let hidden = false;
+  try {
+    peek = await visit(fullName);
+  } catch (err) {
+    hidden = err.status === 404;
+    if (!hidden) console.log(`(Preview skipped: ${err.message.split('\n')[0]})`);
+  }
+  const isPrivate = opts.private ?? (peek ? peek.snapshot.repo.isPrivate : hidden);
+  if (isPrivate) console.log('🔒 Private repo: the README will load the pet through github.com, so everyone with access sees it.');
+
+  const snippet = snippetFor(fullName, style, 'legacypet', { isPrivate });
   const readme = readdirSync('.').find((f) => /^readme\.md$/i.test(f));
   if (readme) {
     const before = readFileSync(readme, 'utf8');
@@ -156,12 +170,11 @@ async function init() {
     console.log(`• No README.md here. Paste this where you want your pet:\n\n  ${snippet}\n`);
   }
 
-  try {
-    const { pet, snapshot } = await visit(fullName);
+  if (peek) {
     console.log('\n🔮 Here is who will hatch:');
-    show(pet, snapshot);
-  } catch (err) {
-    console.log(`\n(Preview skipped: ${err.message.split('\n')[0]})`);
+    show(peek.pet, peek.snapshot);
+  } else if (hidden) {
+    console.log('\n(Preview skipped: GitHub hides private repos without a token. Set GITHUB_TOKEN to see who will hatch.)');
   }
 
   console.log(`
