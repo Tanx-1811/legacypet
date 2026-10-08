@@ -33,7 +33,7 @@
   }
   #repo { flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   button { cursor: pointer; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); padding: 9px 14px; }
-  button.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; font-weight: 600; }
+  button.primary, a.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; font-weight: 600; }
   button:disabled { opacity: .6; cursor: progress; }
   .examples, .moods { margin: 12px auto 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; color: var(--muted); font-size: 13px; align-items: center; }
   .chip { padding: 3px 10px; border-radius: 999px; font-size: 13px; }
@@ -63,7 +63,13 @@
   .code { position: relative; }
   pre { margin: 0; background: var(--code); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow-x: auto; font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
   .code button { position: absolute; top: 6px; right: 6px; font-size: 12px; padding: 3px 8px; }
-  .or { text-align: center; color: var(--muted); font-size: 13px; }
+  a.primary { justify-self: start; border-radius: 8px; padding: 10px 18px; text-decoration: none; font-size: 16px; }
+  a.primary[aria-disabled=true] { opacity: .5; pointer-events: none; }
+  .steps details { max-width: none; margin: 0; }
+  .steps details summary { cursor: pointer; }
+  .steps details[open] summary { margin-bottom: 12px; }
+  .alt { display: grid; gap: 14px; }
+  .alt h4 { margin: 0 0 6px; font-size: 14px; color: var(--text); }
   footer { color: var(--muted); font-size: 13px; text-align: center; padding: 32px 16px 48px; }
   footer a { color: inherit; }
 </style>
@@ -123,17 +129,12 @@
     <h2>🏡 Adopt it</h2>
     <div class="steps">
       <div class="step">
-        <h3>Run this inside your repo</h3>
-        <p>It adds the workflow and puts the pet in your README.md. Re-running it is safe.</p>
-        <div class="code"><pre id="cmd"></pre><button type="button" data-copy="cmd">Copy</button></div>
-      </div>
-      <div class="or">or do it by hand</div>
-      <div class="step">
-        <h3>Add <code>.github/workflows/legacypet.yml</code></h3>
-        <div class="code"><pre id="yaml"></pre><button type="button" data-copy="yaml">Copy</button></div>
+        <h3>Add the workflow in one click</h3>
+        <a class="primary" id="adopt" target="_blank" rel="noopener">🐾 Adopt on GitHub</a>
+        <p id="adopt-hint">GitHub opens with the file already filled in. Press <b>Commit changes</b> and your pet hatches by itself within a minute.</p>
       </div>
       <div class="step">
-        <h3>Run it once from the Actions tab, then paste this into your README</h3>
+        <h3>Paste this into your README</h3>
         <label class="controls"><span>
           <select id="style">
             <option value="card">Full card</option>
@@ -142,6 +143,19 @@
           </select></span></label>
         <div class="code"><pre id="snippet"></pre><button type="button" data-copy="snippet">Copy</button></div>
       </div>
+      <details>
+        <summary>Prefer the terminal, or doing it by hand?</summary>
+        <div class="alt">
+          <div>
+            <h4>Run this inside your repo (adds the workflow and edits README.md for you)</h4>
+            <div class="code"><pre id="cmd"></pre><button type="button" data-copy="cmd">Copy</button></div>
+          </div>
+          <div>
+            <h4>Or create <code>.github/workflows/legacypet.yml</code> yourself</h4>
+            <div class="code"><pre id="yaml"></pre><button type="button" data-copy="yaml">Copy</button></div>
+          </div>
+        </div>
+      </details>
     </div>
   </section>
 </main>
@@ -155,7 +169,7 @@
 <script type="module">
 import {
   buildPet, checkup, collectSnapshot, createClient, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
-  HOMES, renderBadge, renderCard, renderMini, snippetFor, SPECIES_IDS, workflowYaml,
+  HOMES, renderBadge, renderCard, renderMini, snippetFor, SPECIES_IDS, workflowYaml, adoptUrl,
 } from './src/index.js';
 
 const $ = (id) => document.getElementById(id);
@@ -216,6 +230,16 @@ function draw() {
   const flags = [lang !== 'en' && `--lang ${lang}`, species !== 'auto' && `--species ${species}`, scenery !== 'auto' && `--scenery ${scenery}`, name && `--name "${name.replace(/"/g, '')}"`].filter(Boolean);
   $('cmd').textContent = ['npx github:Tanx-1811/legacypet init', ...flags].join(' ');
   $('yaml').textContent = workflowYaml({ lang, species, scenery, name });
+  const adopt = $('adopt');
+  if (state.mood) {
+    adopt.removeAttribute('href');
+    adopt.setAttribute('aria-disabled', 'true');
+    $('adopt-hint').textContent = 'Type your repo above first, then adopt its pet from here.';
+  } else {
+    adopt.href = adoptUrl(fullName, state.snapshot.repo.defaultBranch, { lang, species, scenery, name });
+    adopt.removeAttribute('aria-disabled');
+    $('adopt-hint').innerHTML = 'GitHub opens with the file already filled in. Press <b>Commit changes</b> and your pet hatches by itself within a minute.';
+  }
   $('snippet').textContent = snippetFor(fullName, $('style').value);
   $('result').hidden = false;
 }

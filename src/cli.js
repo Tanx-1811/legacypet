@@ -167,8 +167,7 @@ async function init() {
   console.log(`
 Next steps
   1. git add ${workflow.replace(/\\/g, '/')} ${readme ?? ''} && git commit -m "Adopt a LegacyPet 🐾" && git push
-  2. On GitHub: Actions → LegacyPet → Run workflow (or wait for the schedule)
-  3. Refresh your README. Say hi to your pet!`);
+  2. Your pet hatches by itself a minute after the push. Refresh your README and say hi!`);
 }
 
 function demoPet({ mood = 'happy', species = 'auto', scenery, vacation, stage, shiny, aura, levelUp, commits, holiday = null, season, lang = 'en', name, fullName, now = new Date() }) {

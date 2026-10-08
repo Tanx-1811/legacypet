@@ -34,6 +34,8 @@ export function workflowYaml({ lang = 'en', species = 'auto', scenery = 'auto', 
     '    types: [published] # throw a party the moment you ship',
     '  issue_comment:',
     '    types: [created] # talk to your pet: /pet, /pet pat, /pet checkup',
+    '  push:',
+    "    paths: ['.github/workflows/legacypet.yml'] # hatch right after you commit this file",
     '  workflow_dispatch:',
     '',
     'permissions:',
@@ -53,6 +55,13 @@ export function workflowYaml({ lang = 'en', species = 'auto', scenery = 'auto', 
     ...(inputs.length ? ['        with:', ...inputs.map((line) => `          ${line}`)] : []),
     '',
   ].join('\n');
+}
+
+// A GitHub "new file" link with the workflow pre-filled: adopting a pet becomes one click
+// on "Commit changes", no clone and no Node needed.
+export function adoptUrl(fullName, defaultBranch = 'main', options = {}) {
+  const params = new URLSearchParams({ filename: 'legacypet.yml', value: workflowYaml(options) });
+  return `https://github.com/${fullName}/new/${encodeURIComponent(defaultBranch)}/.github/workflows?${params}`;
 }
 
 // Puts the snippet between markers so re-running init updates it instead of duplicating it.
