@@ -213,6 +213,31 @@ and a few words about it ("This isn't even my final form"). One bad day and the 
 
 <img src="docs/gallery/aura/ninja.svg" width="90"> <img src="docs/gallery/aura/mecha.svg" width="90"> <img src="docs/gallery/aura/dragon.svg" width="90"> <img src="docs/gallery/aura/bunny.svg" width="90"> <img src="docs/gallery/aura/bat.svg" width="90"> <img src="docs/gallery/aura/hero.svg" width="90">
 
+## Homes
+
+Every species lives somewhere of its own, and each place is alive:
+
+<img src="docs/gallery/homes/meadow.svg" width="100" alt="meadow"> <img src="docs/gallery/homes/garden.svg" width="100" alt="garden"> <img src="docs/gallery/homes/pond.svg" width="100" alt="pond"> <img src="docs/gallery/homes/beach.svg" width="100" alt="beach"> <img src="docs/gallery/homes/reef.svg" width="100" alt="reef"> <img src="docs/gallery/homes/jungle.svg" width="100" alt="jungle"> <img src="docs/gallery/homes/desert.svg" width="100" alt="desert">
+
+| Home | Who lives there | What's going on |
+| --- | --- | --- |
+| 🌳 Meadow | Slime, Super Pup | Rolling hills, a windmill turning on the far hill, a tree that changes with the seasons, butterflies |
+| 🏡 Garden | Cat, Magical Bunny | A cottage whose window lights up at night, a picket fence, swaying sunflowers |
+| 🦆 Pond | Rubber Duck | Glints on the water, ripples where a fish just jumped, cattails in the breeze |
+| 🏖️ Beach | Crab | Waves rolling in, foam washing onto the sand, a swaying palm, seagulls, shells and a sandcastle |
+| 🐠 Reef | Octopus | Underwater: sunbeams, swaying kelp, coral, rising bubbles and fish swimming by. Glowing plankton at night |
+| 🌴 Jungle | Snake, Ninja Fox, Night Guardian | A waterfall, hanging vines, big fronds, mist, fireflies after dark |
+| 🏜️ Desert | Cactus, Spirit Dragon, Mecha | Mesas, a heat haze over the dunes and a tumbleweed bouncing past |
+
+At night (dark mode) the props dim, shooting stars streak across the sky and, in winter, the northern lights shimmer:
+
+<img src="docs/gallery/homes/meadow-night.svg" width="100" alt="meadow"> <img src="docs/gallery/homes/garden-night.svg" width="100" alt="garden"> <img src="docs/gallery/homes/pond-night.svg" width="100" alt="pond"> <img src="docs/gallery/homes/beach-night.svg" width="100" alt="beach"> <img src="docs/gallery/homes/reef-night.svg" width="100" alt="reef"> <img src="docs/gallery/homes/jungle-night.svg" width="100" alt="jungle"> <img src="docs/gallery/homes/desert-night.svg" width="100" alt="desert">
+
+The mood changes the place too: a rainbow comes out when the pet is ecstatic or partying, party days hang bunting,
+and a zombie's world wilts, with bare trees, bats and a creeping fog.
+
+Want your pet somewhere else? Set `scenery: beach` (or `--scenery beach` in the CLI).
+
 ## Growing up
 
 <img src="docs/gallery/stages/egg.svg" width="110"> <img src="docs/gallery/stages/baby.svg" width="110"> <img src="docs/gallery/stages/adult.svg" width="110"> <img src="docs/gallery/stages/elder.svg" width="110">
@@ -247,12 +272,12 @@ Trophies are permanent. Once earned, they stay on the card even if the streak br
 ## Seasons, holidays and night mode
 
 The scene follows the calendar: petals in spring, fireflies in summer, falling leaves in autumn, snow in winter.
-In dark mode it's night, with a moon and twinkling stars.
+In dark mode it's night, with a moon, twinkling stars, shooting stars and, in winter, the northern lights.
 
 <img src="docs/gallery/holidays/halloween.svg" width="110"> <img src="docs/gallery/holidays/christmas.svg" width="110"> <img src="docs/gallery/holidays/tet.svg" width="110"> <img src="docs/gallery/holidays/newyear.svg" width="110"> <img src="docs/gallery/holidays/programmers.svg" width="110">
 
-Halloween brings a witch hat and a pumpkin, Christmas a Santa hat, and New Year fireworks.
-Tết (Lunar New Year) brings red lanterns, and the 256th day of the year is Programmers' Day.
+Halloween brings a witch hat, a pumpkin and bats, Christmas a Santa hat, a snowman and twinkling string lights, and New Year fireworks.
+Tết (Lunar New Year) brings red lanterns and a blooming apricot (mai) branch shedding golden petals, and the 256th day of the year is Programmers' Day.
 
 ## It talks about your repo
 
@@ -333,6 +358,7 @@ The default token can read your public repos. To include private ones, pass a pe
 | Input | Default | Description |
 | --- | --- | --- |
 | `species` | `auto` | `auto`, `blob`, `cat`, `duck`, `crab`, `octopus`, `snake`, `cactus`, `ninja`, `mecha`, `dragon`, `bunny`, `bat`, `hero` |
+| `scenery` | `auto` | Where the pet lives. `auto` is its species' home, or `meadow`, `garden`, `pond`, `beach`, `reef`, `jungle`, `desert` |
 | `name` | | Custom name. Empty means the repo names it. |
 | `lang` | `en` | `en`, `vi`, `ja`, `zh`, `ko`, `es` or `fr` |
 | `theme` | `auto` | `auto` follows the viewer's light/dark mode. Also `light` or `dark`. |
@@ -368,6 +394,7 @@ npx github:Tanx-1811/legacypet init                       # adopt a pet in the c
 npx github:Tanx-1811/legacypet render vercel/next.js      # draw any repo's pet + checkup
 npx github:Tanx-1811/legacypet park sindresorhus          # draw someone's Pet Park
 npx github:Tanx-1811/legacypet demo --mood zombie --species cat --lang vi
+npx github:Tanx-1811/legacypet demo --species crab --scenery reef
 ```
 
 In a terminal with true color, it draws the pet right in your shell.

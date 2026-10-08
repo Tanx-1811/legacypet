@@ -145,6 +145,27 @@ Giữ cho thú **phấn khích 7 ngày liền** là nó biến hình: hào quang
 
 Cứ 64 repo thì có 1 repo nở ra thú **lấp lánh (shiny)** ✨, và không có cách nào quay lại.
 
+### 🏝️ Quê nhà của từng loài
+
+Mỗi loài có một nơi ở riêng, và nơi nào cũng sống động:
+
+<img src="docs/gallery/homes/meadow.svg" width="100" alt="meadow"> <img src="docs/gallery/homes/garden.svg" width="100" alt="garden"> <img src="docs/gallery/homes/pond.svg" width="100" alt="pond"> <img src="docs/gallery/homes/beach.svg" width="100" alt="beach"> <img src="docs/gallery/homes/reef.svg" width="100" alt="reef"> <img src="docs/gallery/homes/jungle.svg" width="100" alt="jungle"> <img src="docs/gallery/homes/desert.svg" width="100" alt="desert">
+
+- 🌳 **Đồng cỏ** (Slime, Siêu Cún): đồi xa có cối xay gió quay, cây đổi màu theo mùa, bướm bay
+- 🏡 **Khu vườn** (Mèo, Thỏ): căn nhà nhỏ sáng đèn ban đêm, hàng rào trắng, hoa hướng dương đung đưa
+- 🦆 **Ao** (Vịt): mặt nước lấp lánh, gợn sóng lan tròn, bông lau rung rinh
+- 🏖️ **Bãi biển** (Cua): sóng vỗ, bọt biển tràn lên cát, cây dừa, hải âu, vỏ sò và lâu đài cát
+- 🐠 **Rạn san hô** (Bạch tuộc): dưới nước có tia nắng, rong biển, san hô, bong bóng và cá bơi ngang. Ban đêm sinh vật phát sáng
+- 🌴 **Rừng rậm** (Rắn, Cáo Ninja, Hiệp sĩ Bóng đêm): thác nước, dây leo, sương mù, đom đóm khi trời tối
+- 🏜️ **Sa mạc** (Xương rồng, Rồng Thần, Mecha): núi đá đỉnh bằng, hơi nóng bốc lên, bụi cỏ lăn qua
+
+Ban đêm (dark mode) có sao băng, mùa đông có cả cực quang:
+
+<img src="docs/gallery/homes/meadow-night.svg" width="100" alt="meadow"> <img src="docs/gallery/homes/garden-night.svg" width="100" alt="garden"> <img src="docs/gallery/homes/pond-night.svg" width="100" alt="pond"> <img src="docs/gallery/homes/beach-night.svg" width="100" alt="beach"> <img src="docs/gallery/homes/reef-night.svg" width="100" alt="reef"> <img src="docs/gallery/homes/jungle-night.svg" width="100" alt="jungle"> <img src="docs/gallery/homes/desert-night.svg" width="100" alt="desert">
+
+Tâm trạng cũng đổi cảnh: phấn khích hay tiệc tùng thì có cầu vồng, ngày tiệc giăng cờ dây, còn thú zombie thì cây trụi lá, dơi bay và sương mù phủ kín.
+Muốn chuyển nhà? Đặt `scenery: beach` (hoặc `--scenery beach` trong CLI).
+
 ### Chọn kiểu hiển thị
 
 | File | Dùng cho |
@@ -188,8 +209,8 @@ ví dụ *"3 issue từ cộng đồng đang chờ phản hồi đầu tiên. L�
 
 - 🎂 Lớn lên: Trứng → Bé (có mầm cây) → Trưởng thành → Lão làng (đeo kính một tròng)
 - 🏆 17 cúp vĩnh viễn: Bốc lửa (chuỗi 7 ngày), Hồi sinh, Siêu sao (kèm vương miện), Phản hồi thần tốc, Kỷ niệm…
-- 🍂 Theo mùa: hoa xuân, đom đóm hè, lá thu, tuyết đông. Ở dark mode thì thành ban đêm có trăng sao
-- 🧧 Ngày lễ: Tết có đèn lồng và pháo hoa, Halloween có mũ phù thủy, Giáng sinh có mũ ông già Noel
+- 🍂 Theo mùa: hoa xuân, đom đóm hè, lá thu, tuyết đông. Ở dark mode thì thành ban đêm có trăng sao, sao băng và cực quang mùa đông
+- 🧧 Ngày lễ: Tết có đèn lồng, pháo hoa và cành mai vàng rụng cánh, Halloween có mũ phù thủy và đàn dơi, Giáng sinh có mũ ông già Noel, người tuyết và dây đèn nhấp nháy
 - 💬 Lời thoại theo dữ liệu thật: *"Này... issue #12 chờ phản hồi 87 ngày rồi đó"*
 - ♿ Hỗ trợ trình đọc màn hình và tự tắt chuyển động khi người xem bật reduced motion
 
