@@ -10,6 +10,7 @@ export function checkup(pet, snapshot) {
   const days = Math.floor(pet.facts.daysSinceCommit);
 
   if (snapshot.repo.archived) add('tip', '💤', tr.archived);
+  else if (pet.vacation) add('good', '🏖️', tr.vacation(pet.vacation.until));
   else if (days < 7) add('good', '🍖', tr.fed(days));
   else add(days >= 25 ? 'bad' : 'warn', '🍖', tr.feed(days));
 

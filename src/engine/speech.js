@@ -24,6 +24,7 @@ export function speechVars(pet, snapshot) {
     check: snapshot.ci?.failingNames?.[0],
     toHatch: Math.max(1, 5 - facts.totalCommits),
     auraDays: pet.auraDays,
+    until: pet.vacation?.until,
   };
 }
 
@@ -39,6 +40,7 @@ export function chooseSpeech(pet, snapshot, tr, rng) {
   if (mood === 'hibernating' || mood === 'egg') return pick(lines.moods[mood]);
   if (mood === 'zombie') return pick(holiday === 'halloween' ? lines.holiday.halloweenZombie : lines.moods.zombie);
   if (mood === 'sick') return pick(v.check ? lines.ciFailing : lines.moods.sick);
+  if (pet.vacation) return pick(lines.vacation);
   if (holiday && lines.holiday[holiday]) return pick(lines.holiday[holiday]);
   if (events.includes('birthday')) return pick(lines.birthday);
   if (events.includes('release') && v.tag) return pick(lines.release);

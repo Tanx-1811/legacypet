@@ -4,11 +4,14 @@ import { MOOD_EMOJI } from './mood.js';
 
 const round1 = (n) => Math.round(n * 10) / 10;
 
+// The order of the numbers in each history entry's `vitals`, kept short since pet.json holds 90 days.
+export const VITALS = ['fullness', 'health', 'joy', 'energy'];
+
 // pet.json: what the pet remembers between runs (achievements, mood history,
 // events) and a public, machine-readable status anyone can build on.
 export function nextState(pet, prevState = null) {
   const history = [
-    { date: pet.date, mood: pet.mood },
+    { date: pet.date, mood: pet.mood, vitals: VITALS.map((k) => pet.vitals[k] ?? null) },
     ...(prevState?.history ?? []).filter((h) => h.date !== pet.date),
   ].slice(0, 90);
   return {
@@ -41,6 +44,9 @@ export function nextState(pet, prevState = null) {
     },
     achievements: pet.achievementsMap,
     events: pet.eventDates,
+    vacations: pet.vacations ?? [],
+    // The open care-alert issue (see github/alerts.js); undefined means alerts did not run.
+    alert: pet.alert !== undefined ? pet.alert : prevState?.alert ?? null,
     history,
     lastMood: pet.mood,
     lastStage: pet.stage,
