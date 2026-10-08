@@ -203,6 +203,8 @@ function viewHatch(root, arg) {
   async function visit(raw) {
     const cleaned = raw.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '').replace(/\/+$/, '');
     const [owner, repo] = cleaned.split('/');
+    // Just a username or an org: list its repos to pick from.
+    if (owner && !repo && /^[\w-]+$/.test(owner)) return pick(owner);
     if (!owner || !repo) return setStatus(T.badRepo, true);
     hatch.repo = `${owner}/${repo}`;
     input.value = hatch.repo;
@@ -318,19 +320,117 @@ function viewHatch(root, arg) {
     result.hidden = false;
   }
 
+  // ----- The repo picker: an owner's repos, or (with a token) every repo you can see.
+  const filter = h('input', { type: 'text', placeholder: T.filter, autocomplete: 'off', spellcheck: 'false', oninput: () => drawPicker() });
+  const forksBox = h('input', { type: 'checkbox', onchange: () => drawPicker() });
+  const archivedBox = h('input', { type: 'checkbox', onchange: () => drawPicker() });
+  const pickTitle = h('h3');
+  const pickList = h('ul.pick-list');
+  const pickPanel = h('section.panel.picker', { hidden: true },
+    h('div.picker-head', pickTitle, h('button.ghost', { type: 'button', onclick: () => { pickPanel.hidden = true; } }, `✕ ${T.close}`)),
+    h('div.picker-tools', filter, h('label.check.small', forksBox, T.forks), h('label.check.small', archivedBox, T.archived)),
+    pickList);
+  const mineBtn = h('button.chip', { type: 'button', onclick: () => pick('') }, T.mine);
+  const ago = (iso) => {
+    const days = Math.round((Date.now() - new Date(iso).getTime()) / 86_400_000);
+    if (!iso || Number.isNaN(days)) return '';
+    const fmt = new Intl.RelativeTimeFormat(store.ui, { numeric: 'auto' });
+    if (days < 60) return fmt.format(-days, 'day');
+    return days < 730 ? fmt.format(-Math.round(days / 30), 'month') : fmt.format(-Math.round(days / 365), 'year');
+  };
+
+  async function pick(owner) {
+    if (!owner && !ghToken) {
+      setStatus(T.mineHint, true);
+      token.closest('details').open = true;
+      token.focus();
+      return;
+    }
+    setStatus(T.listing(owner));
+    try {
+      picker.repos = await LP.listRepos(client(), { owner: owner || undefined });
+      picker.owner = owner;
+      setStatus('');
+      filter.value = '';
+      drawPicker();
+      pickPanel.hidden = false;
+      pickPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      findPets(picker.repos);
+    } catch (err) {
+      if (err.status === 404) setStatus(T.noOwner(owner), true);
+      else if (err.status === 401) setStatus(T.badToken, true);
+      else if (err.status === 403 || err.status === 429) setStatus(T.rateLimit, true);
+      else setStatus(err.message, true);
+    }
+  }
+
+  // Which repos already have a pet. Public ones are asked through raw.githubusercontent.com,
+  // which doesn't count against the API limit; private ones need the token.
+  async function findPets(repos) {
+    await Promise.all(repos.slice(0, 60).map(async (r) => {
+      try {
+        if (!r.isPrivate) r.pet = (await fetch(`https://raw.githubusercontent.com/${r.fullName}/legacypet/pet.json`, { method: 'HEAD' })).ok;
+        else if (ghToken) r.pet = await LP.hasPet(client(), r.fullName);
+      } catch { /* unknown: leave it unmarked */ }
+    }));
+    if (picker.repos === repos) drawPicker();
+  }
+
+  function adoptFromList(r) {
+    store.cfg.repo = r.fullName;
+    store.cfg.private = r.isPrivate;
+    save();
+    toast(T.adoptOpened);
+    go_('adopt');
+  }
+
+  function drawPicker() {
+    if (!picker.repos) return;
+    const q = filter.value.trim().toLowerCase();
+    const shown = picker.repos.filter((r) => (forksBox.checked || !r.fork) && (archivedBox.checked || !r.archived)
+      && (!q || r.fullName.toLowerCase().includes(q) || r.description.toLowerCase().includes(q)));
+    pickTitle.textContent = T.pickerTitle(picker.owner, shown.length);
+    if (!shown.length) return pickList.replaceChildren(h('li.empty', T.empty));
+    pickList.replaceChildren(...shown.map((r) => h('li.pick-row',
+      h('div.pick-main',
+        h('div.pick-name', h('b.mono', picker.owner ? r.name : r.fullName),
+          r.isPrivate && h('span.pick-tag', '🔒'), r.fork && h('span.pick-tag', 'fork'), r.archived && h('span.pick-tag', '📦'),
+          r.pet && h('span.pick-tag.pet', `🐾 ${T.hasPet}`)),
+        r.description && h('div.small.muted.clip', { title: r.description }, r.description),
+        h('div.small.muted', [r.stars ? `★ ${r.stars}` : '', r.language, ago(r.pushedAt)].filter(Boolean).join(' · '))),
+      h('div.pick-actions',
+        h('button', { type: 'button', onclick: () => { visit(r.fullName); result.scrollIntoView({ behavior: 'smooth' }); } }, T.rowHatch),
+        r.pet
+          ? h('a.button', { href: `https://github.com/${r.fullName}/tree/legacypet`, target: '_blank', rel: 'noopener' }, T.rowView)
+          : h('a.button.primary', {
+            href: LP.adoptUrl(r.fullName, r.defaultBranch, adoptOptions()), target: '_blank', rel: 'noopener',
+            onclick: () => adoptFromList(r),
+          }, T.rowAdopt),
+        h('button.ghost', {
+          type: 'button', title: T.rowPark, 'aria-label': T.rowPark,
+          onclick: () => {
+            if (!store.park.includes(r.fullName) && store.park.length < LP.PARK_MAX) store.park = [...store.park.filter((n) => !n.startsWith('demo/')), r.fullName];
+            save();
+            toast(T.addedPark(r.fullName));
+          },
+        }, '🏞️+')))));
+  }
+
   const form = h('form.hatch', { onsubmit: (e) => { e.preventDefault(); visit(input.value); } }, input, go);
   root.append(
     h('div.hero',
       h('h2', T.title),
       h('p.lead', { style: { margin: '6px auto 0' } }, t().tagline),
       form,
-      h('div.examples', T.try, ...['rust-lang/rustlings', 'sindresorhus/awesome', 'Tanx-1811/legacypet'].map((r) => h('button.chip', { type: 'button', onclick: () => visit(r) }, r))),
+      h('div.examples', T.try, mineBtn, ...['rust-lang/rustlings', 'sindresorhus/awesome', 'Tanx-1811/legacypet'].map((r) => h('button.chip', { type: 'button', onclick: () => visit(r) }, r))),
       h('div.examples', T.moods, ...LP.MOODS.map((m) => h('button.chip', { type: 'button', onclick: () => demo(m) }, `${LP.MOOD_EMOJI[m]} ${tr().moods[m]}`))),
       h('details', h('summary', T.tokenSummary), token, h('div', T.tokenNote)),
       status,
       privateBtn),
+    pickPanel,
     result);
 
+  if (picker.repos) { drawPicker(); pickPanel.hidden = false; }
   if (arg && arg.includes('/')) visit(arg);
   else if (hatch.snapshot) { draw(); if (hatch.mood) setStatus(T.demo(tr().moods[hatch.mood])); }
   else demo(LP.MOODS[Math.floor(Math.random() * 4)]);
@@ -828,7 +928,7 @@ function viewAdopt(root) {
   };
   const vacation = h('input', { type: 'date', value: store.cfg.vacation });
   vacation.onchange = () => { store.cfg.vacation = vacation.value; save(); draw(); };
-  const wearBox = h('div.tiles');
+  const wearBox = h('div.tiles.compact');
   const privateBox = h('input', { type: 'checkbox', checked: Boolean(store.cfg.private) });
   privateBox.onchange = () => { store.cfg.private = privateBox.checked; save(); draw(); };
   const alertBox = h('div.row');
@@ -863,24 +963,30 @@ function viewAdopt(root) {
     // One click: GitHub's "new file" page with the workflow filled in (see adoptUrl in src/setup.js).
     const known = hatch.snapshot && !hatch.mood && hatch.snapshot.repo.fullName === cfg.repo ? hatch.snapshot.repo.defaultBranch : (pickedRepo(cfg.repo)?.defaultBranch ?? 'main');
     const ready = /^[\w.-]+\/[\w.-]+$/.test(cfg.repo);
+    // The one-click path comes first; the terminal and hand-made routes wait behind a toggle.
     steps.replaceChildren(
       h('div.step', h('h3', T.oneClick),
         h('a.button.primary', { href: ready ? LP.adoptUrl(cfg.repo, known, options) : null, target: '_blank', rel: 'noopener', 'aria-disabled': String(!ready) }, T.oneClickButton),
         h('p', ready ? T.oneClickNote : T.needRepo, ready && hatch.blind && hatch.snapshot?.repo.fullName === cfg.repo ? ` ${T.blindBranch}` : '')),
-      h('div.step', h('h3', T.step1), h('p', T.step1Note), codeBlock(['npx github:Tanx-1811/legacypet init', ...flags].join(' '))),
-      h('div.or', T.or),
-      h('div.step', h('h3', T.step2), codeBlock(yaml)),
       h('div.step', h('h3', T.step3), seg(Object.entries(T.styles), cfg.style, (v) => { cfg.style = v; save(); draw(); }, T.style), codeBlock(LP.snippetFor(fullName, cfg.style, 'legacypet', { isPrivate: Boolean(cfg.private) }))),
       h('div.step', h('h3', T.commands), codeBlock(commands)));
+    manual.replaceChildren(
+      h('div.alt-step', h('h4', T.step1), h('p', T.step1Note), codeBlock(['npx github:Tanx-1811/legacypet init', ...flags].join(' '))),
+      h('div.or', T.or),
+      h('div.alt-step', h('h4', T.step2), codeBlock(yaml)));
   }
+  // Built once, so redrawing (typing the repo name) never snaps the toggles shut.
+  const manual = h('div.alt');
+  const extrasSet = store.cfg.wear.length || store.cfg.alerts.length || store.cfg.vacation || store.cfg.private;
 
   root.append(h('h2', T.title), h('p.lead', T.lead),
     h('div.grid2',
       h('div.stack',
         h('section.panel.stack', h('label.field', T.repo, repo, repoList), h('h3', { style: { margin: '6px 0 0' } }, T.look), lookFields(draw), preview),
-        h('section.panel.stack', h('h3', { style: { margin: 0 } }, T.behavior), h('div.small.muted', T.wear), wearBox,
-          h('div.small.muted', T.alerts), alertBox, h('label.field', T.vacation, vacation), h('label.check', privateBox, T.private))),
-      h('section.panel', steps)));
+        h('details.panel.more', { open: Boolean(extrasSet) }, h('summary', T.moreOptions),
+          h('div.stack', h('div.small.muted', T.wear), wearBox,
+            h('div.small.muted', T.alerts), alertBox, h('label.field', T.vacation, vacation), h('label.check', privateBox, T.private)))),
+      h('section.panel', steps, h('details.manual', h('summary', T.advanced), manual))));
   draw();
   return { redraw: draw };
 }
@@ -912,7 +1018,8 @@ function render() {
   document.title = `LegacyPet · ${T.nav[view]}`;
   for (const a of document.querySelectorAll('nav.tabs a')) {
     const id = a.dataset.view;
-    a.replaceChildren(h('span.ico', ICONS[id]), h('span', T.nav[id]), h('small', T.navHint[id]));
+    a.replaceChildren(h('span.ico', ICONS[id]), h('span', T.nav[id]));
+    a.title = T.navHint[id];
     if (id === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   }
   const main = $('#view');
@@ -957,6 +1064,9 @@ function applyTheme() {
 
 darkQuery.addEventListener('change', () => { if (store.theme === 'auto') { codexCache.clear(); current?.redraw?.(); } });
 window.addEventListener('hashchange', render);
+// Sticky bars below the tabs (the codex index) sit exactly under them at any width.
+const navHeight = () => document.documentElement.style.setProperty('--nav-h', `${$('nav.tabs').offsetHeight}px`);
+window.addEventListener('resize', navHeight);
 document.addEventListener('keydown', (e) => {
   if (e.target.closest('input, select, textarea, [contenteditable]')) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -965,3 +1075,4 @@ document.addEventListener('keydown', (e) => {
 
 applyTheme();
 render();
+navHeight();
