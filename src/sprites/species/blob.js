@@ -3,6 +3,7 @@
 export default {
   id: 'blob',
   trait: 'adaptable',
+  home: 'meadow',
   modifiers: {},
   food: 'kibble',
   palette: { o: '#1f3b2c', b: '#7ee081', l: '#c8f7c5', s: '#4fb86a' },

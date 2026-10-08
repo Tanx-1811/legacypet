@@ -26,6 +26,7 @@ export function nextState(pet, prevState = null) {
       mood: pet.mood,
       speech: pet.speech,
       accessories: pet.accessories,
+      aura: pet.aura,
     },
     vitals: pet.vitals,
     facts: {

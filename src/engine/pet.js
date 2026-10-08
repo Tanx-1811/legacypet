@@ -5,7 +5,7 @@ import { isoDay } from '../util/time.js';
 import { evaluateAchievements } from './achievements.js';
 import { holidayFor, seasonFor } from './calendar.js';
 import { isShiny, petName } from './identity.js';
-import { chooseAccessories, deriveMood } from './mood.js';
+import { AURA_DAYS, blissStreak, chooseAccessories, deriveMood } from './mood.js';
 import { chooseSpeech } from './speech.js';
 import { computeFacts, computeGrowth, computeVitals } from './vitals.js';
 
@@ -13,18 +13,20 @@ import { computeFacts, computeGrowth, computeVitals } from './vitals.js';
 // needed to draw it. Pure: the same inputs always give the same pet.
 //
 // options: species, name, lang, plus preview-only overrides
-//          (shiny, mood, stage, holiday, season) used by the gallery and demos.
+//          (shiny, mood, stage, holiday, season, aura) used by the gallery and demos.
 export function buildPet({ snapshot, prevState = null, options = {}, now = new Date() }) {
   const lang = resolveLang(options.lang);
   const tr = strings(lang);
   const fullName = snapshot.repo.fullName;
-  const species = pickSpecies({ requested: options.species, fullName, language: snapshot.repo.language });
+  const species = pickSpecies({
+    requested: options.species, fullName, language: snapshot.repo.language, previous: prevState?.pet?.species,
+  });
   const modifiers = species.modifiers ?? {};
   const date = isoDay(now);
 
   const facts = computeFacts(snapshot, now);
   const vitals = computeVitals(snapshot, facts, modifiers, now);
-  const growth = computeGrowth(facts);
+  const growth = computeGrowth(facts, modifiers);
   if (options.stage) growth.stage = options.stage;
   const holiday = options.holiday !== undefined ? options.holiday : holidayFor(now);
   const season = options.season ?? seasonFor(now);
@@ -35,11 +37,13 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
   const { mood, events } = derived;
   if (mood === 'egg') growth.stage = 'egg';
 
+  const auraDays = blissStreak(mood, date, prevState?.history);
+  const aura = options.aura ?? auraDays >= AURA_DAYS;
   const shiny = options.shiny ?? isShiny(fullName);
   const name = options.name?.trim() || petName(fullName);
   const accessories = chooseAccessories({ mood, holiday, events, growth, facts, vitals, species });
   const achievements = evaluateAchievements(
-    { snapshot, facts, vitals, growth, events, shiny, mood },
+    { snapshot, facts, vitals, growth, events, shiny, mood, aura },
     prevState?.achievements ?? {},
     date,
   );
@@ -67,6 +71,8 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
     vitals,
     facts,
     accessories,
+    aura,
+    auraDays,
     achievements: achievements.list,
     achievementsMap: achievements.map,
     newAchievements: achievements.fresh,

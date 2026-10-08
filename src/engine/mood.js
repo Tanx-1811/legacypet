@@ -42,6 +42,23 @@ export function deriveMood({ snapshot, facts, vitals, growth, modifiers, prevSta
   return { mood: score >= THRESHOLDS.ecstatic ? 'ecstatic' : 'happy', events };
 }
 
+// Anime rules: a week of pure bliss unlocks a super form with a golden aura.
+export const AURA_DAYS = 7;
+
+// Consecutive days, ending today, that the pet was ecstatic (from pet.json's mood history).
+export function blissStreak(mood, date, history = []) {
+  if (mood !== 'ecstatic') return 0;
+  let streak = 1;
+  let expected = date;
+  const older = history.filter((h) => h.date < date).sort((a, b) => (a.date < b.date ? 1 : -1));
+  for (const h of older) {
+    if (h.mood !== 'ecstatic' || daysBetween(h.date, expected) !== 1) break;
+    streak += 1;
+    expected = h.date;
+  }
+  return streak;
+}
+
 export function chooseAccessories({ mood, holiday, events, growth, facts, vitals, species }) {
   let hat = null;
   if (mood === 'egg') hat = null;

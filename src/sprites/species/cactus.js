@@ -2,6 +2,7 @@
 export default {
   id: 'cactus',
   trait: 'drought',
+  home: 'desert',
   modifiers: { hungerRate: 0.25 },
   food: 'water',
   palette: {

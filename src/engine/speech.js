@@ -1,3 +1,5 @@
+import { AURA_DAYS } from './mood.js';
+
 // The pet talks about what is really happening in the repo.
 // Strong moods and events speak first; calmer days mix in data-aware tidbits.
 
@@ -21,6 +23,7 @@ export function speechVars(pet, snapshot) {
     years: Math.max(1, Math.round(facts.ageDays / 365.25)),
     check: snapshot.ci?.failingNames?.[0],
     toHatch: Math.max(1, 5 - facts.totalCommits),
+    auraDays: pet.auraDays,
   };
 }
 
@@ -39,6 +42,7 @@ export function chooseSpeech(pet, snapshot, tr, rng) {
   if (holiday && lines.holiday[holiday]) return pick(lines.holiday[holiday]);
   if (events.includes('birthday')) return pick(lines.birthday);
   if (events.includes('release') && v.tag) return pick(lines.release);
+  if (pet.aura && pet.auraDays === AURA_DAYS) return pick(lines.aura); // the day it powers up
 
   // A hungry pet talks about food; a content one has room for small talk.
   const chatty = mood === 'happy' || mood === 'ecstatic';
@@ -47,5 +51,7 @@ export function chooseSpeech(pet, snapshot, tr, rng) {
   if (v.treatUser && (chatty || mood === 'party')) pool.push(...lines.treat);
   if (v.streak >= 3 && chatty) pool.push(...lines.streak);
   if (snapshot.ci?.state === 'unknown' && (chatty || mood === 'sleepy')) pool.push(...lines.noCi);
+  if (pet.aura) pool.push(...lines.aura);
+  if (chatty || mood === 'party') pool.push(...(lines.species?.[pet.speciesId] ?? []));
   return pick(pool);
 }

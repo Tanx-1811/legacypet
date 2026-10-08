@@ -2,6 +2,7 @@
 export default {
   id: 'cat',
   trait: 'independent',
+  home: 'garden',
   modifiers: { issuePenalty: 0.5 },
   food: 'kibble',
   palette: { o: '#3b2416', b: '#f4a259', l: '#ffd2a1', s: '#d9822b', w: '#fff4e6', p: '#ff9eb5' },

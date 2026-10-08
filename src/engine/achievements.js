@@ -18,6 +18,13 @@ export const ACHIEVEMENTS = [
     test: (c) => c.facts.openIssues === 0 && c.facts.openPRs === 0 && c.facts.totalCommits >= 20,
   },
   { id: 'elder', emoji: '🧙', test: (c) => c.growth.stage === 'elder' },
+  { id: 'superForm', emoji: '💥', test: (c) => Boolean(c.aura) },
+  {
+    id: 'responder',
+    emoji: '💌',
+    test: (c) => (c.snapshot.issues?.open ?? 0) >= 5 && c.snapshot.issues.unanswered.length === 0,
+  },
+  { id: 'anniversary', emoji: '🎂', test: (c) => c.events.includes('birthday') },
 ];
 
 export function evaluateAchievements(context, unlocked = {}, today) {

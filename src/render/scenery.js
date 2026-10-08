@@ -1,6 +1,7 @@
 // Each species has a home: a little landscape with its own props and ambient effects.
 // Layers are drawn back to front: sky → far → (ground) → props → (pet) → front → overhead.
 // Fixed-color props sit in `.lp-prop`, which the theme dims at night.
+import { stamp as px } from './pixels.js';
 
 export const HOMES = ['meadow', 'garden', 'pond', 'beach', 'reef', 'jungle', 'desert'];
 export const SANDY = new Set(['beach', 'reef', 'desert']);
@@ -11,25 +12,7 @@ const at = (x, y, content, cls = '', style = '') => `<g transform="translate(${r
   + (cls || style ? `<g${cls ? ` class="${cls}"` : ''}${style ? ` style="${style}"` : ''}>${content}</g>` : content) + '</g>';
 const anim = (dur, delay = 0) => `animation-duration:${sec(dur)};animation-delay:-${sec(delay)}`;
 
-// --- tiny pixel stamps (kept local so scenes stay self-contained) -------------------------
-
-function px(rows, colors, p, ox = 0, oy = 0) {
-  let out = '';
-  rows.forEach((row, y) => {
-    let run = null;
-    const flush = (end) => {
-      if (run) out += `<rect x="${r1(ox + run.x * p)}" y="${r1(oy + y * p)}" width="${r1((end - run.x) * p)}" height="${p}" fill="${colors[run.c]}"/>`;
-      run = null;
-    };
-    [...row].forEach((ch, x) => {
-      if (run && ch === run.c) return;
-      flush(x);
-      if (ch !== '.') run = { x, c: ch };
-    });
-    flush(row.length);
-  });
-  return out;
-}
+// --- pixel sprites ---------------------------------------------------------------------------
 
 const TREE = ['...llllll...', '.llllLlllll.', 'llLllllllLll', 'lllllllLllll', 'lLllllllllLl', 'llllLlllllll', '.llllllLlll.', '...llllll...', '.....tt.....', '.....tt.....', '....tttt....'];
 const DEAD_TREE = ['.t.......t..', '..t..t..t...', '...t.t.t..t.', '.t..ttt..t..', '..t..tt.t...', '...t.tttt...', '....ttt.....', '.....tt.....', '.....tt.....', '.....tt.....', '....tttt....'];
