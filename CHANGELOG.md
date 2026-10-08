@@ -4,6 +4,24 @@ Every release of LegacyPet. `@v1` always points to the newest 1.x release, so pe
 the first run on a new version also lists these notes in the job summary.
 Releases that need a change to your workflow file say so.
 
+## 1.2.0 (2026-10-08)
+
+### New
+
+- 🏖️ **Vacation mode**: `vacation: until 2027-01-05` (or comment `/pet vacation 14`, and `/pet back` to return early).
+  Hunger pauses, vacation days never count, and the pet relaxes on the beach in sunglasses. Up to 60 days.
+- 🚨 **Care alerts** (opt-in, `alerts: true`): one issue when the pet stays sick or turns zombie, kept up to date and
+  closed automatically when it recovers. Waits for two runs in a row, and closing it by hand mutes it.
+- 📈 **`pet-stats.svg`**: a 30-day chart of fullness, health, joy and energy, with each day's mood. `pet.json` history now keeps daily vitals.
+- 🏆 **`/pet trophies`**: the trophy shelf, with unlock dates and what's still locked.
+- 🌄 **Livelier scenes**: rainbows, shooting stars, northern lights, party bunting, zombie fog, Halloween bats,
+  Christmas lights and a snowman, and a blooming mai branch at Tết.
+- 📤 **New outputs**: `on-vacation`, `alert-issue`.
+
+### Workflow
+
+Nothing to change. Alerts use the `issues: write` permission that `/pet` already needs.
+
 ## 1.1.0 (2026-10-08)
 
 ### New

@@ -155,7 +155,10 @@ test('care alerts: closing by hand mutes, vacations stay quiet, lost state is ad
   assert.equal(muted.calls.filter(([m]) => m !== 'GET').length, 0);
 
   const beach = fakeClient();
-  assert.equal(await syncAlert(beach, { ...base, pet: pet('sick', { vacation: 'until 2026-10-20' }), prevMood: 'sick' }), null);
+  const away = pet('sick', { vacation: 'until 2026-10-20' });
+  assert.equal(await syncAlert(beach, { ...base, pet: away, prevMood: 'sick' }), null);
+  const open = { issue: 9, mood: 'sick', since: '2026-10-01' };
+  assert.deepEqual(await syncAlert(beach, { ...base, pet: away, prev: open, prevMood: 'sick' }), open); // left alone
   assert.equal(beach.calls.length, 0);
 
   const lost = fakeClient({ 42: { number: 42, state: 'open' } }, { listed: [{ number: 42 }] });

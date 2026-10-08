@@ -45,8 +45,10 @@ export function alertIssue(pet, snapshot, { since, cardUrl } = {}) {
 // Brings the alert issue in line with how the pet feels. Returns what pet.json should remember:
 // { issue, mood, since, muted? } while an alert is open, or null.
 export async function syncAlert(client, { owner, repo, pet, snapshot, moods, prev = null, prevMood = null, cardUrl }) {
+  // Away on vacation: open nothing new, and leave an open alert exactly as it is for when they're back.
+  if (pet.vacation) return prev;
   const base = `/repos/${owner}/${repo}`;
-  const unwell = Boolean(moods?.has(pet.mood)) && !pet.vacation;
+  const unwell = Boolean(moods?.has(pet.mood));
   const tr = strings(pet.lang);
 
   if (prev?.issue) {
