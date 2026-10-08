@@ -6,6 +6,8 @@ on:
     - cron: '17 */6 * * *' # check on the pet four times a day
   release:
     types: [published] # throw a party the moment you ship
+  push:
+    paths: ['.github/workflows/legacypet.yml'] # hatch right after you commit this file
   workflow_dispatch: # "Run workflow" button for impatient owners
   issue_comment:
     types: [created] # talk to your pet: /pet, /pet feed, /pet play, /pet quests

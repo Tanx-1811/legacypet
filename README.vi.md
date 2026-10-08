@@ -39,12 +39,13 @@ Tất cả chạy trong một GitHub Action: không server, không đăng ký, k
 
 ## Cách dùng
 
-### Cách 1: xem trước trên web (không cần cài gì)
+### Cách 1: một cú click trên web (không cần cài gì, khuyên dùng)
 
-Mở **[playground](https://tanx-1811.github.io/legacypet/)**, gõ `owner/repo` bất kỳ để xem nó nở ra con gì,
-kèm bảng khám sức khỏe repo. Gửi link cho bạn bè khoe luôn.
+Mở **[playground](https://tanx-1811.github.io/legacypet/)**, gõ `owner/repo` của bạn để xem nó nở ra con gì,
+kèm bảng khám sức khỏe repo. Ưng rồi thì bấm **🐾 Adopt on GitHub**: GitHub mở sẵn file workflow đã điền xong,
+bạn chỉ cần bấm **Commit changes**, khoảng một phút sau thú tự nở. Cuối cùng dán đoạn snippet trang web đưa vào README là xong.
 
-### Cách 2: một lệnh duy nhất (khuyên dùng)
+### Cách 2: một lệnh duy nhất
 
 Chạy trong thư mục repo của bạn:
 
@@ -58,7 +59,7 @@ Lệnh này tạo `.github/workflows/legacypet.yml`, chèn con thú lên đầu 
 git add . && git commit -m "Nhận nuôi LegacyPet 🐾" && git push
 ```
 
-Vào tab **Actions** → **LegacyPet** → **Run workflow** (hoặc đợi lịch tự chạy), rồi tải lại README.
+Khoảng một phút sau khi push, thú tự nở. Tải lại README để chào nó nhé!
 
 Tùy chọn: `--species ninja`, `--scenery beach`, `--name "Bánh Bao"`, `--style badge`.
 Nếu chạy trong repo profile (`ten-ban/ten-ban`), lệnh sẽ tự tạo **Công viên thú** gom tất cả thú của bạn.
@@ -74,6 +75,8 @@ on:
     - cron: '17 */6 * * *'
   release:
     types: [published]
+  push:
+    paths: ['.github/workflows/legacypet.yml'] # nở ngay khi bạn commit file này
   workflow_dispatch:
   issue_comment:
     types: [created] # nói chuyện với thú bằng /pet
@@ -96,7 +99,7 @@ jobs:
           lang: vi
 ```
 
-**2.** Chạy workflow một lần trong tab **Actions**, rồi dán vào README (thay `OWNER/REPO`):
+**2.** Commit file đó là thú tự nở, rồi dán vào README (thay `OWNER/REPO`):
 
 ```md
 [![LegacyPet](https://raw.githubusercontent.com/OWNER/REPO/legacypet/pet.svg)](https://github.com/OWNER/REPO/blob/legacypet/DIARY.md)

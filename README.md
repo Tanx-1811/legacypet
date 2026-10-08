@@ -40,12 +40,14 @@ Everything runs inside a GitHub Action: no server, no sign-up, no tracking, zero
 
 ## Quick start
 
-### 1. Preview it (optional)
+### 1. Adopt it in one click (nothing to install)
 
-Open the **[playground](https://tanx-1811.github.io/legacypet/)**, type any `owner/repo`
-and see which pet it hatches, plus a checkup. Then share the link and show off. 🔮
+Open the **[playground](https://tanx-1811.github.io/legacypet/)**, type your `owner/repo`
+and see which pet it hatches, plus a checkup. Like it? Press **🐾 Adopt on GitHub**:
+GitHub opens with the workflow already filled in. Press **Commit changes** and your pet
+hatches by itself within a minute. Then paste the README snippet the page gives you. Done!
 
-### 2. Adopt it with one command
+### 2. …or with one command
 
 Inside your repository:
 
@@ -60,7 +62,7 @@ and shows a preview right in your terminal. Then:
 git add . && git commit -m "Adopt a LegacyPet 🐾" && git push
 ```
 
-Run the workflow once from the **Actions** tab (or wait for the schedule) and refresh your README. Hello, pet!
+The pet hatches by itself a minute after the push. Refresh your README. Hello, pet!
 
 Options: `--lang ja`, `--species ninja`, `--scenery beach`, `--name Mochi`, `--style badge`. In a profile repo (`you/you`) it sets up a [Pet Park](#pet-park) instead.
 
@@ -75,6 +77,8 @@ on:
     - cron: '17 */6 * * *'
   release:
     types: [published]
+  push:
+    paths: ['.github/workflows/legacypet.yml'] # hatch right after you commit this file
   workflow_dispatch:
   issue_comment:
     types: [created] # talk to your pet with /pet
@@ -95,7 +99,7 @@ jobs:
       - uses: Tanx-1811/legacypet@v1
 ```
 
-Run it once from the **Actions** tab, then paste this into your README (replace `OWNER/REPO`):
+Commit it and the pet hatches by itself. Then paste this into your README (replace `OWNER/REPO`):
 
 ```md
 [![LegacyPet](https://raw.githubusercontent.com/OWNER/REPO/legacypet/pet.svg)](https://github.com/OWNER/REPO/blob/legacypet/DIARY.md)
