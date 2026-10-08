@@ -200,6 +200,21 @@ Six original characters inspired by anime and Saturday-morning superhero cartoon
 They have their own catchphrases too ("Up, up and deploy! 🦸", "*poof* Shadow clone commit jutsu! 🍥").
 Pets that already hatched keep their species when new ones join the pool.
 
+### 🕺 Signature moves
+
+On good days (happy, ecstatic or partying) every species shows off its own move every few seconds,
+on top of its mood animation. It stops when the pet feels bad, and with reduced motion.
+
+| Species | Move | | Species | Move |
+| --- | --- | --- | --- | --- |
+| Slime | squashes flat and springs up | | Ninja Fox | a blink-fast dash, leaving two shadow clones behind |
+| Cat | a long, lazy stretch | | Mecha | crouches, fires its jets and hovers |
+| Rubber Duck | waddles left and right | | Spirit Dragon | rises and coils through the air |
+| Crab | scuttles sideways | | Magical Bunny | a transformation twirl |
+| Octopus | an eight-armed wiggle | | Night Guardian | a backflip |
+| Snake | slithers back and forth | | Super Pup | takes off, then a hero landing |
+| Cactus | a slow sway in the desert wind | | | |
+
 Prefer a different one? Set `species: cactus`. Want a name? Set `name: Mochi`.
 Otherwise the repo names its pet too. You don't choose, you adopt.
 

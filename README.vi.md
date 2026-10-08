@@ -184,6 +184,21 @@ Sáu nhân vật nguyên bản lấy cảm hứng từ anime và phim hoạt hì
 
 Mỗi bé còn có câu cửa miệng riêng (*"Bay lên nào, deploy! 🦸"*, *"\*bùm\* Thuật phân thân commit! 🍥"*).
 Thú đã nở thì giữ nguyên loài, kể cả khi có loài mới được thêm vào.
+
+### 🕺 Động tác đặc trưng
+
+Những ngày vui (vui, phấn khích, quẩy), mỗi loài lại khoe một động tác riêng vài giây một lần, thêm vào chuyển động theo tâm trạng.
+Khi thú mệt hay ốm thì nó thôi, và người xem bật reduced motion thì cũng tắt.
+
+| Loài | Động tác | | Loài | Động tác |
+| --- | --- | --- | --- | --- |
+| Slime | nén dẹp rồi bật nảy | | Cáo Ninja | lướt nhanh như chớp, để lại hai bóng phân thân |
+| Mèo | vươn vai thật dài | | Mecha | ngồi thụp, khai hỏa động cơ rồi bay lơ lửng |
+| Vịt cao su | lạch bạch qua lại | | Rồng Thần | bay lên và uốn lượn |
+| Cua | bước ngang | | Thỏ Phép Thuật | xoay một vòng biến hình |
+| Bạch tuộc | uốn éo tám xúc tu | | Hiệp sĩ Bóng đêm | lộn ngược ra sau |
+| Rắn | trườn tới trườn lui | | Siêu Cún | cất cánh rồi tiếp đất kiểu siêu anh hùng |
+| Xương rồng | đung đưa chậm rãi trong gió | | | |
 Muốn chọn loài khác? Đặt `species: ninja`. Muốn đặt tên? Đặt `name: Bánh Bao`.
 
 ### ✨ Thú lấp lánh

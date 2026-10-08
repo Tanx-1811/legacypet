@@ -23,6 +23,8 @@ node src/cli.js demo --species cat --mood party   # try one pet
    - `hat`: `[center column, top row of the head]`. Hats sit on that row.
    - `home`: where it lives: `meadow`, `garden`, `pond`, `beach`, `reef`, `jungle` or `desert` (see `src/render/scenery.js`).
    - `shinyKeep` (optional): palette letters that keep their color on a shiny pet, like a cape or a gem.
+   - `move`: its signature move from `src/render/moves.js` (`squish`, `jet`, `twirl`…). Every species should move its own way,
+     so a new species usually brings a new move: a keyframe that idles until about 75% and plays its trick after that.
 4. Give it a `trait`: one rule it bends. The options in `modifiers` are
    `hungerRate`, `ciPenalty`, `issuePenalty`, `releaseJoy`, `teamEnergy`, `streakEnergy`, `ciEnergyFloor`,
    `inboxJoy`, `healthFloor`, `xpRate` and `starJoy` (see `src/engine/vitals.js`).

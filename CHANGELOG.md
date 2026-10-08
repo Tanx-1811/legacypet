@@ -16,6 +16,9 @@ Releases that need a change to your workflow file say so.
 - 🏆 **`/pet trophies`**: the trophy shelf, with unlock dates and what's still locked.
 - 🌄 **Livelier scenes**: rainbows, shooting stars, northern lights, party bunting, zombie fog, Halloween bats,
   Christmas lights and a snowman, and a blooming mai branch at Tết.
+- 🕺 **Signature moves**: on good days every species shows off its own move every few seconds: the slime squishes,
+  the crab sidesteps, the ninja dashes and leaves two shadow clones, the mecha hovers on its jets, the bunny twirls,
+  the bat does a backflip and the super pup takes off. Off when the pet feels bad, and with reduced motion.
 - 📤 **New outputs**: `on-vacation`, `alert-issue`.
 
 ### Workflow
