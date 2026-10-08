@@ -20,6 +20,15 @@ export const SPECIES = {
 };
 export const SPECIES_IDS = Object.keys(SPECIES);
 
+// Where a pet lives. Every species has a `home`; the `scenery` option can move it elsewhere.
+export const HOMES = ['meadow', 'garden', 'pond', 'beach', 'reef', 'jungle', 'desert'];
+
+export function pickHome(requested, species) {
+  if (!requested || requested === 'auto') return species.home ?? 'meadow';
+  if (!HOMES.includes(requested)) throw new Error(`Unknown scenery "${requested}". Pick one of: auto, ${HOMES.join(', ')}`);
+  return requested;
+}
+
 // A few languages come with a matching pet. Everything else is decided by the repo's name.
 export const LANGUAGE_SPECIES = { Rust: 'crab', Python: 'snake', 'Jupyter Notebook': 'snake' };
 

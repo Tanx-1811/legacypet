@@ -1,9 +1,9 @@
 // Each species has a home: a little landscape with its own props and ambient effects.
 // Layers are drawn back to front: sky → far → (ground) → props → (pet) → front → overhead.
 // Fixed-color props sit in `.lp-prop`, which the theme dims at night.
+import { HOMES } from '../sprites/index.js';
 import { stamp as px } from './pixels.js';
 
-export const HOMES = ['meadow', 'garden', 'pond', 'beach', 'reef', 'jungle', 'desert'];
 export const SANDY = new Set(['beach', 'reef', 'desert']);
 
 const r1 = (v) => Math.round(v * 10) / 10;

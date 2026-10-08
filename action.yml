@@ -18,6 +18,9 @@ inputs:
   species:
     description: 'auto, blob, cat, duck, crab, octopus, snake, cactus, ninja, mecha, dragon, bunny, bat or hero. "auto" lets the repo choose.'
     default: 'auto'
+  scenery:
+    description: 'Where the pet lives: auto (its species home), meadow, garden, pond, beach, reef, jungle or desert.'
+    default: 'auto'
   name:
     description: 'Custom pet name. Leave empty and the repo names its own pet.'
     default: ''

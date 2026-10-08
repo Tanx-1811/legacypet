@@ -156,7 +156,7 @@ async function main() {
   const keepDiary = flag('diary', true);
   const outputDir = input('output-dir', 'legacypet-out');
   const ignoreChecks = [process.env.GITHUB_JOB, ...input('ignore-checks').split(',').map((s) => s.trim())];
-  const options = { species: input('species', 'auto'), name: input('name'), lang: input('lang', 'en') };
+  const options = { species: input('species', 'auto'), scenery: input('scenery', 'auto'), name: input('name'), lang: input('lang', 'en') };
 
   const client = createClient({ token });
   const now = new Date();

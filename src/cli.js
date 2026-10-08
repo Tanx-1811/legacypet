@@ -6,7 +6,7 @@ import { parseArgs } from 'node:util';
 import {
   buildPet, checkup, collectPark, collectSnapshot, createClient, insertSnippet, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
   parseRemote, PLAYGROUND, renderBadge, renderCard, renderFiles, renderMini, renderPark, resolveParkRepos,
-  snippetFor, SPECIES_IDS, terminalArt, workflowYaml,
+  snippetFor, HOMES, SPECIES_IDS, terminalArt, workflowYaml,
 } from './index.js';
 
 const HELP = `
@@ -21,6 +21,7 @@ Usage
 
 Options
   --species <id>   auto | ${SPECIES_IDS.join(' | ')}
+  --scenery <home> auto | ${HOMES.join(' | ')}
   --name <name>    custom pet name
   --lang <code>    ${Object.keys(LANG_NAMES).join(' | ')}
   --theme <mode>   auto | light | dark
@@ -38,6 +39,7 @@ const { values: opts, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     species: { type: 'string', default: 'auto' },
+    scenery: { type: 'string', default: 'auto' },
     mood: { type: 'string' },
     stage: { type: 'string' },
     shiny: { type: 'boolean' },
@@ -84,7 +86,7 @@ async function visit(fullName, now = new Date()) {
   if (!owner || !repo) throw new Error('Expected a repo like owner/name');
   const snapshot = await collectSnapshot(createClient({ token: token() }), { owner, repo, now });
   snapshot.warnings.forEach((w) => console.warn(`⚠ ${w}`));
-  const pet = buildPet({ snapshot, now, options: { species: opts.species, name: opts.name, lang: opts.lang } });
+  const pet = buildPet({ snapshot, now, options: { species: opts.species, scenery: opts.scenery, name: opts.name, lang: opts.lang } });
   return { pet, snapshot };
 }
 
@@ -132,7 +134,7 @@ async function init() {
     console.log(`• ${workflow} already exists (use --force to overwrite)`);
   } else {
     mkdirSync(dirname(workflow), { recursive: true });
-    writeFileSync(workflow, workflowYaml({ lang: opts.lang, species: opts.species, name: opts.name, park: parkSpec }));
+    writeFileSync(workflow, workflowYaml({ lang: opts.lang, species: opts.species, scenery: opts.scenery, name: opts.name, park: parkSpec }));
     console.log(`✔ Created ${workflow}`);
   }
 
@@ -165,14 +167,14 @@ Next steps
   3. Refresh your README. Say hi to your pet!`);
 }
 
-function demoPet({ mood = 'happy', species = 'auto', stage, shiny, aura, holiday = null, season, lang = 'en', name, fullName, now = new Date() }) {
+function demoPet({ mood = 'happy', species = 'auto', scenery, stage, shiny, aura, holiday = null, season, lang = 'en', name, fullName, now = new Date() }) {
   const snapshot = mockSnapshot({ mood, stage: stage ?? 'adult', now, fullName });
-  return buildPet({ snapshot, now, options: { species, mood, stage, shiny: shiny ?? false, aura: aura ?? false, holiday, season, lang, name } });
+  return buildPet({ snapshot, now, options: { species, scenery, mood, stage, shiny: shiny ?? false, aura: aura ?? false, holiday, season, lang, name } });
 }
 
 function demo() {
   const pet = demoPet({
-    mood: opts.mood ?? 'happy', species: opts.species, stage: opts.stage, shiny: opts.shiny, aura: opts.aura,
+    mood: opts.mood ?? 'happy', species: opts.species, scenery: opts.scenery, stage: opts.stage, shiny: opts.shiny, aura: opts.aura,
     holiday: opts.holiday ?? null, lang: opts.lang, name: opts.name,
   });
   write(opts.out, 'demo.svg', renderCard(pet, { theme: opts.theme }));
@@ -186,6 +188,11 @@ function demo() {
 const MOOD_STARS = {
   ecstatic: 'duck', happy: 'cat', party: 'ninja', hungry: 'blob', sleepy: 'octopus',
   sad: 'bat', sick: 'mecha', zombie: 'cat', hibernating: 'cactus', egg: 'bunny',
+};
+// Each home with its native species, on a day that shows the place at its best.
+const HOME_DEMO = {
+  meadow: ['blob', 'ecstatic'], garden: ['cat', 'happy'], pond: ['duck', 'happy'], beach: ['crab', 'happy'],
+  reef: ['octopus', 'happy'], jungle: ['snake', 'sleepy'], desert: ['cactus', 'party'],
 };
 const HERO_SQUAD = ['ninja', 'mecha', 'dragon', 'bunny', 'bat', 'hero'];
 const LANG_DEMO = { en: 'hero', vi: 'cat', ja: 'ninja', zh: 'dragon', ko: 'bunny', es: 'mecha', fr: 'bat' };
@@ -219,6 +226,8 @@ function gallery() {
   add('Badges', MOODS.map((mood) => ({ label: mood, src: save('badges', `${mood}.svg`, renderBadge(demoPet({ mood, species: MOOD_STARS[mood], now, name: 'Mochi' }))) })));
   add('Moods', MOODS.map((mood) => ({ label: mood, src: mini('moods', `${mood}.svg`, demoPet({ mood, species: MOOD_STARS[mood], now })) })));
   add('Species', SPECIES_IDS.map((species) => ({ label: species, src: mini('species', `${species}.svg`, demoPet({ mood: 'happy', species, now })) })));
+  add('Homes (each species lives somewhere special; set `scenery` to move)', HOMES.map((home) => ({ label: home, src: card('homes', `${home}.svg`, demoPet({ mood: HOME_DEMO[home][1], species: HOME_DEMO[home][0], scenery: home, season: 'summer', now })), wide: true })));
+  add('Homes at night', HOMES.map((home) => ({ label: home, src: mini('homes', `${home}-night.svg`, demoPet({ mood: 'happy', species: HOME_DEMO[home][0], scenery: home, season: home === 'meadow' ? 'winter' : 'summer', now }), 'dark'), dark: true })));
   add('Shiny variants (1 in 64 repos)', SPECIES_IDS.map((species) => ({ label: `✨ ${species}`, src: mini('shiny', `${species}.svg`, demoPet({ mood: 'ecstatic', species, shiny: true, now })) })));
   add('Super form (7 ecstatic days in a row)', HERO_SQUAD.map((species) => ({ label: `💥 ${species}`, src: mini('aura', `${species}.svg`, demoPet({ mood: 'ecstatic', species, aura: true, now })) })));
   add('Languages', Object.entries(LANG_DEMO).map(([lang, species]) => ({ label: LANG_NAMES[lang], src: card('langs', `${lang}.svg`, demoPet({ mood: 'happy', species, lang, now, fullName: 'Tanx-1811/legacypet' })), wide: true })));

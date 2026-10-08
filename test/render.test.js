@@ -5,8 +5,9 @@ import { buildPet } from '../src/engine/pet.js';
 import { mockSnapshot } from '../src/mock.js';
 import { renderCard } from '../src/render/card.js';
 import { renderMini } from '../src/render/mini.js';
+import { renderPark } from '../src/render/park.js';
 import { terminalArt } from '../src/render/terminal.js';
-import { SPECIES_IDS } from '../src/sprites/index.js';
+import { HOMES, SPECIES, SPECIES_IDS } from '../src/sprites/index.js';
 import { renderFiles } from '../src/index.js';
 
 const NOW = new Date('2026-10-08T09:00:00Z');
@@ -81,4 +82,32 @@ test('terminal art draws the pet with half blocks', () => {
   const art = terminalArt(buildPet({ snapshot: mockSnapshot({ mood: 'happy', now: NOW }), now: NOW, options: { species: 'cat', holiday: null } }));
   assert.match(art, /▀|▄/);
   assert.ok(art.split('\n').length >= 7);
+});
+
+test('every home renders in every season, mood and holiday, light and dark', () => {
+  for (const scenery of HOMES) {
+    for (const season of ['spring', 'summer', 'autumn', 'winter']) {
+      for (const [mood, holiday] of [['ecstatic', null], ['party', 'tet'], ['zombie', 'halloween'], ['hibernating', 'christmas'], ['egg', null]]) {
+        const pet = buildPet({ snapshot: mockSnapshot({ mood, now: NOW }), now: NOW, options: { species: 'blob', scenery, mood, season, holiday } });
+        assertValidSvg(renderCard(pet, { theme: 'light' }), `${scenery}/${season}/${mood}`);
+        assertValidSvg(renderMini(pet, { theme: 'dark' }), `${scenery}/${season}/${mood}/mini`);
+      }
+    }
+  }
+});
+
+test('each species lives in a known home, and scenery can move it', () => {
+  for (const id of SPECIES_IDS) assert.ok(HOMES.includes(SPECIES[id].home), `${id} has no home`);
+  const build = (scenery) => buildPet({ snapshot: mockSnapshot({ mood: 'happy', now: NOW }), now: NOW, options: { species: 'duck', scenery, holiday: null } });
+  assert.equal(build('auto').home, 'pond');
+  assert.equal(build('reef').home, 'reef');
+  assert.match(renderCard(build('beach')), /--lp-water:#3fa7e0/);
+  assert.throws(() => build('moon'), /Unknown scenery "moon"/);
+});
+
+test('the park gets scenery too and stays a reasonable size', () => {
+  const pets = SPECIES_IDS.slice(0, 8).map((species) => buildPet({ snapshot: mockSnapshot({ mood: 'party', now: NOW, fullName: `me/${species}` }), now: NOW, options: { species, holiday: 'christmas' } }));
+  const svg = renderPark(pets, { owner: 'me' });
+  assertValidSvg(svg.replace(/^/, ''), 'park');
+  assert.match(svg, /lp-spin/);
 });

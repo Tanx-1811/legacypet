@@ -1,5 +1,5 @@
 import { strings, resolveLang } from '../i18n/index.js';
-import { pickSpecies } from '../sprites/index.js';
+import { pickHome, pickSpecies } from '../sprites/index.js';
 import { createRng } from '../util/rng.js';
 import { isoDay } from '../util/time.js';
 import { evaluateAchievements } from './achievements.js';
@@ -41,7 +41,7 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
   const auraDays = blissStreak(mood, date, prevState?.history);
   const aura = options.aura ?? auraDays >= AURA_DAYS;
   const shiny = options.shiny ?? isShiny(fullName);
-  const home = options.scenery && options.scenery !== 'auto' ? options.scenery : species.home;
+  const home = pickHome(options.scenery, species);
   const name = options.name?.trim() || petName(fullName);
   const accessories = chooseAccessories({ mood, holiday, events, growth, facts, vitals, species });
   const achievements = evaluateAchievements(

@@ -72,17 +72,20 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  issue_comment:
+    types: [created] # talk to your pet with /pet
 
 permissions:
   contents: write # publish the pet to the `legacypet` branch
   actions: write # keep the schedule alive while the repo sleeps
-  issues: read
-  pull-requests: read
+  issues: write # answer /pet in issues
+  pull-requests: write # ...and in pull requests
   checks: read
   statuses: read
 
 jobs:
   legacypet:
+    if: github.event_name != 'issue_comment' || startsWith(github.event.comment.body, '/pet')
     runs-on: ubuntu-latest
     steps:
       - uses: Tanx-1811/legacypet@v1
@@ -105,8 +108,13 @@ Your pet lives on its own `legacypet` branch, so your main history stays clean.
 | `pet-mini.svg` | <img src="docs/gallery/moods/happy.svg" width="70"> | sidebars, tables, profile READMEs |
 | `pet-badge.svg` | <img src="docs/gallery/badges/ecstatic.svg"> | next to your other badges |
 | `park.svg` | see [Pet Park](#pet-park) | your profile README |
+| `pet-shields.json` | a [shields.io endpoint](https://shields.io/badges/endpoint-badge) | a badge row in shields.io style |
 
-Swap the file name in the snippet to switch.
+Swap the file name in the snippet to switch. The shields.io badge looks like this:
+
+```md
+![pet](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FOWNER%2FREPO%2Flegacypet%2Fpet-shields.json)
+```
 
 ## Moods
 
@@ -172,6 +180,22 @@ Everyone else gets one decided by the repo's name. Each species bends one rule:
 | <img src="docs/gallery/species/snake.svg" width="80"> | Snake | Patient | Eats rarely, so hunger builds 40% slower. |
 | <img src="docs/gallery/species/cactus.svg" width="80"> | Cactus | Drought-proof | Thrives on neglect: hunger builds 4× slower. Made for finished projects. |
 
+### 🦸 The hero squad
+
+Six original characters inspired by anime and Saturday-morning superhero cartoons. Each one brings a brand-new rule:
+
+| | Species | Trait | Effect |
+| :-: | --- | --- | --- |
+| <img src="docs/gallery/species/ninja.svg" width="80"> | Ninja Fox (`ninja`) | Shadow Clone | Every day of your commit streak sends out a clone: +4 energy per day (up to +24). |
+| <img src="docs/gallery/species/mecha.svg" width="80"> | Mecha (`mecha`) | Reactor Core | Green CI powers the reactor: energy never drops below 40 while CI passes. |
+| <img src="docs/gallery/species/dragon.svg" width="80"> | Spirit Dragon (`dragon`) | Ancient Power | Has lived for millennia, so it levels up 50% faster. |
+| <img src="docs/gallery/species/bunny.svg" width="80"> | Magical Bunny (`bunny`) | Starlight | Wishes on your stars: +2 joy per 100 stars (up to +20). |
+| <img src="docs/gallery/species/bat.svg" width="80"> | Night Guardian (`bat`) | Vigilant | Patrols the issue tracker: +15 joy while no community issue waits for a reply. |
+| <img src="docs/gallery/species/hero.svg" width="80"> | Super Pup (`hero`) | Steel Body | Shrugs off red builds: failing CI can't push its health below 40. |
+
+They have their own catchphrases too ("Up, up and deploy! 🦸", "*poof* Shadow clone commit jutsu! 🍥").
+Pets that already hatched keep their species when new ones join the pool.
+
 Prefer a different one? Set `species: cactus`. Want a name? Set `name: Mochi`.
 Otherwise the repo names its pet too. You don't choose, you adopt.
 
@@ -180,6 +204,14 @@ Otherwise the repo names its pet too. You don't choose, you adopt.
 One repo in 64 hatches a **shiny** pet with different colors and a sparkle. There is no way to reroll.
 
 <img src="docs/gallery/shiny/blob.svg" width="90"> <img src="docs/gallery/shiny/cat.svg" width="90"> <img src="docs/gallery/shiny/duck.svg" width="90"> <img src="docs/gallery/shiny/crab.svg" width="90"> <img src="docs/gallery/shiny/octopus.svg" width="90"> <img src="docs/gallery/shiny/snake.svg" width="90"> <img src="docs/gallery/shiny/cactus.svg" width="90">
+<img src="docs/gallery/shiny/ninja.svg" width="90"> <img src="docs/gallery/shiny/mecha.svg" width="90"> <img src="docs/gallery/shiny/dragon.svg" width="90"> <img src="docs/gallery/shiny/bunny.svg" width="90"> <img src="docs/gallery/shiny/bat.svg" width="90"> <img src="docs/gallery/shiny/hero.svg" width="90">
+
+### 💥 Super form
+
+Keep your pet **ecstatic 7 days in a row** and it powers up: a golden aura, a 💥 Super Form trophy,
+and a few words about it ("This isn't even my final form"). One bad day and the aura fades until the next streak.
+
+<img src="docs/gallery/aura/ninja.svg" width="90"> <img src="docs/gallery/aura/mecha.svg" width="90"> <img src="docs/gallery/aura/dragon.svg" width="90"> <img src="docs/gallery/aura/bunny.svg" width="90"> <img src="docs/gallery/aura/bat.svg" width="90"> <img src="docs/gallery/aura/hero.svg" width="90">
 
 ## Growing up
 
@@ -208,6 +240,9 @@ Trophies are permanent. Once earned, they stay on the card even if the streak br
 | 🧼 | Spotless | 100% community profile |
 | 📭 | Inbox Zero | No open issues or PRs |
 | 🧙 | Wise Elder | Reach the elder stage |
+| 💥 | Super Form | Stay ecstatic 7 days in a row |
+| 💌 | First Responder | Every community issue answered, with 5+ open |
+| 🎂 | Anniversary | Celebrate the repo's birthday |
 
 ## Seasons, holidays and night mode
 
@@ -229,7 +264,24 @@ The speech bubble isn't random filler. It reads the room:
 > "v2.0.0 just shipped! Party time! 🎉"
 > "Last fed 420 days ago. I have seen things."
 
-It speaks English and Vietnamese (`lang: vi`). [More languages welcome!](CONTRIBUTING.md#translate)
+It speaks 7 languages: English (`en`), Tiếng Việt (`vi`), 日本語 (`ja`), 中文 (`zh`), 한국어 (`ko`), Español (`es`) and Français (`fr`).
+Chinese, Japanese and Korean wrap correctly in the speech bubble. [More languages welcome!](CONTRIBUTING.md#translate)
+
+<img src="docs/gallery/langs/ja.svg" width="420"> <img src="docs/gallery/langs/ko.svg" width="420">
+
+## Talk to your pet: `/pet`
+
+Comment on any issue or pull request and your pet answers in the thread, in its own language:
+
+| Command | The pet replies with |
+| --- | --- |
+| `/pet` | its card, how it feels, its vitals and a full checkup |
+| `/pet pat` | a happy wiggle 💕 |
+| `/pet checkup` | just the checkup |
+| `/pet help` | the list of commands |
+
+It needs the `issue_comment` trigger and `issues: write` / `pull-requests: write` (already in the [example workflow](examples/legacypet.yml)).
+Comments from bots are ignored, and the `if:` line keeps every other comment from starting a run. Set `commands: false` to switch it off.
 
 ## The diary
 
@@ -280,9 +332,9 @@ The default token can read your public repos. To include private ones, pass a pe
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `species` | `auto` | `auto`, `blob`, `cat`, `duck`, `crab`, `octopus`, `snake`, `cactus` |
+| `species` | `auto` | `auto`, `blob`, `cat`, `duck`, `crab`, `octopus`, `snake`, `cactus`, `ninja`, `mecha`, `dragon`, `bunny`, `bat`, `hero` |
 | `name` | | Custom name. Empty means the repo names it. |
-| `lang` | `en` | `en` or `vi` |
+| `lang` | `en` | `en`, `vi`, `ja`, `zh`, `ko`, `es` or `fr` |
 | `theme` | `auto` | `auto` follows the viewer's light/dark mode. Also `light` or `dark`. |
 | `branch` | `legacypet` | Where the pet lives. Rewritten on every run, so use a dedicated branch. |
 | `diary` | `true` | Keep `DIARY.md` |
@@ -290,16 +342,18 @@ The default token can read your public repos. To include private ones, pass a pe
 | `park-size` | `6` | How many repos `auto` puts in the park (1–8) |
 | `ignore-checks` | | Comma-separated check names that shouldn't affect health |
 | `keepalive` | `true` | Stop GitHub from pausing the schedule after 60 quiet days (needs `actions: write`) |
+| `commands` | `true` | Answer [`/pet` commands](#talk-to-your-pet-pet) in issue and PR comments |
 | `dry-run` | `false` | Render without publishing |
 | `repository` | current repo | Visit another repo's pet |
 | `github-token` | `github.token` | Token used for the API |
 
-**Outputs:** `mood`, `name`, `level`, `species`, `stage`, `speech`, `svg-path`. For example, ping your team when the pet gets sick:
+**Outputs:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `svg-path`.
+For example, ping your team only when the pet *just* got sick:
 
 ```yaml
       - uses: Tanx-1811/legacypet@v1
         id: pet
-      - if: steps.pet.outputs.mood == 'sick'
+      - if: steps.pet.outputs.mood == 'sick' && steps.pet.outputs.mood-changed == 'true'
         run: echo "${{ steps.pet.outputs.name }} is sick! ${{ steps.pet.outputs.speech }}"
 ```
 
@@ -328,6 +382,12 @@ In a terminal with true color, it draws the pet right in your shell.
 
 **Does it send my data anywhere?** No. It reads the GitHub API with your workflow's token and writes to your repo. That's all.
 
+**How do I get new features?** `@v1` always points to the latest 1.x release, so updates arrive on their own on the next run.
+The first time your pet runs a newer version, the run page shows a notice and the job summary lists **what's new**.
+If a feature needs a change to your workflow file (like `/pet`, which needs the `issue_comment` trigger), the summary says so.
+Re-run `npx github:Tanx-1811/legacypet init --force` to refresh the workflow, or watch the repo's releases (**Watch → Custom → Releases**).
+Breaking changes only ever ship as a new major tag (`@v2`).
+
 **Is it accessible?** Every SVG has a title and a full text description for screen readers, and all animation stops when the viewer prefers reduced motion.
 
 ## Contributing
@@ -339,8 +399,7 @@ The playground runs the exact same code in the browser: `npm run playground` and
 
 Ideas on the roadmap:
 
-- 🌍 More languages (each one is a single file)
-- 💬 A `/pet` command in issues, so the pet answers in the thread
+- 🌍 Even more languages (each one is a single file)
 - 🐉 Rare evolutions (a duck that becomes a phoenix after 1,000 days without a red build?)
 - 🤝 **Visits**: pets of repos that depend on each other say hi
 

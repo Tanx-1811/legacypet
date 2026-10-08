@@ -14,7 +14,7 @@ export { checkup } from './engine/checkup.js';
 export { AURA_DAYS, MOODS, MOOD_EMOJI } from './engine/mood.js';
 export { ACHIEVEMENTS } from './engine/achievements.js';
 export { nextState, updateDiary, diaryEntry, moodStrip } from './engine/memory.js';
-export { SPECIES, SPECIES_IDS } from './sprites/index.js';
+export { HOMES, SPECIES, SPECIES_IDS } from './sprites/index.js';
 export { LANGS, LANG_NAMES } from './i18n/index.js';
 export { createClient, GitHubError } from './github/client.js';
 export { collectSnapshot } from './github/collect.js';

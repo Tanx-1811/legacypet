@@ -17,10 +17,11 @@ export function snippetFor(fullName, style = 'card', branch = 'legacypet') {
   return `[![LegacyPet](https://raw.githubusercontent.com/${fullName}/${branch}/${file})](https://github.com/${fullName}/blob/${branch}/DIARY.md)`;
 }
 
-export function workflowYaml({ lang = 'en', species = 'auto', name = '', park = '' } = {}) {
+export function workflowYaml({ lang = 'en', species = 'auto', scenery = 'auto', name = '', park = '' } = {}) {
   const inputs = [];
   if (lang && lang !== 'en') inputs.push(`lang: ${lang}`);
   if (species && species !== 'auto') inputs.push(`species: ${species}`);
+  if (scenery && scenery !== 'auto') inputs.push(`scenery: ${scenery}`);
   if (name) inputs.push(`name: ${JSON.stringify(name)}`);
   if (park) inputs.push(`park: ${park}`);
   return [

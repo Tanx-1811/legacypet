@@ -189,7 +189,7 @@ const STATIC_CSS = `
 @keyframes lp-kelp{0%,100%{transform:skewX(-9deg)}50%{transform:skewX(9deg)}}
 @keyframes lp-mist{0%,100%{transform:translateX(-14px)}50%{transform:translateX(14px)}}
 @keyframes lp-shoot{0%,86%{transform:translate(0,0);opacity:0}88%{opacity:1}100%{transform:translate(-70px,36px);opacity:0}}
-@keyframes lp-aurora{0%,100%{opacity:.15;transform:translateX(-6px)}50%{opacity:.45;transform:translateX(6px)}}
+@keyframes lp-aurora{0%,100%{opacity:.1;transform:translateY(0)}50%{opacity:.5;transform:translateY(3px)}}
 @keyframes lp-rainbow{0%,100%{opacity:.25}50%{opacity:.6}}
 @keyframes lp-wave{0%,100%{transform:translateX(0)}50%{transform:translateX(-7px)}}
 @keyframes lp-tide{0%,100%{transform:translateY(0);opacity:.2}50%{transform:translateY(4px);opacity:.9}}

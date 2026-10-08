@@ -106,6 +106,7 @@
     </div>
     <div class="controls">
       <label>Species <select id="species"><option value="auto">auto (the repo decides)</option></select></label>
+      <label>Scenery <select id="scenery"><option value="auto">auto (its species' home)</option></select></label>
       <label>Language <select id="lang"></select></label>
       <label>Theme <select id="theme"><option value="auto">auto (follows light/dark)</option><option value="light">light</option><option value="dark">dark (night)</option></select></label>
       <label>Name <input id="name" type="text" placeholder="let the repo name it"></label>
@@ -154,7 +155,7 @@
 <script type="module">
 import {
   buildPet, checkup, collectSnapshot, createClient, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
-  renderBadge, renderCard, renderMini, snippetFor, SPECIES_IDS, workflowYaml,
+  HOMES, renderBadge, renderCard, renderMini, snippetFor, SPECIES_IDS, workflowYaml,
 } from './src/index.js';
 
 const $ = (id) => document.getElementById(id);
@@ -162,6 +163,7 @@ const state = { snapshot: null, mood: null, now: new Date() };
 let blobUrls = [];
 
 for (const id of SPECIES_IDS) $('species').append(new Option(id, id));
+for (const id of HOMES) $('scenery').append(new Option(id, id));
 for (const [code, name] of Object.entries(LANG_NAMES)) $('lang').append(new Option(name, code));
 for (const mood of MOODS) {
   const b = document.createElement('button');
@@ -188,11 +190,12 @@ function draw() {
   blobUrls.forEach((u) => URL.revokeObjectURL(u));
   blobUrls = [];
   const species = $('species').value;
+  const scenery = $('scenery').value;
   const lang = $('lang').value;
   const name = $('name').value.trim();
   const theme = $('theme').value;
   const preview = state.mood ? { mood: state.mood, holiday: null } : {};
-  const pet = buildPet({ snapshot: state.snapshot, now: state.now, options: { species, lang, name, ...preview } });
+  const pet = buildPet({ snapshot: state.snapshot, now: state.now, options: { species, scenery, lang, name, ...preview } });
 
   for (const [id, svg] of [['card', renderCard(pet, { theme })], ['mini', renderMini(pet, { theme })], ['badge', renderBadge(pet)]]) {
     const url = svgUrl(svg);
@@ -210,9 +213,9 @@ function draw() {
   }));
 
   const fullName = state.mood ? 'OWNER/REPO' : pet.repo.fullName;
-  const flags = [lang !== 'en' && `--lang ${lang}`, species !== 'auto' && `--species ${species}`, name && `--name "${name.replace(/"/g, '')}"`].filter(Boolean);
+  const flags = [lang !== 'en' && `--lang ${lang}`, species !== 'auto' && `--species ${species}`, scenery !== 'auto' && `--scenery ${scenery}`, name && `--name "${name.replace(/"/g, '')}"`].filter(Boolean);
   $('cmd').textContent = ['npx github:Tanx-1811/legacypet init', ...flags].join(' ');
-  $('yaml').textContent = workflowYaml({ lang, species, name });
+  $('yaml').textContent = workflowYaml({ lang, species, scenery, name });
   $('snippet').textContent = snippetFor(fullName, $('style').value);
   $('result').hidden = false;
 }
@@ -252,7 +255,7 @@ function demo(mood) {
 
 $('hatch').onsubmit = (e) => { e.preventDefault(); hatch($('repo').value); };
 document.querySelectorAll('[data-repo]').forEach((b) => { b.onclick = () => hatch(b.dataset.repo); });
-for (const id of ['species', 'lang', 'theme', 'style']) $(id).onchange = draw;
+for (const id of ['species', 'scenery', 'lang', 'theme', 'style']) $(id).onchange = draw;
 $('name').oninput = draw;
 document.querySelectorAll('[data-copy]').forEach((b) => {
   b.onclick = async () => {
