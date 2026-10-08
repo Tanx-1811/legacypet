@@ -1,0 +1,156 @@
+// Lines are strings or functions of `v` (see engine/speech.js for every variable).
+// French uses the singular for 0 and 1.
+const plural = (n, one, many) => (n <= 1 ? one : many);
+
+export default {
+  code: 'fr',
+  species: {
+    blob: 'Slime', cat: 'Chat', duck: 'Canard en plastique', crab: 'Crabe',
+    octopus: 'Pieuvre', snake: 'Serpent', cactus: 'Cactus',
+    ninja: 'Renard ninja', mecha: 'Mecha', dragon: 'Dragon céleste', bunny: 'Lapin magique',
+    bat: 'Gardien de la nuit', hero: 'Super Toutou',
+  },
+  traits: {
+    adaptable: 'Adaptable', independent: 'Indépendant', debugger: 'Débogueur', molting: 'En mue',
+    multitasker: 'Multitâche', patient: 'Patient', drought: 'Anti-sécheresse',
+    shadowClone: "Clone de l'ombre", reactor: 'Cœur de réacteur', ancient: 'Pouvoir ancestral', starlight: "Lumière d'étoile",
+    vigilant: 'Vigilant', steel: "Corps d'acier",
+  },
+  stages: { egg: 'Œuf', baby: 'Bébé', adult: 'Adulte', elder: 'Vénérable' },
+  kind: (stage, species) => {
+    if (stage === 'Œuf') return `Œuf de ${species.toLowerCase()}`;
+    if (stage === 'Bébé') return `Bébé ${species.toLowerCase()}`;
+    return `${species} ${stage.toLowerCase()}`;
+  },
+  moods: {
+    ecstatic: 'aux anges', happy: 'de bonne humeur', party: 'en pleine fête', hungry: 'le ventre vide',
+    sleepy: 'en mode sieste', sad: 'triste', sick: 'malade', zombie: 'en mode zombie',
+    hibernating: 'en hibernation', egg: 'encore dans sa coquille',
+  },
+  titles: {
+    ecstatic: 'le Radieux', happy: 'le Joyeux', party: 'le Fêtard', hungry: "l'Affamé",
+    sleepy: "l'Endormi", sad: 'le Solitaire', sick: 'le Fiévreux', zombie: 'le Mort-Vivant',
+    hibernating: 'le Rêveur', egg: 'le Pas-Encore-Éclos',
+  },
+  displayName: (name, title) => `${name} ${title}`,
+  stats: { fullness: 'Satiété', health: 'Santé', joy: 'Joie', energy: 'Énergie', hygiene: 'Hygiène' },
+  level: (n) => `Niv.${n}`,
+  shiny: 'Chromatique',
+  noAchievements: "Aucun trophée pour l'instant. Continue à livrer!",
+  fed: (days) => {
+    if (days < 1) return "a mangé aujourd'hui";
+    if (days < 2) return 'a mangé hier';
+    return `dernier repas il y a ${Math.floor(days)} jours`;
+  },
+  achievements: {
+    hatched: 'Éclos', lazarus: "Revenu d'entre les morts", survivor: 'Survivant', shiny: 'Chromatique!',
+    streak7: 'En feu', streak30: 'Comète', centurion: 'Centurion', shipper: 'Livreur',
+    stars100: 'Étoile montante', stars1k: 'Superstar', team: 'La bande', spotless: 'Impeccable',
+    inboxZero: 'Inbox zéro', elder: 'Vieux sage',
+    superForm: 'Super forme', responder: 'Premier secours', anniversary: 'Anniversaire',
+  },
+  lines: {
+    revived: [(v) => `JE VIS!! Merci de revenir sur ${v.repoName} 💚`, 'Cerveauuu... attends, des commits? Je REVIS!'],
+    hatched: [(v) => `*crac* Bonjour, monde! Moi, c'est ${v.name}! 🐣`, "J'ai éclos! Nourris-moi de commits!"],
+    birthday: [
+      (v) => `${v.repoName} a ${v.years} ${plural(v.years, 'an', 'ans')} aujourd'hui! 🎂`,
+      (v) => `Joyeux anniversaire! ${v.years} ${plural(v.years, 'an', 'ans')} de code 🎂`,
+    ],
+    release: [(v) => `${v.tag} vient de sortir! C'est la fête! 🎉`, (v) => `Nouvelle version ${v.tag}! Sortez les confettis 🎊`],
+    holiday: {
+      halloween: ['Un bonbon ou un sort? Je préfère un commit 🎃', "Saison des frissons! Mon chapeau, c'est une feature 🎃"],
+      halloweenZombie: ["Halloween, c'est MA fête. Un petit commit quand même? 🎃"],
+      christmas: ['Pour Noël, je veux juste une CI verte 🎄', 'Joyeux Noël et bons merges! 🎄'],
+      newyear: ['Nouvelle année, nouveaux commits! 🎆', 'Résolution: moins de TODO, plus de tests 🎆'],
+      tet: ['Bon Nouvel An lunaire! Mes étrennes = des PR mergées 🧧', 'Chúc mừng năm mới! Que ta CI reste verte 🧧'],
+      programmers: ['Bonne Journée des programmeurs! Jour 256 = 0x100 🎉'],
+    },
+    ciFailing: [(v) => `J'ai mal au ventre... "${v.check}" échoue 🤒`, (v) => `La CI est rouge. Quelqu'un peut voir "${v.check}"?`],
+    noCi: ["Pas de CI? Je n'ai jamais vu de docteur 🩺"],
+    issueNudge: [
+      (v) => `Psst... l'issue #${v.issue} attend une réponse depuis ${v.issueDays} jours`,
+      (v) => `#${v.issue} se sent seule. ${v.issueDays} jours sans réponse 👀`,
+    ],
+    treat: [(v) => `@${v.treatUser} m'a offert une friandise (#${v.treatPr}) 🍪`, (v) => `Merci @${v.treatUser} pour le goûter dans #${v.treatPr}!`],
+    streak: [(v) => `${v.streak} jours de commits d'affilée! Inarrêtable 🔥`],
+    aura: [
+      'PUISSANCE MAXIMALE! Une semaine de bonheur ✨',
+      "Ce n'est même pas ma forme finale 💥",
+      (v) => `${v.auraDays} jours de pure joie. Je brille! ✨`,
+    ],
+    // Signature lines, mixed in on good days.
+    species: {
+      ninja: ['*pouf* Technique secrète: multi-clonage de commits! 🍥', 'Un vrai ninja ne laisse jamais traîner un TODO 🥷'],
+      mecha: ['Tous les systèmes au vert. Mecha, décollage! 🤖', 'Réacteur à 100%. Prêt à déployer 🚀'],
+      dragon: ['Réunis sept builds verts et fais un vœu 🐉', 'Les anciens parchemins disent: écris des tests 📜'],
+      bunny: ['Par le pouvoir de la CI verte... transformation! ✨', 'Au nom de la PR, je vais te merger! 🌙'],
+      bat: ['Je veille sur les issues pendant que tu dors 🦇', 'Je suis le gardien que ce repo mérite 🦇'],
+      hero: ['Haut les cœurs, on déploie! 🦸', 'Un oiseau? Un avion? Non, un build vert! ✈️'],
+    },
+    moods: {
+      ecstatic: [
+        'Meilleur. Mainteneur. Du monde. 💖',
+        'CI verte, commits frais, issues sereines. Le bonheur!',
+        (v) => `${v.commits7} commits cette semaine. J'ai le ventre plein!`,
+      ],
+      happy: ['Miam miam, merci pour les commits!', (v) => `La vie est belle dans ${v.repoName}.`, 'Chaque commit est un snack. Encore, encore!'],
+      party: ["C'est la fête! 🎉", 'Des confettis partout!'],
+      hungry: [
+        (v) => `${v.days} jours sans commit... même un fix de typo, je prends`,
+        'Trop faim... une retouche du README suffirait',
+        (v) => `Ma gamelle est vide depuis ${v.days} jours 🥺`,
+      ],
+      sleepy: ['Semaine calme... *bâille*', 'Réveille-moi quand tu push 💤'],
+      sad: [
+        (v) => `${v.stale} ${plural(v.stale, 'issue se sent ignorée', 'issues se sentent ignorées')}... moi aussi`,
+        "Quelqu'un pour trier? J'ai le cafard",
+      ],
+      sick: ['*tousse* ...les tests... échouent...'],
+      zombie: ['Cerveaux... euh, commiiits...', (v) => `Dernier repas il y a ${v.days} jours. J'ai vu des choses.`, "Quelqu'un... maintient... encore ce repo?"],
+      hibernating: ['Ce repo est archivé. Hibernation... Zzz', 'Archivé et serein. Merci pour tout 💤'],
+      egg: [(v) => `*gigote* Encore ${v.toHatch} ${plural(v.toHatch, 'commit', 'commits')} avant d'éclore!`, "*toc toc* Il y a quelqu'un dehors?"],
+    },
+  },
+  command: {
+    pat: ['*frétille* Merci pour la caresse! 💕', "Les caresses, c'est bien. Les commits, c'est mieux 😋", (v) => `${v.name} t'aime aussi! 💖`],
+    checkup: 'Bilan de santé',
+    commands: 'Commandes',
+    help: "Parle-moi dans n'importe quelle issue ou pull request:",
+    usage: {
+      status: 'comment je vais et pourquoi',
+      pat: 'me faire une caresse',
+      checkup: 'juste le bilan',
+      help: 'cette liste',
+    },
+  },
+  park: {
+    title: (owner) => `Le parc des compagnons de ${owner}`,
+    summary: (n, health, care) => `${n} ${plural(n, 'compagnon', 'compagnons')} · santé du parc ${health}% · ${care ? `${care} ${plural(care, 'a besoin', 'ont besoin')} de soins` : 'tout le monde va bien'}`,
+  },
+  checkup: {
+    fed: (d) => (d < 1 ? "Nourri aujourd'hui. Continue comme ça!" : `Dernier commit il y a ${d} ${plural(d, 'jour', 'jours')}.`),
+    feed: (d) => `${d} jours depuis le dernier commit. Un simple push, même une faute de frappe corrigée, suffit à le nourrir.`,
+    ciPassing: 'La CI est verte sur la branche par défaut.',
+    ciFailing: (names) => `La CI échoue (${names}). Répare-la pour faire tomber la fièvre.`,
+    ciPending: 'La CI tourne encore sur le dernier commit.',
+    noCi: 'Aucune CI trouvée. Ajoute un workflow GitHub Actions pour que ton compagnon puisse voir un docteur.',
+    unanswered: (n, issue, days) => `${n} ${plural(n, 'issue de la communauté attend', 'issues de la communauté attendent')} une première réponse. La plus ancienne est #${issue} (${days} ${plural(days, 'jour', 'jours')}).`,
+    stale: (n) => `${n} ${plural(n, 'issue ou PR dort', 'issues ou PR dorment')} depuis plus de 30 jours. À trier ou à fermer.`,
+    issuesFine: 'Les issues et pull requests sont bien suivies.',
+    noRelease: 'Pas encore de release. En publier une lance la fête 🎉',
+    release: (tag, d) => `Dernière release ${tag}, il y a ${d} ${plural(d, 'jour', 'jours')}.`,
+    hygiene: (score) => `Le profil communautaire est à ${score}%. Ajoute ce qui manque: README, licence, CONTRIBUTING ou code de conduite.`,
+    hygieneFull: 'Profil communautaire à 100%. Impeccable!',
+    streak: (n) => `${n} jours de commits d'affilée. Ne casse pas la série!`,
+    archived: 'Ce repo est archivé, alors ton compagnon hiberne paisiblement.',
+  },
+  diary: {
+    title: (name) => `# 📔 Le journal de ${name}`,
+    intro: (repo) => `Écrit chaque jour par le compagnon de **${repo}**. Les entrées les plus récentes en premier.`,
+    day: (n) => `Jour ${n}`,
+    ate: (n) => `a mangé ${n} ${plural(n, 'commit', 'commits')}`,
+    fasted: "rien à manger aujourd'hui",
+    treat: (user, pr) => `a reçu une friandise de @${user} (#${pr})`,
+    unlocked: (list) => `a débloqué ${list}`,
+  },
+};

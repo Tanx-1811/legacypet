@@ -64,5 +64,5 @@ test('species selection: language easter eggs, overrides and stable hashing', ()
   assert.equal(pickSpecies({ fullName: 'a/b', language: 'Rust' }).id, LANGUAGE_SPECIES.Rust);
   assert.equal(pickSpecies({ requested: 'cactus', fullName: 'a/b', language: 'Rust' }).id, 'cactus');
   assert.equal(pickSpecies({ fullName: 'Foo/Bar' }).id, pickSpecies({ fullName: 'foo/bar' }).id);
-  assert.throws(() => pickSpecies({ requested: 'dragon', fullName: 'a/b' }), /Unknown species/);
+  assert.throws(() => pickSpecies({ requested: 'unicorn', fullName: 'a/b' }), /Unknown species/);
 });
