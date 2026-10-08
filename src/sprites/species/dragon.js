@@ -1,0 +1,33 @@
+// Ancient Power: a spirit dragon has lived for millennia, so it levels up 50% faster.
+export default {
+  id: 'dragon',
+  trait: 'ancient',
+  modifiers: { xpRate: 1.5 },
+  food: 'kibble',
+  palette: {
+    o: '#123c3a', b: '#2ec4b6', l: '#bff5ec', s: '#1f8f86', m: '#ff6b6b', y: '#ffd23f', w: '#ffe08a',
+  },
+  shinyKeep: ['y', 'w'],
+  grid: [
+    '.y............y.',
+    '.yy..........yy.',
+    '..yy.oooooo.yy..',
+    '...yobllbbboy...',
+    'mmmobbbbbbbbommm',
+    '.mmobbbbbbbbomm.',
+    'mmobbbbbbbbbbomm',
+    '.mobbbbbbbbbbom.',
+    'mmobbbbbbbbbbomm',
+    '.mobbbbbbbbbbom.',
+    '..osllllllllso..',
+    'ww.osllllllso.ww',
+    '..w.osllllso.w..',
+    '.....oooooo.....',
+    '................',
+    '................',
+  ],
+  eyes: [[4, 7], [10, 7]],
+  mouth: [6, 10],
+  cheeks: [[3, 9], [11, 9]],
+  hat: [8, 2],
+};

@@ -1,0 +1,33 @@
+// Starlight: a magical bunny wishes on your stars. Every 100 stars add +2 joy (up to +20).
+export default {
+  id: 'bunny',
+  trait: 'starlight',
+  modifiers: { starJoy: 2 },
+  food: 'kibble',
+  palette: {
+    o: '#4a2040', b: '#fff0f7', l: '#ffffff', s: '#f3c6dc', p: '#ff9ec7', y: '#ffd23f', g: '#ff5fa2',
+  },
+  shinyKeep: ['y', 'g'],
+  grid: [
+    '...oo......oo...',
+    '..obpo....opbo..',
+    '..obpo....opbo..',
+    '..obpo....opbo..',
+    '..obpo....opbo..',
+    '..obboooooobbo..',
+    '.obbbbbyybbbbbo.',
+    'obbbbbyggybbbbbo',
+    'obbbbbbyybbbbbbo',
+    'obbbbbbbbbbbbbbo',
+    'obbbbbbbbbbbbbbo',
+    'obbbbbbbbbbbbbbo',
+    '.obbbbbbbbbbbbo.',
+    '..osbbbbbbbbso..',
+    '...oooooooooo...',
+    '................',
+  ],
+  eyes: [[4, 9], [10, 9]],
+  mouth: [6, 12],
+  cheeks: [[2, 11], [12, 11]],
+  hat: [8, 5],
+};

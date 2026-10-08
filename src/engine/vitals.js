@@ -12,7 +12,10 @@ export const THRESHOLDS = {
 
 const clamp = (value, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, Math.round(value)));
 
-const DEFAULT_MODIFIERS = { hungerRate: 1, ciPenalty: 1, issuePenalty: 1, releaseJoy: 0, teamEnergy: 0 };
+const DEFAULT_MODIFIERS = {
+  hungerRate: 1, ciPenalty: 1, issuePenalty: 1, releaseJoy: 0, teamEnergy: 0,
+  streakEnergy: 0, ciEnergyFloor: 0, inboxJoy: 0, healthFloor: 0, xpRate: 1, starJoy: 0,
+};
 
 export const withDefaults = (modifiers = {}) => ({ ...DEFAULT_MODIFIERS, ...modifiers });
 
@@ -79,25 +82,28 @@ function joyFromIssues(issues, penalty) {
 export function computeVitals(snapshot, facts, modifiers, now) {
   const m = withDefaults(modifiers);
   let joy = joyFromIssues(snapshot.issues, m.issuePenalty);
-  if (m.releaseJoy && snapshot.release && daysBetween(snapshot.release.publishedAt, now) <= 14) {
-    joy = clamp(joy + m.releaseJoy);
-  }
+  if (m.releaseJoy && snapshot.release && daysBetween(snapshot.release.publishedAt, now) <= 14) joy += m.releaseJoy;
+  if (m.inboxJoy && snapshot.issues && !snapshot.issues.unanswered.length) joy += m.inboxJoy;
+  if (m.starJoy) joy += Math.min(20, Math.floor(facts.stars / 100) * m.starJoy);
   let energy = 100 * (1 - Math.exp(-facts.commits14 / 6));
   if (m.teamEnergy) energy += m.teamEnergy * Math.max(0, facts.activeAuthors30 - 1);
+  if (m.streakEnergy) energy += m.streakEnergy * Math.min(facts.streak, 6);
+  if (m.ciEnergyFloor && snapshot.ci?.state === 'passing') energy = Math.max(energy, m.ciEnergyFloor);
   return {
     fullness: clamp(100 * Math.exp(-(facts.daysSinceCommit * m.hungerRate) / 21)),
-    health: healthFromCi(snapshot.ci, m.ciPenalty),
-    joy,
+    health: Math.max(healthFromCi(snapshot.ci, m.ciPenalty), m.healthFloor),
+    joy: clamp(joy),
     energy: clamp(energy),
     hygiene: snapshot.community?.health ?? null,
   };
 }
 
 // Level grows with the square root of all-time commits: Lv.11 at 100, Lv.32 at 1,000.
-export function computeGrowth(facts) {
+// Species with an `xpRate` (the ancient dragon) count every commit for more.
+export function computeGrowth(facts, modifiers = {}) {
   const total = facts.totalCommits;
   if (total == null) return { level: 1, xp: 0, stage: 'adult', hatchProgress: 1 }; // commits unreadable
-  const root = Math.sqrt(total);
+  const root = Math.sqrt(total * withDefaults(modifiers).xpRate);
   const level = Math.min(99, Math.floor(root) + 1);
   let stage = 'adult';
   if (total < 5) stage = 'egg';

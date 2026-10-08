@@ -1,0 +1,33 @@
+// Vigilant: patrols the issue tracker. +15 joy while no community issue waits for a first reply.
+export default {
+  id: 'bat',
+  trait: 'vigilant',
+  modifiers: { inboxJoy: 15 },
+  food: 'kibble',
+  palette: {
+    o: '#120c1f', b: '#3a3358', l: '#6a5f94', s: '#29233f', f: '#d8cce8', c: '#2b2250', p: '#8a6fbf',
+  },
+  shinyKeep: ['f'],
+  grid: [
+    '................',
+    '.o............o.',
+    '.oo..........oo.',
+    '.opo........opo.',
+    '.obpo......opbo.',
+    '.obbboooooobbbo.',
+    '.obllbbbbbbbbbo.',
+    '.obbbbbbbbbbbbo.',
+    'oobffffbbffffboo',
+    'cobffffbbffffboc',
+    'cobbbbbbbbbbbboc',
+    'ccobffffffffbocc',
+    'ccobffffffffbocc',
+    'cc.osbbbbbbso.cc',
+    'c.c.oooooooo.c.c',
+    '................',
+  ],
+  eyes: [[4, 8], [10, 8]],
+  mouth: [6, 11],
+  cheeks: [[3, 10], [11, 10]],
+  hat: [8, 5],
+};
