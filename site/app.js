@@ -808,12 +808,19 @@ function viewAdopt(root) {
       cfg.lang !== 'en' && `--lang ${cfg.lang}`, cfg.species !== 'auto' && `--species ${cfg.species}`, cfg.scenery !== 'auto' && `--scenery ${cfg.scenery}`,
       cfg.name && `--name "${cfg.name.replace(/"/g, '')}"`, cfg.style !== 'card' && `--style ${cfg.style}`,
     ].filter(Boolean);
-    const yaml = LP.workflowYaml({
+    const options = {
       lang: cfg.lang, species: cfg.species, scenery: cfg.scenery, name: cfg.name, wear: cfg.wear.join(', '),
       alerts: cfg.alerts.join(', '), vacation: cfg.vacation ? `until ${cfg.vacation}` : '', park: cfg.style === 'park' ? 'auto' : '',
-    });
+    };
+    const yaml = LP.workflowYaml(options);
     const commands = LP.COMMANDS.map((c) => `/pet${c === 'status' ? '' : ` ${c}`}  ${lang.command.usage[c]}`).join('\n');
+    // One click: GitHub's "new file" page with the workflow filled in (see adoptUrl in src/setup.js).
+    const known = hatch.snapshot && !hatch.mood && hatch.snapshot.repo.fullName === cfg.repo ? hatch.snapshot.repo.defaultBranch : 'main';
+    const ready = /^[\w.-]+\/[\w.-]+$/.test(cfg.repo);
     steps.replaceChildren(
+      h('div.step', h('h3', T.oneClick),
+        h('a.button.primary', { href: ready ? LP.adoptUrl(cfg.repo, known, options) : null, target: '_blank', rel: 'noopener', 'aria-disabled': String(!ready) }, T.oneClickButton),
+        h('p', ready ? T.oneClickNote : T.needRepo)),
       h('div.step', h('h3', T.step1), h('p', T.step1Note), codeBlock(['npx github:Tanx-1811/legacypet init', ...flags].join(' '))),
       h('div.or', T.or),
       h('div.step', h('h3', T.step2), codeBlock(yaml)),

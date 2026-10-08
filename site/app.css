@@ -203,6 +203,9 @@ button.tile { cursor: pointer; }
 pre { margin: 0; background: var(--code); border: 1px solid var(--border); border-radius: 9px; padding: 12px; overflow-x: auto; font: 12.5px/1.5 var(--mono); white-space: pre; }
 .code > button { position: absolute; top: 6px; right: 6px; font-size: 12px; padding: 3px 9px; }
 .or { text-align: center; color: var(--muted); font-size: 13px; }
+a.button { display: inline-flex; justify-self: start; align-items: center; gap: 8px; border-radius: 10px; padding: 11px 18px; text-decoration: none; font-weight: 600; font-size: 16px; }
+a.button.primary { background: var(--accent); color: var(--accent-text); }
+a.button[aria-disabled="true"] { opacity: .5; pointer-events: none; }
 
 /* Park */
 .park-list { display: flex; flex-wrap: wrap; gap: 6px; }

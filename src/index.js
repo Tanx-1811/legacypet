@@ -34,7 +34,7 @@ export { CHANGELOG, VERSION, whatsNew } from './whatsnew.js';
 export { renderCard, renderMini, renderBadge, renderStats };
 export { PARK_MAX, renderPark, parkSummary } from './render/park.js';
 export { terminalArt } from './render/terminal.js';
-export { insertSnippet, parseRemote, snippetFor, workflowYaml } from './setup.js';
+export { adoptUrl, insertSnippet, parseRemote, snippetFor, workflowYaml } from './setup.js';
 
 export function petUrls(fullName, branch = 'legacypet') {
   const raw = `https://raw.githubusercontent.com/${fullName}/${branch}`;
