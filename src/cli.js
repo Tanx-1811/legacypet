@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
-  buildPet, checkup, collectPark, collectSnapshot, createClient, insertSnippet, mockSnapshot, MOOD_EMOJI, MOODS,
+  buildPet, checkup, collectPark, collectSnapshot, createClient, insertSnippet, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
   parseRemote, PLAYGROUND, renderBadge, renderCard, renderFiles, renderMini, renderPark, resolveParkRepos,
   snippetFor, SPECIES_IDS, terminalArt, workflowYaml,
 } from './index.js';
@@ -22,14 +22,14 @@ Usage
 Options
   --species <id>   auto | ${SPECIES_IDS.join(' | ')}
   --name <name>    custom pet name
-  --lang <code>    en | vi
+  --lang <code>    ${Object.keys(LANG_NAMES).join(' | ')}
   --theme <mode>   auto | light | dark
   --out <dir>      output directory (default: legacypet-out)
   --token <token>  GitHub token (default: $GITHUB_TOKEN)
 
   init:    --repo <owner/name>  --style card|mini|badge|park  --park auto|<repos>  --force
   park:    --size <1-8>
-  demo:    --mood ${MOODS.join('|')}  --stage egg|baby|adult|elder  --shiny  --holiday <id>
+  demo:    --mood ${MOODS.join('|')}  --stage egg|baby|adult|elder  --shiny  --aura  --holiday <id>
 
 Preview any repo in the browser: ${PLAYGROUND}
 `;
@@ -41,6 +41,7 @@ const { values: opts, positionals } = parseArgs({
     mood: { type: 'string' },
     stage: { type: 'string' },
     shiny: { type: 'boolean' },
+    aura: { type: 'boolean' },
     holiday: { type: 'string' },
     name: { type: 'string' },
     lang: { type: 'string', default: 'en' },
@@ -164,14 +165,14 @@ Next steps
   3. Refresh your README. Say hi to your pet!`);
 }
 
-function demoPet({ mood = 'happy', species = 'auto', stage, shiny, holiday = null, season, lang = 'en', name, fullName, now = new Date() }) {
+function demoPet({ mood = 'happy', species = 'auto', stage, shiny, aura, holiday = null, season, lang = 'en', name, fullName, now = new Date() }) {
   const snapshot = mockSnapshot({ mood, stage: stage ?? 'adult', now, fullName });
-  return buildPet({ snapshot, now, options: { species, mood, stage, shiny: shiny ?? false, holiday, season, lang, name } });
+  return buildPet({ snapshot, now, options: { species, mood, stage, shiny: shiny ?? false, aura: aura ?? false, holiday, season, lang, name } });
 }
 
 function demo() {
   const pet = demoPet({
-    mood: opts.mood ?? 'happy', species: opts.species, stage: opts.stage, shiny: opts.shiny,
+    mood: opts.mood ?? 'happy', species: opts.species, stage: opts.stage, shiny: opts.shiny, aura: opts.aura,
     holiday: opts.holiday ?? null, lang: opts.lang, name: opts.name,
   });
   write(opts.out, 'demo.svg', renderCard(pet, { theme: opts.theme }));
@@ -183,9 +184,11 @@ function demo() {
 
 // One mood per species keeps the README lineup varied.
 const MOOD_STARS = {
-  ecstatic: 'duck', happy: 'cat', party: 'crab', hungry: 'blob', sleepy: 'octopus',
-  sad: 'snake', sick: 'duck', zombie: 'cat', hibernating: 'cactus', egg: 'blob',
+  ecstatic: 'duck', happy: 'cat', party: 'ninja', hungry: 'blob', sleepy: 'octopus',
+  sad: 'bat', sick: 'mecha', zombie: 'cat', hibernating: 'cactus', egg: 'bunny',
 };
+const HERO_SQUAD = ['ninja', 'mecha', 'dragon', 'bunny', 'bat', 'hero'];
+const LANG_DEMO = { en: 'hero', vi: 'cat', ja: 'ninja', zh: 'dragon', ko: 'bunny', es: 'mecha', fr: 'bat' };
 const HOLIDAYS = [['halloween', 'zombie'], ['christmas', 'happy'], ['tet', 'party'], ['newyear', 'party'], ['programmers', 'party']];
 const PARK_DEMO = [
   ['awesome-cli', 'ecstatic', 'duck'], ['dotfiles', 'happy', 'cat'], ['api-server', 'sick', 'octopus'],
@@ -217,6 +220,8 @@ function gallery() {
   add('Moods', MOODS.map((mood) => ({ label: mood, src: mini('moods', `${mood}.svg`, demoPet({ mood, species: MOOD_STARS[mood], now })) })));
   add('Species', SPECIES_IDS.map((species) => ({ label: species, src: mini('species', `${species}.svg`, demoPet({ mood: 'happy', species, now })) })));
   add('Shiny variants (1 in 64 repos)', SPECIES_IDS.map((species) => ({ label: `✨ ${species}`, src: mini('shiny', `${species}.svg`, demoPet({ mood: 'ecstatic', species, shiny: true, now })) })));
+  add('Super form (7 ecstatic days in a row)', HERO_SQUAD.map((species) => ({ label: `💥 ${species}`, src: mini('aura', `${species}.svg`, demoPet({ mood: 'ecstatic', species, aura: true, now })) })));
+  add('Languages', Object.entries(LANG_DEMO).map(([lang, species]) => ({ label: LANG_NAMES[lang], src: card('langs', `${lang}.svg`, demoPet({ mood: 'happy', species, lang, now, fullName: 'Tanx-1811/legacypet' })), wide: true })));
   add('Life stages', ['egg', 'baby', 'adult', 'elder'].map((stage) => ({ label: stage, src: mini('stages', `${stage}.svg`, demoPet({ mood: stage === 'egg' ? 'egg' : 'happy', species: 'octopus', stage, now })) })));
   add('Holidays', HOLIDAYS.map(([holiday, mood], i) => ({ label: holiday, src: mini('holidays', `${holiday}.svg`, demoPet({ mood, holiday, species: SPECIES_IDS[i + 1], season: holiday === 'christmas' ? 'winter' : 'autumn', now })) })));
   add('Every species × mood (light)', SPECIES_IDS.flatMap((species) => MOODS.map((mood) => ({ label: `${species} · ${mood}`, src: card('cards', `${species}-${mood}.svg`, demoPet({ mood, species, now })), wide: true }))));

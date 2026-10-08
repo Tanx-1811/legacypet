@@ -106,7 +106,7 @@
     </div>
     <div class="controls">
       <label>Species <select id="species"><option value="auto">auto (the repo decides)</option></select></label>
-      <label>Language <select id="lang"><option value="en">English</option><option value="vi">Tiếng Việt</option></select></label>
+      <label>Language <select id="lang"></select></label>
       <label>Theme <select id="theme"><option value="auto">auto (follows light/dark)</option><option value="light">light</option><option value="dark">dark (night)</option></select></label>
       <label>Name <input id="name" type="text" placeholder="let the repo name it"></label>
       <button id="share" type="button">🔗 Copy share link</button>
@@ -153,7 +153,7 @@
 
 <script type="module">
 import {
-  buildPet, checkup, collectSnapshot, createClient, mockSnapshot, MOOD_EMOJI, MOODS,
+  buildPet, checkup, collectSnapshot, createClient, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
   renderBadge, renderCard, renderMini, snippetFor, SPECIES_IDS, workflowYaml,
 } from './src/index.js';
 
@@ -162,6 +162,7 @@ const state = { snapshot: null, mood: null, now: new Date() };
 let blobUrls = [];
 
 for (const id of SPECIES_IDS) $('species').append(new Option(id, id));
+for (const [code, name] of Object.entries(LANG_NAMES)) $('lang').append(new Option(name, code));
 for (const mood of MOODS) {
   const b = document.createElement('button');
   b.type = 'button';
