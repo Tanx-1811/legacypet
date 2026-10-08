@@ -4,6 +4,7 @@ import { strings } from './i18n/index.js';
 import { BADGE_COLORS, renderBadge } from './render/badge.js';
 import { renderCard } from './render/card.js';
 import { renderMini } from './render/mini.js';
+import { renderStats } from './render/stats.js';
 import { snippetFor } from './setup.js';
 
 export const HOMEPAGE = 'https://github.com/Tanx-1811/legacypet';
@@ -23,7 +24,7 @@ export { collectPark, resolveParkRepos } from './github/park.js';
 export { answerCommand, commandFromEvent, commandReply, parseCommand } from './github/command.js';
 export { mockSnapshot } from './mock.js';
 export { CHANGELOG, VERSION, whatsNew } from './whatsnew.js';
-export { renderCard, renderMini, renderBadge };
+export { renderCard, renderMini, renderBadge, renderStats };
 export { renderPark, parkSummary } from './render/park.js';
 export { terminalArt } from './render/terminal.js';
 export { insertSnippet, parseRemote, snippetFor, workflowYaml } from './setup.js';
@@ -36,6 +37,7 @@ export function petUrls(fullName, branch = 'legacypet') {
     badge: `${raw}/pet-badge.svg`,
     park: `${raw}/park.svg`,
     shields: `${raw}/pet-shields.json`,
+    stats: `${raw}/pet-stats.svg`,
     diary: `https://github.com/${fullName}/blob/${branch}/DIARY.md`,
   };
 }
@@ -66,6 +68,8 @@ function branchReadme(pet, branch, hasPark, state) {
     '',
     '![pet](pet.svg)',
     '',
+    '![stats](pet-stats.svg)',
+    '',
     `**Mood, last ${Math.min(14, state.history.length)} days:** ${moodStrip(state.history)}`,
     '',
     `This branch is rewritten on every run by [LegacyPet](${HOMEPAGE}). Please don't edit it by hand.`,
@@ -75,6 +79,7 @@ function branchReadme(pet, branch, hasPark, state) {
     `| \`pet.svg\` | The full card | \`${snippetFor(name, 'card', branch)}\` |`,
     `| \`pet-mini.svg\` | A compact card for profiles and sidebars | \`${snippetFor(name, 'mini', branch)}\` |`,
     `| \`pet-badge.svg\` | A badge for the top of your README | \`${snippetFor(name, 'badge', branch)}\` |`,
+    `| \`pet-stats.svg\` | Vitals and moods over the last 30 days | \`![stats](${petUrls(name, branch).stats})\` |`,
     `| \`pet-shields.json\` | A [shields.io endpoint](https://shields.io/badges/endpoint-badge) | \`![pet](${shields})\` |`,
     ...(hasPark ? [`| \`park.svg\` | Every pet from your repos together | \`${snippetFor(name, 'park', branch)}\` |`] : []),
     '| `pet.json` | The pet\'s memory: vitals, trophies and mood history | |',
@@ -92,6 +97,7 @@ export function renderFiles(pet, snapshot, {
     { path: 'pet.svg', content: renderCard(pet, { theme }) },
     { path: 'pet-mini.svg', content: renderMini(pet, { theme }) },
     { path: 'pet-badge.svg', content: renderBadge(pet) },
+    { path: 'pet-stats.svg', content: renderStats(pet, state.history, { theme }) },
     { path: 'pet-shields.json', content: `${JSON.stringify(shieldsJson(pet))}\n` },
     { path: 'pet.json', content: `${JSON.stringify(state, null, 2)}\n` },
     { path: 'README.md', content: branchReadme(pet, branch, Boolean(park), state) },

@@ -8,7 +8,7 @@ import { chromeCss, FONT } from './theme.js';
 
 const W = 520;
 const H = 200;
-const PLOT = { x: 34, y: 58, w: 470, h: 100 };
+const PLOT = { x: 34, y: 62, w: 470, h: 96 };
 const COLORS = { fullness: '#f0883e', health: '#f85149', joy: '#e3b341', energy: '#58a6ff' };
 const ICONS = { fullness: '🍖', health: '❤️', joy: '😊', energy: '⚡' };
 const r1 = (v) => Math.round(v * 10) / 10;
@@ -68,8 +68,8 @@ export function renderStats(pet, history = [], { theme = 'auto', days = 30 } = {
     body += `<text x="${PLOT.x + PLOT.w}" y="${H - 12}" text-anchor="end" class="lp-label">${pet.date}</text>`;
   }
   const legend = VITALS.map((key, i) => {
-    const x = 250 + i * 66;
-    return `<rect x="${x}" y="27" width="8" height="8" rx="2" fill="${COLORS[key]}"/><text x="${x + 12}" y="35" class="lp-label">${ICONS[key]} ${esc(tr.stats[key])}</text>`;
+    const x = 16 + i * 112;
+    return `<rect x="${x}" y="38" width="8" height="8" rx="2" fill="${COLORS[key]}"/><text x="${x + 12}" y="46" class="lp-label">${ICONS[key]} ${esc(tr.stats[key])}</text>`;
   }).join('');
   const desc = points.length
     ? VITALS.map((key, i) => `${tr.stats[key]} ${points[0].vitals[i] ?? '?'}→${points[points.length - 1].vitals[i] ?? '?'}`).join(', ')
@@ -81,7 +81,7 @@ export function renderStats(pet, history = [], { theme = 'auto', days = 30 } = {
     `<desc id="${uid}-d">${esc(desc)}</desc>`,
     `<style>${chromeCss(theme)}${CSS}</style>`,
     `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" class="lp-card"/>`,
-    `<text x="16" y="35" class="lp-name">${esc(title)}</text>`,
+    `<text x="16" y="26" class="lp-name">${esc(title)}</text>`,
     legend,
     body,
     '</svg>',

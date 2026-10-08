@@ -16,6 +16,8 @@ fed by commits, healed by green CI, cheered up when issues get answered.
 
 <img src="docs/gallery/hero/hero.svg" alt="Mochi the Radiant, an ecstatic rubber duck wearing a crown" width="520">
 
+**🆕 New in 1.1:** [the hero squad](#-the-hero-squad) · [7 languages](#it-talks-about-your-repo) · [`/pet` command](#talk-to-your-pet-pet) · [super form](#-super-form) · [homes](#homes) · [full changelog](CHANGELOG.md)
+
 </div>
 
 ## Why
@@ -30,6 +32,8 @@ and gives you a small, silly reason to come back and care for your code.
 - 🎉 **Releases throw a party.** Confetti, a party hat, and a shout-out to your contributors.
 - 📔 **It keeps a diary** of every day of your project's life.
 - 🩺 **It gives you a checkup**: what's wrong, and exactly what would help.
+- 💬 **It talks back.** Comment `/pet` on an issue or PR and it answers, in 7 languages.
+- 🦸 **13 species to adopt**, from a rubber duck to a ninja fox, each living in its own animated home.
 - 🏞️ **All your pets meet in a Pet Park** on your profile README.
 
 Everything runs inside a GitHub Action: no server, no sign-up, no tracking, zero dependencies.
@@ -58,7 +62,7 @@ git add . && git commit -m "Adopt a LegacyPet 🐾" && git push
 
 Run the workflow once from the **Actions** tab (or wait for the schedule) and refresh your README. Hello, pet!
 
-Options: `--lang vi`, `--species cactus`, `--name Mochi`, `--style badge`. In a profile repo (`you/you`) it sets up a [Pet Park](#pet-park) instead.
+Options: `--lang ja`, `--species ninja`, `--scenery beach`, `--name Mochi`, `--style badge`. In a profile repo (`you/you`) it sets up a [Pet Park](#pet-park) instead.
 
 ### …or by hand
 
@@ -383,7 +387,7 @@ For example, ping your team only when the pet *just* got sick:
         run: echo "${{ steps.pet.outputs.name }} is sick! ${{ steps.pet.outputs.speech }}"
 ```
 
-The branch also holds `pet.json`, the pet's full state, if you want to build something on top.
+The branch also holds `pet.json` (the pet's full state and mood history, if you want to build something on top) and a `README.md` with a 14-day mood chart.
 
 ## CLI
 
@@ -413,7 +417,7 @@ In a terminal with true color, it draws the pet right in your shell.
 The first time your pet runs a newer version, the run page shows a notice and the job summary lists **what's new**.
 If a feature needs a change to your workflow file (like `/pet`, which needs the `issue_comment` trigger), the summary says so.
 Re-run `npx github:Tanx-1811/legacypet init --force` to refresh the workflow, or watch the repo's releases (**Watch → Custom → Releases**).
-Breaking changes only ever ship as a new major tag (`@v2`).
+Breaking changes only ever ship as a new major tag (`@v2`). Every release is listed in [CHANGELOG.md](CHANGELOG.md).
 
 **Is it accessible?** Every SVG has a title and a full text description for screen readers, and all animation stops when the viewer prefers reduced motion.
 
