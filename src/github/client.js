@@ -36,6 +36,7 @@ export function createClient({ token, baseUrl = 'https://api.github.com', fetch:
     get: async (path, opts) => (await request('GET', path, opts)).data,
     post: async (path, body) => (await request('POST', path, { body })).data,
     patch: async (path, body) => (await request('PATCH', path, { body })).data,
+    put: async (path, body) => (await request('PUT', path, { body })).data,
   };
 }
 

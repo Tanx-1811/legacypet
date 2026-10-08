@@ -26,6 +26,7 @@ export { createClient, GitHubError } from './github/client.js';
 export { collectSnapshot } from './github/collect.js';
 export { loadPrevious, publishFiles } from './github/publish.js';
 export { collectPark, resolveParkRepos } from './github/park.js';
+export { adoptRepo, hasPet, listRepos, parseSelection, WORKFLOW_PATH } from './github/repos.js';
 export { answerCommand, commandArg, commandFromEvent, commandReply, COMMANDS, parseCommand, questLines, unlockHint } from './github/command.js';
 export { ALERT_MOODS, alertIssue, parseAlerts, syncAlert } from './github/alerts.js';
 export { activeVacation, parseVacation, resolveVacations } from './engine/vacation.js';
