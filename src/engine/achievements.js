@@ -25,6 +25,9 @@ export const ACHIEVEMENTS = [
     test: (c) => (c.snapshot.issues?.open ?? 0) >= 5 && c.snapshot.issues.unanswered.length === 0,
   },
   { id: 'anniversary', emoji: '🎂', test: (c) => c.events.includes('birthday') },
+  { id: 'veteran', emoji: '🎖️', test: (c) => c.growth.level >= 25 },
+  { id: 'master', emoji: '🏅', test: (c) => c.growth.level >= 50 },
+  { id: 'maxLevel', emoji: '🏆', test: (c) => c.growth.level >= 99 },
 ];
 
 export function evaluateAchievements(context, unlocked = {}, today) {

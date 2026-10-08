@@ -24,12 +24,14 @@ export function speechVars(pet, snapshot) {
     check: snapshot.ci?.failingNames?.[0],
     toHatch: Math.max(1, 5 - facts.totalCommits),
     auraDays: pet.auraDays,
+    level: pet.level,
+    rankEmoji: pet.rank?.emoji,
     until: pet.vacation?.until,
   };
 }
 
 export function chooseSpeech(pet, snapshot, tr, rng) {
-  const v = speechVars(pet, snapshot);
+  const v = { ...speechVars(pet, snapshot), rank: tr.ranks?.[pet.rank?.id] };
   const say = (line) => (typeof line === 'function' ? line(v) : line);
   const pick = (lines) => say(rng.pick(lines));
   const { lines } = tr;
@@ -44,6 +46,8 @@ export function chooseSpeech(pet, snapshot, tr, rng) {
   if (holiday && lines.holiday[holiday]) return pick(lines.holiday[holiday]);
   if (events.includes('birthday')) return pick(lines.birthday);
   if (events.includes('release') && v.tag) return pick(lines.release);
+  if (events.includes('rankUp')) return pick(lines.rankUp);
+  if (events.includes('levelUp') && ['happy', 'ecstatic', 'party', 'sleepy'].includes(mood)) return pick(lines.levelUp);
   if (pet.aura && pet.auraDays === AURA_DAYS) return pick(lines.aura); // the day it powers up
 
   // A hungry pet talks about food; a content one has room for small talk.

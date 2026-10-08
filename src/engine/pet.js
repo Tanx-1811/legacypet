@@ -6,6 +6,7 @@ import { evaluateAchievements } from './achievements.js';
 import { holidayFor, seasonFor } from './calendar.js';
 import { isShiny, petName } from './identity.js';
 import { AURA_DAYS, blissStreak, chooseAccessories, deriveMood } from './mood.js';
+import { levelEvents, levelProgress, rankFor } from './rank.js';
 import { chooseSpeech } from './speech.js';
 import { activeVacation, lastDay, parseVacation, resolveVacations, vacationDays } from './vacation.js';
 import { computeFacts, computeGrowth, computeVitals } from './vitals.js';
@@ -15,7 +16,7 @@ import { computeFacts, computeGrowth, computeVitals } from './vitals.js';
 //
 // options: species, name, lang, scenery (the pet's home; auto = the species' own),
 //          vacation (the input, e.g. "until 2027-01-05"), vacationCommand ({ name: 'vacation', days } | { name: 'back' }),
-//          plus preview-only overrides (shiny, mood, stage, holiday, season, aura)
+//          plus preview-only overrides (shiny, mood, stage, holiday, season, aura, levelUp: true | 'rank')
 //          used by the gallery and demos.
 export function buildPet({ snapshot, prevState = null, options = {}, now = new Date() }) {
   const lang = resolveLang(options.lang);
@@ -48,6 +49,10 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
     ? { mood: options.mood, events: [] }
     : deriveMood({ snapshot, facts, vitals, growth, modifiers, prevState, now, holiday });
   const { mood, events } = derived;
+  if (mood !== 'egg') {
+    const leveled = options.levelUp ? ['levelUp', ...(options.levelUp === 'rank' ? ['rankUp'] : [])] : levelEvents(prevState, growth.level);
+    events.push(...leveled);
+  }
   if (mood === 'egg') growth.stage = 'egg';
 
   const auraDays = blissStreak(mood, date, prevState?.history);
@@ -77,6 +82,8 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
     home,
     stage: growth.stage,
     level: growth.level,
+    rank: rankFor(growth.level),
+    progress: levelProgress({ level: growth.level, totalCommits: facts.totalCommits }, modifiers),
     xp: growth.xp,
     hatchProgress: growth.hatchProgress,
     mood,

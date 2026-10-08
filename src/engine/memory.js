@@ -28,6 +28,7 @@ export function nextState(pet, prevState = null) {
       shiny: pet.shiny,
       stage: pet.stage,
       level: pet.level,
+      rank: pet.rank?.id,
       mood: pet.mood,
       speech: pet.speech,
       accessories: pet.accessories,
