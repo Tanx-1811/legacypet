@@ -8,10 +8,15 @@ Một con thú pixel sống trong README, cảm nhận đúng tình trạng dự
 ăn bằng commit, khỏe nhờ CI xanh, vui khi issue được trả lời.
 
 [![Thú của chính dự án](https://raw.githubusercontent.com/Tanx-1811/legacypet/legacypet/pet-badge.svg)](https://github.com/Tanx-1811/legacypet/blob/legacypet/DIARY.md)
+[![CI](https://github.com/Tanx-1811/legacypet/actions/workflows/ci.yml/badge.svg)](https://github.com/Tanx-1811/legacypet/actions/workflows/ci.yml)
+![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
+![license](https://img.shields.io/badge/license-MIT-blue)
 
 [English](README.md) · [Tiếng Việt](README.vi.md) · **[🔮 Xem trước thú của repo bạn](https://tanx-1811.github.io/legacypet/)**
 
 <img src="docs/gallery/hero/hero-vi.svg" alt="Bánh Bao Đói Meo, một con mèo đang đói" width="520">
+
+**🆕 Bản 1.1:** [biệt đội anh hùng](#-biệt-đội-anh-hùng) · [7 ngôn ngữ](#-7-ngôn-ngữ) · [lệnh `/pet`](#-nói-chuyện-với-thú-pet) · [siêu hình thái](#-siêu-hình-thái) · [quê nhà](#️-quê-nhà-của-từng-loài) · [xem tất cả](CHANGELOG.md)
 
 </div>
 
@@ -26,6 +31,9 @@ Nhìn con thú một cái là biết ngay, và bạn cũng có thêm một lý d
 - 😊 **Issue quyết định tâm trạng.** Bỏ mặc người khác không trả lời thì một đám mây mưa sẽ bám theo nó.
 - 🎉 **Release là tiệc.** Có pháo giấy, mũ tiệc và lời cảm ơn người đóng góp.
 - 📔 **Nó viết nhật ký** từng ngày trong đời dự án của bạn.
+- 🩺 **Nó khám sức khỏe repo**: chỉ ra chỗ chưa ổn và việc nên làm.
+- 💬 **Nó nói chuyện được**: gõ `/pet` trong issue hay PR là nó trả lời, bằng 7 thứ tiếng.
+- 🏞️ **Mọi thú của bạn tụ họp trong Công viên thú** trên profile README.
 
 Tất cả chạy trong một GitHub Action: không server, không đăng ký, không theo dõi, không có dependency nào.
 
@@ -52,6 +60,7 @@ git add . && git commit -m "Nhận nuôi LegacyPet 🐾" && git push
 
 Vào tab **Actions** → **LegacyPet** → **Run workflow** (hoặc đợi lịch tự chạy), rồi tải lại README.
 
+Tùy chọn: `--species ninja`, `--scenery beach`, `--name "Bánh Bao"`, `--style badge`.
 Nếu chạy trong repo profile (`ten-ban/ten-ban`), lệnh sẽ tự tạo **Công viên thú** gom tất cả thú của bạn.
 
 ### Cách 3: làm tay
@@ -70,10 +79,10 @@ on:
     types: [created] # nói chuyện với thú bằng /pet
 
 permissions:
-  contents: write
-  actions: write
-  issues: write
-  pull-requests: write
+  contents: write # đăng thú lên nhánh `legacypet`
+  actions: write # giữ lịch chạy khi repo im ắng
+  issues: write # trả lời /pet trong issue
+  pull-requests: write # ...và trong pull request
   checks: read
   statuses: read
 
@@ -95,6 +104,22 @@ jobs:
 
 Xong! Thú cưng sống trên nhánh riêng `legacypet`, nên lịch sử nhánh chính vẫn sạch.
 
+### Chọn kiểu hiển thị
+
+| File | Trông thế nào | Dùng cho |
+| --- | --- | --- |
+| `pet.svg` | thẻ ở đầu trang này | đầu README dự án |
+| `pet-mini.svg` | <img src="docs/gallery/moods/happy.svg" width="70"> | sidebar, bảng, profile README |
+| `pet-badge.svg` | <img src="docs/gallery/badges/ecstatic.svg"> | cạnh các badge khác |
+| `park.svg` | xem [Công viên thú](#️-công-viên-thú) | profile README |
+| `pet-shields.json` | badge kiểu [shields.io](https://shields.io/badges/endpoint-badge) | hàng badge kiểu shields.io |
+
+Đổi tên file trong đoạn markdown ở trên là xong. Badge shields.io thì dùng:
+
+```md
+![pet](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FOWNER%2FREPO%2Flegacypet%2Fpet-shields.json)
+```
+
 ## Tâm trạng
 
 | Tâm trạng | Khi nào |
@@ -112,15 +137,17 @@ Xong! Thú cưng sống trên nhánh riêng `legacypet`, nên lịch sử nhánh
 
 ## 13 loài, mỗi loài một đặc tính
 
-| Loài | Đặc tính | Tác dụng |
-| --- | --- | --- |
-| Slime | Linh hoạt | Cân bằng hoàn hảo |
-| Mèo | Độc lập | Issue bị bỏ rơi chỉ làm nó buồn một nửa |
-| Vịt cao su | Thợ gỡ lỗi | CI đỏ ít ảnh hưởng hơn 35% |
-| Cua | Lột xác | +15 niềm vui trong 2 tuần sau mỗi release (repo Rust luôn ra cua 🦀) |
-| Bạch tuộc | Đa nhiệm | +6 năng lượng cho mỗi người đóng góp thêm |
-| Rắn | Kiên nhẫn | Đói chậm hơn 40% (repo Python luôn ra rắn 🐍) |
-| Xương rồng | Chịu hạn | Đói chậm gấp 4 lần, hợp với dự án đã hoàn thành |
+Repo tự chọn thú cho mình: repo Rust luôn nở ra cua 🦀, repo Python luôn ra rắn 🐍, còn lại tùy tên repo.
+
+| | Loài | Đặc tính | Tác dụng |
+| :-: | --- | --- | --- |
+| <img src="docs/gallery/species/blob.svg" width="70"> | Slime (`blob`) | Linh hoạt | Cân bằng hoàn hảo |
+| <img src="docs/gallery/species/cat.svg" width="70"> | Mèo (`cat`) | Độc lập | Issue bị bỏ rơi chỉ làm nó buồn một nửa |
+| <img src="docs/gallery/species/duck.svg" width="70"> | Vịt cao su (`duck`) | Thợ gỡ lỗi | CI đỏ ít ảnh hưởng hơn 35% |
+| <img src="docs/gallery/species/crab.svg" width="70"> | Cua (`crab`) | Lột xác | +15 niềm vui trong 2 tuần sau mỗi release |
+| <img src="docs/gallery/species/octopus.svg" width="70"> | Bạch tuộc (`octopus`) | Đa nhiệm | +6 năng lượng cho mỗi người đóng góp thêm |
+| <img src="docs/gallery/species/snake.svg" width="70"> | Rắn (`snake`) | Kiên nhẫn | Đói chậm hơn 40% |
+| <img src="docs/gallery/species/cactus.svg" width="70"> | Xương rồng (`cactus`) | Chịu hạn | Đói chậm gấp 4 lần, hợp với dự án đã hoàn thành |
 
 ### 🦸 Biệt đội anh hùng
 
@@ -135,15 +162,22 @@ Sáu nhân vật nguyên bản lấy cảm hứng từ anime và phim hoạt hì
 | <img src="docs/gallery/species/bat.svg" width="70"> | Hiệp sĩ Bóng đêm (`bat`) | Canh gác | +15 niềm vui khi không issue nào phải chờ phản hồi |
 | <img src="docs/gallery/species/hero.svg" width="70"> | Siêu Cún (`hero`) | Thân thép | CI đỏ cũng không kéo sức khỏe xuống dưới 40 |
 
+Mỗi bé còn có câu cửa miệng riêng (*"Bay lên nào, deploy! 🦸"*, *"\*bùm\* Thuật phân thân commit! 🍥"*).
 Thú đã nở thì giữ nguyên loài, kể cả khi có loài mới được thêm vào.
+Muốn chọn loài khác? Đặt `species: ninja`. Muốn đặt tên? Đặt `name: Bánh Bao`.
+
+### ✨ Thú lấp lánh
+
+Cứ 64 repo thì có 1 repo nở ra thú **lấp lánh (shiny)** với màu khác và ánh sao, và không có cách nào quay lại.
+
+<img src="docs/gallery/shiny/cat.svg" width="80"> <img src="docs/gallery/shiny/duck.svg" width="80"> <img src="docs/gallery/shiny/ninja.svg" width="80"> <img src="docs/gallery/shiny/dragon.svg" width="80"> <img src="docs/gallery/shiny/bunny.svg" width="80"> <img src="docs/gallery/shiny/hero.svg" width="80">
 
 ### 💥 Siêu hình thái
 
-Giữ cho thú **phấn khích 7 ngày liền** là nó biến hình: hào quang vàng rực và cúp 💥 Siêu hình thái.
+Giữ cho thú **phấn khích 7 ngày liền** là nó biến hình: hào quang vàng rực, cúp 💥 Siêu hình thái
+và một câu khoe (*"Đây còn chưa phải hình dạng cuối cùng"*). Chỉ cần một ngày không vui là hào quang tắt, chờ chuỗi tiếp theo.
 
-<img src="docs/gallery/aura/ninja.svg" width="90"> <img src="docs/gallery/aura/dragon.svg" width="90"> <img src="docs/gallery/aura/bunny.svg" width="90"> <img src="docs/gallery/aura/hero.svg" width="90">
-
-Cứ 64 repo thì có 1 repo nở ra thú **lấp lánh (shiny)** ✨, và không có cách nào quay lại.
+<img src="docs/gallery/aura/ninja.svg" width="90"> <img src="docs/gallery/aura/mecha.svg" width="90"> <img src="docs/gallery/aura/dragon.svg" width="90"> <img src="docs/gallery/aura/bunny.svg" width="90"> <img src="docs/gallery/aura/bat.svg" width="90"> <img src="docs/gallery/aura/hero.svg" width="90">
 
 ### 🏝️ Quê nhà của từng loài
 
@@ -152,7 +186,7 @@ Mỗi loài có một nơi ở riêng, và nơi nào cũng sống động:
 <img src="docs/gallery/homes/meadow.svg" width="100" alt="meadow"> <img src="docs/gallery/homes/garden.svg" width="100" alt="garden"> <img src="docs/gallery/homes/pond.svg" width="100" alt="pond"> <img src="docs/gallery/homes/beach.svg" width="100" alt="beach"> <img src="docs/gallery/homes/reef.svg" width="100" alt="reef"> <img src="docs/gallery/homes/jungle.svg" width="100" alt="jungle"> <img src="docs/gallery/homes/desert.svg" width="100" alt="desert">
 
 - 🌳 **Đồng cỏ** (Slime, Siêu Cún): đồi xa có cối xay gió quay, cây đổi màu theo mùa, bướm bay
-- 🏡 **Khu vườn** (Mèo, Thỏ): căn nhà nhỏ sáng đèn ban đêm, hàng rào trắng, hoa hướng dương đung đưa
+- 🏡 **Khu vườn** (Mèo, Thỏ Phép Thuật): căn nhà nhỏ sáng đèn ban đêm, hàng rào trắng, hoa hướng dương đung đưa
 - 🦆 **Ao** (Vịt): mặt nước lấp lánh, gợn sóng lan tròn, bông lau rung rinh
 - 🏖️ **Bãi biển** (Cua): sóng vỗ, bọt biển tràn lên cát, cây dừa, hải âu, vỏ sò và lâu đài cát
 - 🐠 **Rạn san hô** (Bạch tuộc): dưới nước có tia nắng, rong biển, san hô, bong bóng và cá bơi ngang. Ban đêm sinh vật phát sáng
@@ -166,16 +200,6 @@ Ban đêm (dark mode) có sao băng, mùa đông có cả cực quang:
 Tâm trạng cũng đổi cảnh: phấn khích hay tiệc tùng thì có cầu vồng, ngày tiệc giăng cờ dây, còn thú zombie thì cây trụi lá, dơi bay và sương mù phủ kín.
 Muốn chuyển nhà? Đặt `scenery: beach` (hoặc `--scenery beach` trong CLI).
 
-### Chọn kiểu hiển thị
-
-| File | Dùng cho |
-| --- | --- |
-| `pet.svg` | Thẻ đầy đủ, đặt đầu README dự án |
-| `pet-mini.svg` | Thẻ nhỏ, đặt ở sidebar hoặc bảng |
-| `pet-badge.svg` | Badge <img src="docs/gallery/badges/ecstatic.svg"> đặt cạnh các badge khác |
-| `park.svg` | Công viên thú trên profile README |
-| `pet-shields.json` | Badge kiểu [shields.io](https://shields.io/badges/endpoint-badge) |
-
 ## 💬 Nói chuyện với thú: `/pet`
 
 Bình luận trong bất kỳ issue hay pull request nào, thú sẽ trả lời ngay trong thread, bằng ngôn ngữ của nó:
@@ -188,41 +212,79 @@ Bình luận trong bất kỳ issue hay pull request nào, thú sẽ trả lời
 | `/pet help` | Danh sách lệnh |
 
 Cần trigger `issue_comment` và quyền `issues: write` / `pull-requests: write` (đã có sẵn trong workflow mẫu ở trên).
+Bình luận của bot bị bỏ qua, và dòng `if:` giúp các bình luận khác không khởi động workflow. Đặt `commands: false` để tắt.
 
 ## 🌍 7 ngôn ngữ
 
-`lang:` nhận `en`, `vi`, `ja` (日本語), `zh` (中文), `ko` (한국어), `es` (Español), `fr` (Français).
-Tiếng Nhật, Trung, Hàn được ngắt dòng đúng trong bong bóng thoại.
+`lang:` nhận `en` (English), `vi` (Tiếng Việt), `ja` (日本語), `zh` (中文), `ko` (한국어), `es` (Español), `fr` (Français).
+Tiếng Nhật, Trung, Hàn được ngắt dòng đúng trong bong bóng thoại. Muốn thêm ngôn ngữ? Xem [CONTRIBUTING.md](CONTRIBUTING.md#translate).
+
+<img src="docs/gallery/langs/ja.svg" width="420"> <img src="docs/gallery/langs/zh.svg" width="420">
 
 ## 🏞️ Công viên thú
 
 <img src="docs/gallery/park/park-vi.svg" alt="Công viên thú với sáu con thú" width="840">
 
 Thêm `park: auto` vào workflow trong repo profile (lấy 6 repo nhiều sao nhất của bạn), hoặc liệt kê `park: app, dotfiles, owner-khac/lib`.
+Repo nào đã có LegacyPet riêng thì giữ nguyên tên, loài và cúp khi vào công viên.
 
 ## 🩺 Khám sức khỏe repo
 
 Mỗi lần chạy, action viết vào job summary lý do con thú đang vui hay buồn và việc nên làm,
 ví dụ *"3 issue từ cộng đồng đang chờ phản hồi đầu tiên. Lâu nhất là #12 (87 ngày)"*.
+Nhánh `legacypet` còn có biểu đồ tâm trạng 14 ngày gần nhất và nhật ký `DIARY.md`.
 
 ## Còn gì nữa?
 
 - 🎂 Lớn lên: Trứng → Bé (có mầm cây) → Trưởng thành → Lão làng (đeo kính một tròng)
-- 🏆 17 cúp vĩnh viễn: Bốc lửa (chuỗi 7 ngày), Hồi sinh, Siêu sao (kèm vương miện), Phản hồi thần tốc, Kỷ niệm…
+- 🏆 17 cúp vĩnh viễn: Bốc lửa (chuỗi 7 ngày), Hồi sinh, Siêu sao (kèm vương miện), Siêu hình thái, Phản hồi thần tốc, Kỷ niệm…
 - 🍂 Theo mùa: hoa xuân, đom đóm hè, lá thu, tuyết đông. Ở dark mode thì thành ban đêm có trăng sao, sao băng và cực quang mùa đông
 - 🧧 Ngày lễ: Tết có đèn lồng, pháo hoa và cành mai vàng rụng cánh, Halloween có mũ phù thủy và đàn dơi, Giáng sinh có mũ ông già Noel, người tuyết và dây đèn nhấp nháy
 - 💬 Lời thoại theo dữ liệu thật: *"Này... issue #12 chờ phản hồi 87 ngày rồi đó"*
 - ♿ Hỗ trợ trình đọc màn hình và tự tắt chuyển động khi người xem bật reduced motion
 
-- 🆕 Tự báo tính năng mới: `@v1` luôn trỏ tới bản 1.x mới nhất nên bạn được cập nhật tự động. Lần đầu chạy bản mới, trang Actions hiện thông báo và job summary liệt kê **có gì mới**, kèm hướng dẫn nếu cần sửa workflow
+## Cấu hình
 
-Xem chi tiết công thức tính chỉ số, cấu hình và FAQ trong [README tiếng Anh](README.md).
+| Input | Mặc định | Ý nghĩa |
+| --- | --- | --- |
+| `species` | `auto` | `auto` hoặc một trong 13 loài ở trên |
+| `scenery` | `auto` | Nơi ở: `auto` (quê nhà của loài), `meadow`, `garden`, `pond`, `beach`, `reef`, `jungle`, `desert` |
+| `name` | | Tên tự đặt. Để trống thì repo tự đặt tên |
+| `lang` | `en` | `en`, `vi`, `ja`, `zh`, `ko`, `es`, `fr` |
+| `theme` | `auto` | `auto` theo chế độ sáng/tối của người xem, hoặc `light`, `dark` |
+| `park` | | Vẽ thêm `park.svg`: `auto` hoặc danh sách repo |
+| `commands` | `true` | Trả lời lệnh `/pet` trong issue và PR |
+| `keepalive` | `true` | Không để GitHub tạm dừng lịch chạy sau 60 ngày im ắng (cần `actions: write`) |
+
+**Output:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `svg-path`.
+Ví dụ, chỉ báo cho team khi thú *vừa* bị ốm:
+
+```yaml
+      - uses: Tanx-1811/legacypet@v1
+        id: pet
+      - if: steps.pet.outputs.mood == 'sick' && steps.pet.outputs.mood-changed == 'true'
+        run: echo "${{ steps.pet.outputs.name }} đang ốm! ${{ steps.pet.outputs.speech }}"
+```
+
+Danh sách đầy đủ, công thức tính chỉ số và CLI có trong [README tiếng Anh](README.md#configuration).
+
+## Hỏi đáp
+
+**Có làm rối lịch sử commit không?** Không. Thú sống trên nhánh riêng, mỗi lần chạy nhánh đó được thay bằng đúng một commit.
+
+**Làm sao nhận tính năng mới?** `@v1` luôn trỏ tới bản 1.x mới nhất, nên bạn được cập nhật tự động ở lần chạy kế tiếp.
+Lần đầu chạy bản mới, trang Actions hiện thông báo và job summary liệt kê **có gì mới**.
+Nếu tính năng cần sửa file workflow (như `/pet` cần trigger `issue_comment`), summary sẽ nói rõ.
+Chạy lại `npx github:Tanx-1811/legacypet init --force` để làm mới workflow, hoặc bấm **Watch → Custom → Releases** để nhận email khi có bản mới.
+Thay đổi phá vỡ tương thích chỉ ra ở tag mới (`@v2`). Lịch sử các bản có trong [CHANGELOG.md](CHANGELOG.md).
+
+**Có gửi dữ liệu đi đâu không?** Không. Nó đọc GitHub API bằng token của workflow và ghi vào repo của bạn, chỉ vậy thôi.
 
 ## Đóng góp
 
-Cách đóng góp dễ nhất là **vẽ một loài mới**: một lưới 16×16 ký tự, một bảng màu và một đặc tính.
+Cách đóng góp dễ nhất là **vẽ một loài mới**: một lưới 16×16 ký tự, một bảng màu, một đặc tính và một nơi ở.
 Mất khoảng 10 phút, và `npm run gallery` cho xem ngay loài đó ở mọi tâm trạng. Xem [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Giấy phép
 
-[MIT](LICENSE)
+[MIT](LICENSE). Cứ nhận nuôi thoải mái.

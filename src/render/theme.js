@@ -208,3 +208,9 @@ const STATIC_CSS = `
 `.replace(/\n/g, '');
 
 export const buildCss = ({ theme = 'auto', mood, home = 'meadow' }) => themeBlock(theme, mood, home) + STATIC_CSS;
+
+// Just the card chrome (background, text, borders) for simple panels like the stats chart.
+export function chromeCss(theme = 'auto') {
+  if (theme === 'light' || theme === 'dark') return decl(CHROME[theme]);
+  return `${decl(CHROME.light)}@media (prefers-color-scheme:dark){${decl(CHROME.dark)}}`;
+}
