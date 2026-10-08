@@ -6,10 +6,14 @@ export default {
   species: {
     blob: 'Slime', cat: 'Cat', duck: 'Rubber Duck', crab: 'Crab',
     octopus: 'Octopus', snake: 'Snake', cactus: 'Cactus',
+    ninja: 'Ninja Fox', mecha: 'Mecha', dragon: 'Spirit Dragon', bunny: 'Magical Bunny',
+    bat: 'Night Guardian', hero: 'Super Pup',
   },
   traits: {
     adaptable: 'Adaptable', independent: 'Independent', debugger: 'Debugger', molting: 'Molting',
     multitasker: 'Multitasker', patient: 'Patient', drought: 'Drought-proof',
+    shadowClone: 'Shadow Clone', reactor: 'Reactor Core', ancient: 'Ancient Power', starlight: 'Starlight',
+    vigilant: 'Vigilant', steel: 'Steel Body',
   },
   stages: { egg: 'Egg', baby: 'Baby', adult: 'Adult', elder: 'Elder' },
   kind: (stage, species) => `${stage} ${species}`,
@@ -37,6 +41,7 @@ export default {
     streak7: 'On Fire', streak30: 'Comet', centurion: 'Centurion', shipper: 'Shipper',
     stars100: 'Rising Star', stars1k: 'Superstar', team: 'Squad', spotless: 'Spotless',
     inboxZero: 'Inbox Zero', elder: 'Wise Elder',
+    superForm: 'Super Form', responder: 'First Responder', anniversary: 'Anniversary',
   },
   lines: {
     revived: [(v) => `I'M ALIVE!! Thanks for coming back to ${v.repoName} 💚`, 'Braaai... wait, fresh commits? I feel ALIVE!'],
@@ -59,6 +64,20 @@ export default {
     ],
     treat: [(v) => `@${v.treatUser} fed me a treat (#${v.treatPr}) 🍪`, (v) => `Thanks @${v.treatUser} for the snack in #${v.treatPr}!`],
     streak: [(v) => `${v.streak}-day commit streak! Unstoppable 🔥`],
+    aura: [
+      'POWER UP! A whole week of bliss ✨',
+      "This isn't even my final form 💥",
+      (v) => `${v.auraDays} days of pure joy. I'm glowing! ✨`,
+    ],
+    // Signature lines, mixed in on good days.
+    species: {
+      ninja: ['*poof* Shadow clone commit jutsu! 🍥', 'A true ninja never leaves a TODO behind 🥷'],
+      mecha: ['All systems green. Mecha, launch! 🤖', 'Reactor at 100%. Ready to deploy 🚀'],
+      dragon: ['Gather seven green builds and make a wish 🐉', 'The ancient scrolls say: write tests 📜'],
+      bunny: ['By the power of green CI... transform! ✨', 'Merge request power, make up! 🌙'],
+      bat: ['I patrol the issue tracker so you can sleep 🦇', "I'm the guardian this repo deserves 🦇"],
+      hero: ['Up, up and deploy! 🦸', 'Is it a bird? A plane? No, a green build! ✈️'],
+    },
     moods: {
       ecstatic: ['Best. Maintainer. Ever. 💖', 'Green CI, fresh commits, happy issues. Bliss!', (v) => `${v.commits7} commits this week. I'm so full!`],
       happy: ['Nom nom, thanks for the commits!', (v) => `Life is good in ${v.repoName}.`, 'Every commit is a snack. Keep them coming!'],
@@ -74,6 +93,18 @@ export default {
       zombie: ['Braaains... I mean, commiiits...', (v) => `Last fed ${v.days} days ago. I have seen things.`, 'Is anyone... still... maintaining this?'],
       hibernating: ['This repo is archived. Hibernating... Zzz', 'Archived and at peace. Thanks for everything 💤'],
       egg: [(v) => `*wobble* ${v.toHatch} more ${plural(v.toHatch, 'commit', 'commits')} until I hatch!`, '*tap tap* Is somebody out there?'],
+    },
+  },
+  command: {
+    pat: ['*happy wiggle* Thanks for the pat! 💕', 'Pats are nice. Commits are nicer 😋', (v) => `${v.name} loves you too! 💖`],
+    checkup: 'Checkup',
+    commands: 'Commands',
+    help: 'Talk to me in any issue or pull request:',
+    usage: {
+      status: 'how I feel and why',
+      pat: 'give me a pat',
+      checkup: 'just the checkup',
+      help: 'this list',
     },
   },
   park: {

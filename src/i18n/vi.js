@@ -3,10 +3,14 @@ export default {
   species: {
     blob: 'Slime', cat: 'Mèo', duck: 'Vịt cao su', crab: 'Cua',
     octopus: 'Bạch tuộc', snake: 'Rắn', cactus: 'Xương rồng',
+    ninja: 'Cáo Ninja', mecha: 'Người máy Mecha', dragon: 'Rồng Thần', bunny: 'Thỏ Phép Thuật',
+    bat: 'Hiệp sĩ Bóng đêm', hero: 'Siêu Cún',
   },
   traits: {
     adaptable: 'Linh hoạt', independent: 'Độc lập', debugger: 'Thợ gỡ lỗi', molting: 'Lột xác',
     multitasker: 'Đa nhiệm', patient: 'Kiên nhẫn', drought: 'Chịu hạn',
+    shadowClone: 'Phân thân', reactor: 'Lò phản ứng', ancient: 'Sức mạnh cổ xưa', starlight: 'Ánh sao',
+    vigilant: 'Canh gác', steel: 'Thân thép',
   },
   stages: { egg: 'Trứng', baby: 'Bé', adult: 'Trưởng thành', elder: 'Lão làng' },
   kind: (stage, species) => `${species} ${stage.toLowerCase()}`,
@@ -34,6 +38,7 @@ export default {
     streak7: 'Bốc lửa', streak30: 'Sao chổi', centurion: 'Bách chiến', shipper: 'Người giao hàng',
     stars100: 'Ngôi sao mới', stars1k: 'Siêu sao', team: 'Biệt đội', spotless: 'Sạch bong',
     inboxZero: 'Hộp thư trống', elder: 'Lão làng thông thái',
+    superForm: 'Siêu hình thái', responder: 'Phản hồi thần tốc', anniversary: 'Kỷ niệm',
   },
   lines: {
     revived: [(v) => `TA SỐNG LẠI RỒI!! Cảm ơn đã quay về ${v.repoName} 💚`, 'Commiiit... ơ khoan, có đồ ăn thật này? Hồi sinh!'],
@@ -56,6 +61,19 @@ export default {
     ],
     treat: [(v) => `@${v.treatUser} vừa cho mình ăn bánh (#${v.treatPr}) 🍪`, (v) => `Cảm ơn @${v.treatUser} đã tiếp tế ở #${v.treatPr}!`],
     streak: [(v) => `Chuỗi ${v.streak} ngày commit liên tục! Cháy quá 🔥`],
+    aura: [
+      'BIẾN HÌNH! Cả tuần sung sướng ✨',
+      'Đây còn chưa phải hình dạng cuối cùng 💥',
+      (v) => `${v.auraDays} ngày hạnh phúc liền. Mình phát sáng rồi! ✨`,
+    ],
+    species: {
+      ninja: ['*bùm* Thuật phân thân commit! 🍥', 'Ninja chân chính không bỏ sót TODO nào 🥷'],
+      mecha: ['Mọi hệ thống xanh. Mecha, xuất kích! 🤖', 'Lò phản ứng 100%. Sẵn sàng deploy 🚀'],
+      dragon: ['Gom đủ bảy build xanh để ước một điều 🐉', 'Bí kíp cổ xưa dạy rằng: hãy viết test 📜'],
+      bunny: ['Nhân danh CI xanh... biến hình! ✨', 'Sức mạnh merge request, trang điểm! 🌙'],
+      bat: ['Mình canh issue để bạn ngủ ngon 🦇', 'Hiệp sĩ mà repo này xứng đáng có 🦇'],
+      hero: ['Bay lên nào, deploy! 🦸', 'Chim à? Máy bay à? Không, build xanh! ✈️'],
+    },
     moods: {
       ecstatic: ['Maintainer tuyệt nhất quả đất! 💖', 'CI xanh, commit tươi, issue gọn. Sướng!', (v) => `Tuần này ${v.commits7} commit. No căng bụng!`],
       happy: ['Măm măm, cảm ơn mấy cái commit nha!', (v) => `Sống ở ${v.repoName} thật là vui.`, 'Mỗi commit là một miếng snack. Cho thêm đi!'],
@@ -71,6 +89,18 @@ export default {
       zombie: ['Commiiit... cho ta commiiit...', (v) => `Lần cuối được ăn là ${v.days} ngày trước. Ta đã thấy nhiều thứ.`, 'Còn... ai... bảo trì... repo này không?'],
       hibernating: ['Repo đã lưu trữ. Mình đi ngủ đông đây... Zzz', 'Đã lưu trữ, thanh thản rồi. Cảm ơn tất cả 💤'],
       egg: [(v) => `*lắc lư* Còn ${v.toHatch} commit nữa là mình nở!`, '*cốc cốc* Có ai ở ngoài đó không?'],
+    },
+  },
+  command: {
+    pat: ['*ngoe nguẩy* Cảm ơn đã xoa đầu! 💕', 'Xoa đầu thích lắm. Commit còn thích hơn 😋', (v) => `${v.name} cũng thương bạn! 💖`],
+    checkup: 'Khám sức khỏe',
+    commands: 'Lệnh',
+    help: 'Nói chuyện với mình trong bất kỳ issue hay pull request nào:',
+    usage: {
+      status: 'mình thấy thế nào và vì sao',
+      pat: 'xoa đầu mình',
+      checkup: 'chỉ phần khám sức khỏe',
+      help: 'danh sách này',
     },
   },
   park: {
