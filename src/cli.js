@@ -6,7 +6,7 @@ import { parseArgs } from 'node:util';
 import {
   buildPet, checkup, collectPark, collectSnapshot, createClient, insertSnippet, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
   parseRemote, PLAYGROUND, renderBadge, renderCard, renderFiles, renderMini, renderPark, resolveParkRepos,
-  snippetFor, HOMES, SPECIES_IDS, terminalArt, workflowYaml,
+  snippetFor, HOMES, renderStats, SPECIES_IDS, terminalArt, workflowYaml,
 } from './index.js';
 
 const HELP = `
@@ -31,6 +31,7 @@ Options
   init:    --repo <owner/name>  --style card|mini|badge|park  --park auto|<repos>  --force
   park:    --size <1-8>
   demo:    --mood ${MOODS.join('|')}  --stage egg|baby|adult|elder  --shiny  --aura  --holiday <id>
+  render, demo:  --vacation "until 2027-01-05"  preview the pet on vacation
 
 Preview any repo in the browser: ${PLAYGROUND}
 `;
@@ -40,6 +41,7 @@ const { values: opts, positionals } = parseArgs({
   options: {
     species: { type: 'string', default: 'auto' },
     scenery: { type: 'string', default: 'auto' },
+    vacation: { type: 'string' },
     mood: { type: 'string' },
     stage: { type: 'string' },
     shiny: { type: 'boolean' },
@@ -86,7 +88,7 @@ async function visit(fullName, now = new Date()) {
   if (!owner || !repo) throw new Error('Expected a repo like owner/name');
   const snapshot = await collectSnapshot(createClient({ token: token() }), { owner, repo, now });
   snapshot.warnings.forEach((w) => console.warn(`⚠ ${w}`));
-  const pet = buildPet({ snapshot, now, options: { species: opts.species, scenery: opts.scenery, name: opts.name, lang: opts.lang } });
+  const pet = buildPet({ snapshot, now, options: { species: opts.species, scenery: opts.scenery, vacation: opts.vacation, name: opts.name, lang: opts.lang } });
   return { pet, snapshot };
 }
 
@@ -167,14 +169,14 @@ Next steps
   3. Refresh your README. Say hi to your pet!`);
 }
 
-function demoPet({ mood = 'happy', species = 'auto', scenery, stage, shiny, aura, holiday = null, season, lang = 'en', name, fullName, now = new Date() }) {
+function demoPet({ mood = 'happy', species = 'auto', scenery, vacation, stage, shiny, aura, holiday = null, season, lang = 'en', name, fullName, now = new Date() }) {
   const snapshot = mockSnapshot({ mood, stage: stage ?? 'adult', now, fullName });
-  return buildPet({ snapshot, now, options: { species, scenery, mood, stage, shiny: shiny ?? false, aura: aura ?? false, holiday, season, lang, name } });
+  return buildPet({ snapshot, now, options: { species, scenery, vacation, mood, stage, shiny: shiny ?? false, aura: aura ?? false, holiday, season, lang, name } });
 }
 
 function demo() {
   const pet = demoPet({
-    mood: opts.mood ?? 'happy', species: opts.species, scenery: opts.scenery, stage: opts.stage, shiny: opts.shiny, aura: opts.aura,
+    mood: opts.mood ?? 'happy', species: opts.species, scenery: opts.scenery, vacation: opts.vacation, stage: opts.stage, shiny: opts.shiny, aura: opts.aura,
     holiday: opts.holiday ?? null, lang: opts.lang, name: opts.name,
   });
   write(opts.out, 'demo.svg', renderCard(pet, { theme: opts.theme }));
@@ -202,6 +204,20 @@ const PARK_DEMO = [
   ['ml-notebooks', 'hungry', 'snake'], ['rust-game', 'party', 'crab'], ['old-blog', 'zombie', 'blob'],
 ];
 
+// A believable month: a CI scare mid-month, a quiet patch, then a release.
+function demoHistory(now) {
+  const moods = { 0: 'party', 1: 'ecstatic', 2: 'ecstatic', 9: 'sleepy', 10: 'sleepy', 16: 'sick', 17: 'sick' };
+  return Array.from({ length: 30 }, (_, i) => {
+    const t = i / 29;
+    const sick = i === 16 || i === 17;
+    return {
+      date: new Date(now.getTime() - i * 86_400_000).toISOString().slice(0, 10),
+      mood: moods[i] ?? 'happy',
+      vitals: [Math.round(70 + 25 * Math.cos(t * 7)), sick ? 25 : 100, Math.round(62 + 30 * (1 - t)), Math.round(45 + 40 * Math.sin(t * 5 + 1))],
+    };
+  });
+}
+
 function gallery() {
   const out = opts.out === 'legacypet-out' ? 'docs/gallery' : opts.out;
   const now = new Date('2026-10-08T09:00:00Z');
@@ -227,6 +243,11 @@ function gallery() {
   add('Moods', MOODS.map((mood) => ({ label: mood, src: mini('moods', `${mood}.svg`, demoPet({ mood, species: MOOD_STARS[mood], now })) })));
   add('Species', SPECIES_IDS.map((species) => ({ label: species, src: mini('species', `${species}.svg`, demoPet({ mood: 'happy', species, now })) })));
   add('Homes (each species lives somewhere special; set `scenery` to move)', HOMES.map((home) => ({ label: home, src: mini('homes', `${home}.svg`, demoPet({ mood: HOME_DEMO[home][1], species: HOME_DEMO[home][0], scenery: home, season: 'summer', now })) })));
+  add('Vacation mode and the stats chart', [
+    { label: 'vacation', src: mini('care', 'vacation.svg', demoPet({ mood: 'happy', species: 'cat', vacation: '2026-10-01..2026-10-20', now })) },
+    { label: 'pet-stats.svg', src: save('care', 'stats.svg', renderStats(demoPet({ mood: 'happy', species: 'duck', now, name: 'Mochi' }), demoHistory(now), { theme: 'light' })), wide: true },
+    { label: 'pet-stats.svg (dark)', src: save('care', 'stats-dark.svg', renderStats(demoPet({ mood: 'happy', species: 'duck', now, name: 'Mochi' }), demoHistory(now), { theme: 'dark' })), wide: true, dark: true },
+  ]);
   add('Homes at night', HOMES.map((home) => ({ label: home, src: mini('homes', `${home}-night.svg`, demoPet({ mood: 'happy', species: HOME_DEMO[home][0], scenery: home, season: home === 'meadow' ? 'winter' : 'summer', now }), 'dark'), dark: true })));
   add('Shiny variants (1 in 64 repos)', SPECIES_IDS.map((species) => ({ label: `✨ ${species}`, src: mini('shiny', `${species}.svg`, demoPet({ mood: 'ecstatic', species, shiny: true, now })) })));
   add('Super form (7 ecstatic days in a row)', HERO_SQUAD.map((species) => ({ label: `💥 ${species}`, src: mini('aura', `${species}.svg`, demoPet({ mood: 'ecstatic', species, aura: true, now })) })));
