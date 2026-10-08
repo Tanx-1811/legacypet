@@ -555,6 +555,7 @@ No install needed. It works on any public repo:
 
 ```sh
 npx github:Tanx-1811/legacypet init                       # adopt a pet in the current repo
+npx github:Tanx-1811/legacypet adopt                      # pick any of your repos (private too) from a list, no clone
 npx github:Tanx-1811/legacypet render vercel/next.js      # draw any repo's pet + checkup
 npx github:Tanx-1811/legacypet park sindresorhus          # draw someone's Pet Park
 npx github:Tanx-1811/legacypet demo --mood zombie --species cat --lang vi
@@ -563,6 +564,8 @@ npx github:Tanx-1811/legacypet demo --species dragon --path sage --wear "wizard,
 ```
 
 In a terminal with true color, it draws the pet right in your shell.
+
+`adopt` lists your repos (🐾 already has a pet, 🔒 private), asks which ones (`1,3`, `2-5`, `all` or names), and commits the workflow and README snippet to each one through the API. It uses `$GITHUB_TOKEN` or your `gh` login; writing workflow files needs the `workflow` scope (`gh auth refresh -s workflow`). Pass an owner (`adopt my-org`) for an organization's repos, or `--repos "app,lib"` to skip the question.
 
 ## FAQ
 

@@ -59,6 +59,18 @@ Lệnh này tạo `.github/workflows/legacypet.yml`, chèn con thú lên đầu 
 git add . && git commit -m "Nhận nuôi LegacyPet 🐾" && git push
 ```
 
+### Cách 3: chọn nhiều repo từ danh sách, không cần clone
+
+```sh
+npx github:Tanx-1811/legacypet adopt --lang vi
+```
+
+Lệnh này liệt kê các repo của bạn (🐾 là đã có thú, 🔒 là repo riêng tư) rồi hỏi bạn chọn repo nào (`1,3`, `2-5`, `all` hoặc gõ tên).
+Sau đó nó commit workflow và snippet README vào từng repo qua API. Lệnh dùng `$GITHUB_TOKEN` hoặc tài khoản `gh` đang đăng nhập.
+Muốn ghi được file workflow thì token cần quyền `workflow`: chạy `gh auth refresh -s workflow`. Với repo của tổ chức thì thêm tên vào sau, ví dụ `adopt ten-to-chuc`.
+
+Trên trang web cũng vậy: gõ một **username** (hoặc bấm **📂 Repo của tôi** sau khi thêm token) để hiện danh sách repo, mỗi repo có nút **🏡 Nhận nuôi**.
+
 Khoảng một phút sau khi push, thú tự nở. Tải lại README để chào nó nhé!
 
 Tùy chọn: `--species ninja`, `--scenery beach`, `--name "Bánh Bao"`, `--style badge`.
