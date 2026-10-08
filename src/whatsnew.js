@@ -2,9 +2,20 @@
 // and tells the owner about anything newer in the job summary, so people pinned to the
 // floating `@v1` tag hear about new features (and the rare workflow change they need).
 // Keep VERSION in sync with package.json (a test checks it).
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';
 
 export const CHANGELOG = [
+  {
+    version: '1.2.0',
+    items: [
+      '🏖️ Vacation mode: set `vacation: until 2027-01-05` (or comment `/pet vacation 14`). Hunger pauses, the pet goes to the beach in sunglasses, and the days away never count',
+      '🚨 Care alerts (opt-in, `alerts: true`): one issue when the pet stays sick or turns zombie, kept up to date and closed automatically when it recovers',
+      '📈 `pet-stats.svg`: a 30-day chart of fullness, health, joy and energy with the mood of each day',
+      '🏆 New commands: `/pet trophies`, plus `/pet vacation [days]` and `/pet back` for maintainers',
+      '🌄 Livelier scenes: rainbows, shooting stars, northern lights, bunting, fog, bats, string lights and a blooming mai branch at Tết',
+      '📤 New outputs: `on-vacation`, `alert-issue`',
+    ],
+  },
   {
     version: '1.1.0',
     items: [

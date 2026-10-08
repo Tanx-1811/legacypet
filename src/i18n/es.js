@@ -69,7 +69,7 @@ export default {
     streak: [(v) => `¡Racha de ${v.streak} días con commits! Imparable 🔥`],
     vacation: [
       (v) => `De vacaciones hasta el ${v.until} 🌴 ¡Vuelvo pronto!`,
-      (v) => `Me fui a la playa hasta el ${v.until} 🏖️ Sin commits`,
+      (v) => `Me fui a la playa hasta el ${v.until} 🏖️ Commits no, gracias`,
       'Fuera de la oficina. Protector solar on, avisos off 😎',
     ],
     aura: [

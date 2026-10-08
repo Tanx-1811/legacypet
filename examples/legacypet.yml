@@ -29,3 +29,6 @@ jobs:
           # species: ninja   # auto | blob | cat | duck | crab | octopus | snake | cactus
           #                  # | ninja | mecha | dragon | bunny | bat | hero
           # name: Mochi      # leave empty and the repo names its own pet
+          # scenery: beach   # auto | meadow | garden | pond | beach | reef | jungle | desert
+          # alerts: true     # open an issue when the pet stays sick or turns zombie
+          # vacation: until 2027-01-05  # going away? the pet won't starve meanwhile

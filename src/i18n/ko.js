@@ -62,6 +62,11 @@ export default {
     ],
     treat: [(v) => `@${v.treatUser} 님이 간식을 줬어 (#${v.treatPr}) 🍪`, (v) => `#${v.treatPr} 간식 고마워, @${v.treatUser} 님!`],
     streak: [(v) => `${v.streak}일 연속 커밋! 멈출 수 없어 🔥`],
+    vacation: [
+      (v) => `${v.until}까지 휴가 중 🌴 곧 돌아올게!`,
+      (v) => `${v.until}까지 바다 여행 중 🏖️ 커밋은 쉬어도 돼`,
+      '부재 중. 선크림 바르고 알림은 끔 😎',
+    ],
     aura: [
       '파워 업! 일주일 내내 행복해 ✨',
       '이건 아직 내 최종 형태가 아니야 💥',
@@ -102,8 +107,17 @@ export default {
       status: '내 기분과 그 이유',
       pat: '쓰다듬어 주기',
       checkup: '건강검진만 보기',
+      trophies: '내 트로피 진열장',
+      vacation: 'N일 동안 배고픔 멈추기, 예: `/pet vacation 14` (메인테이너 전용)',
+      back: '휴가 일찍 끝내기 (메인테이너 전용)',
       help: '이 목록',
     },
+    vacation: (until, days) => `🏖️ **${until}**까지 바닷가로 휴가 갈게! ${days}일 동안 배고픔이 멈추고, 돌아와도 그동안은 안 세는 거야.`,
+    back: '다녀왔어! 👋 휴가 끝, 밥그릇은 다시 커밋 받을 준비 완료!',
+    notOnVacation: '나 휴가 중 아닌데? 그래도 챙겨줘서 고마워! 😊',
+    maintainersOnly: (name) => `\`/pet ${name}\` 명령어는 메인테이너만 쓸 수 있어. 그래도 \`/pet pat\` 쓰담쓰담은 누구나 해줄 수 있어 💕`,
+    trophies: (n, total) => `트로피 진열장: ${total}개 중 ${n}개`,
+    locked: '아직 해금 전',
   },
   park: {
     title: (owner) => `${owner}의 펫 파크`,
@@ -125,6 +139,7 @@ export default {
     hygieneFull: '커뮤니티 프로필 100%. 티끌 하나 없어요!',
     streak: (n) => `${n}일 연속 커밋 중이에요. 끊기지 않게 해요!`,
     archived: '보관된 레포라서 펫이 평화롭게 겨울잠을 자고 있어요.',
+    vacation: (until) => `${until}까지 휴가 중이에요. 배고픔이 멈춰 있고, 이 기간은 계산되지 않아요.`,
   },
   diary: {
     title: (name) => `# 📔 ${name}의 일기`,
@@ -134,5 +149,22 @@ export default {
     fasted: '오늘은 굶음',
     treat: (user, pr) => `@${user} 님에게 간식 받음 (#${pr})`,
     unlocked: (list) => `${list} 해금`,
+    vacation: (until) => `${until}까지 휴가 중 🏖️`,
+  },
+  alert: {
+    title: {
+      sick: (name) => `🤒 ${name} 아파요: CI가 실패하고 있어요`,
+      zombie: (name, days) => `🧟 ${name} 좀비가 됐어요: ${days}일째 커밋이 없어요`,
+      hungry: (name, days) => `🍖 ${name} 배고파요: ${days}일째 커밋이 없어요`,
+      sad: (name) => `🥺 ${name} 슬퍼요: 이슈가 답변을 기다리고 있어요`,
+    },
+    intro: '펫에게 돌봄이 필요해요. 이 이슈는 스스로 업데이트되고, 펫이 기운을 차리면 저절로 닫혀요.',
+    since: (date) => `${date}부터예요.`,
+    recovered: (name, mood) => `🎉 ${name} 기운을 차렸어요 (지금은 ${mood}). 이 이슈를 닫을게요. 돌봐 줘서 고마워요!`,
+    footer: 'LegacyPet이 연 이슈예요. 이 이슈를 닫으면 펫이 회복될 때까지 알림이 꺼지고, `alerts: false`로 설정하면 알림을 아예 끌 수 있어요.',
+  },
+  chart: {
+    title: (name, days) => `${name} · 최근 ${days}일`,
+    empty: '아직 기록이 부족해요. 차트는 하루하루 채워져요.',
   },
 };

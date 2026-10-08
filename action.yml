@@ -51,6 +51,12 @@ inputs:
   commands:
     description: 'Answer /pet commands in issue and PR comments (needs the issue_comment trigger and issues: write).'
     default: 'true'
+  vacation:
+    description: 'Going away? "until 2027-01-05" or "2026-12-20..2027-01-05". Hunger pauses, the pet relaxes on the beach and the days away never count. Max 60 days. Maintainers can also comment /pet vacation 14 and /pet back.'
+    default: ''
+  alerts:
+    description: 'Open one GitHub issue when the pet needs care, kept up to date and closed when it recovers. true (sick + zombie), false, or a list: sick, zombie, hungry, sad. Needs issues: write.'
+    default: 'false'
   dry-run:
     description: 'Render the pet without publishing it.'
     default: 'false'
@@ -78,6 +84,10 @@ outputs:
     description: 'true when the pet is in its super form (7 ecstatic days in a row)'
   new-trophies:
     description: 'Comma-separated ids of trophies unlocked on this run'
+  on-vacation:
+    description: 'true while the pet is on vacation'
+  alert-issue:
+    description: 'Number of the open care-alert issue, or empty'
 
 runs:
   using: 'node24'
