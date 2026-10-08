@@ -25,6 +25,11 @@ export default {
     hibernating: '꿈꾸는', egg: '알 속의',
   },
   displayName: (name, title) => `${title} ${name}`,
+  ranks: {
+    rookie: '루키', bronze: '브론즈', silver: '실버', gold: '골드',
+    platinum: '플래티넘', diamond: '다이아몬드', legend: '레전드',
+  },
+  levelUpBanner: '레벨 업!',
   stats: { fullness: '포만감', health: '건강', joy: '기쁨', energy: '에너지', hygiene: '청결' },
   level: (n) => `Lv.${n}`,
   shiny: '반짝이',
@@ -40,6 +45,7 @@ export default {
     stars100: '떠오르는 별', stars1k: '슈퍼스타', team: '드림팀', spotless: '깔끔 그 자체',
     inboxZero: '인박스 제로', elder: '지혜로운 원로',
     superForm: '슈퍼 폼', responder: '응답 1등', anniversary: '기념일',
+    veteran: '베테랑', master: '마스터', maxLevel: '만렙',
   },
   lines: {
     revived: [(v) => `살아났다!! ${v.repoName}에 돌아와줘서 고마워 💚`, '뇌애애... 어? 새 커밋? 살아난 기분이야!'],
@@ -66,6 +72,14 @@ export default {
       (v) => `${v.until}까지 휴가 중 🌴 곧 돌아올게!`,
       (v) => `${v.until}까지 바다 여행 중 🏖️ 커밋은 쉬어도 돼`,
       '부재 중. 선크림 바르고 알림은 끔 😎',
+    ],
+    levelUp: [
+      (v) => `레벨 업! 이제 난 Lv.${v.level} ⬆️`,
+      (v) => `Lv.${v.level}! 커밋 먹을수록 강해져 💪`,
+    ],
+    rankUp: [
+      (v) => `랭크 업! ${v.rankEmoji} ${v.rank} 랭크 해금!`,
+      (v) => `Lv.${v.level}에 ${v.rankEmoji} ${v.rank} 달성! 나 빛나지? ✨`,
     ],
     aura: [
       '파워 업! 일주일 내내 행복해 ✨',
@@ -99,6 +113,13 @@ export default {
     },
   },
   command: {
+    level: {
+      title: (level, rank) => `Lv.${level} · ${rank} 랭크`,
+      nextLevel: (n, level) => `Lv.${level}까지 커밋 ${n}개 남았어`,
+      nextRank: (n, rank) => `${rank}까지 커밋 ${n}개 남았어`,
+      maxed: '만렙 달성! 진정한 레전드야 👑',
+      ladder: '랭크',
+    },
     pat: ['*꼬물꼬물* 쓰다듬어줘서 고마워! 💕', '쓰담쓰담도 좋지만 커밋이 더 좋아 😋', (v) => `${v.name}도 너를 사랑해! 💖`],
     checkup: '건강검진',
     commands: '명령어',
@@ -107,6 +128,7 @@ export default {
       status: '내 기분과 그 이유',
       pat: '쓰다듬어 주기',
       checkup: '건강검진만 보기',
+      level: '내 레벨, 랭크, 다음 단계까지 남은 커밋',
       trophies: '내 트로피 진열장',
       vacation: 'N일 동안 배고픔 멈추기, 예: `/pet vacation 14` (메인테이너 전용)',
       back: '휴가 일찍 끝내기 (메인테이너 전용)',
@@ -149,6 +171,8 @@ export default {
     fasted: '오늘은 굶음',
     treat: (user, pr) => `@${user} 님에게 간식 받음 (#${pr})`,
     unlocked: (list) => `${list} 해금`,
+    levelUp: (level) => `Lv.${level} 달성`,
+    rankUp: (level, rank) => `Lv.${level}에서 ${rank} 랭크 달성`,
     vacation: (until) => `${until}까지 휴가 중 🏖️`,
   },
   alert: {

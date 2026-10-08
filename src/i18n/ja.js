@@ -24,6 +24,11 @@ export default {
     hibernating: 'ゆめみる', egg: 'たまごの',
   },
   displayName: (name, title) => `${title}${name}`,
+  ranks: {
+    rookie: 'ルーキー', bronze: 'ブロンズ', silver: 'シルバー', gold: 'ゴールド',
+    platinum: 'プラチナ', diamond: 'ダイヤモンド', legend: 'レジェンド',
+  },
+  levelUpBanner: 'レベルアップ!',
   stats: { fullness: 'まんぷく', health: '健康', joy: 'ごきげん', energy: '元気', hygiene: '清潔' },
   level: (n) => `Lv.${n}`,
   shiny: '色違い',
@@ -39,6 +44,7 @@ export default {
     stars100: 'ライジングスター', stars1k: 'スーパースター', team: 'なかまたち', spotless: 'ピカピカ',
     inboxZero: 'インボックスゼロ', elder: '賢き長老',
     superForm: '覚醒フォーム', responder: '即レス隊', anniversary: '記念日',
+    veteran: 'ベテラン', master: 'マスター', maxLevel: 'レベルMAX',
   },
   lines: {
     revived: [(v) => `生き返ったー!! ${v.repoName}に戻ってくれてありがと 💚`, 'コミーット… え、新しいコミット? 生き返る!'],
@@ -65,6 +71,14 @@ export default {
       (v) => `${v.until}まで休暇中 🌴 すぐ戻るね!`,
       (v) => `${v.until}まで海にいるよ 🏖️ コミットはいらないよ`,
       'おやすみ中。日焼け止めぬって通知はオフ 😎',
+    ],
+    levelUp: [
+      (v) => `レベルアップ! Lv.${v.level}になったよ ⬆️`,
+      (v) => `Lv.${v.level}! コミットのたびに強くなる 💪`,
+    ],
+    rankUp: [
+      (v) => `ランクアップ! ${v.rankEmoji} ${v.rank}ランク解放!`,
+      (v) => `Lv.${v.level}で${v.rankEmoji} ${v.rank}! キラキラでしょ ✨`,
     ],
     aura: [
       'パワーアップ! 一週間ずっとしあわせ ✨',
@@ -98,6 +112,13 @@ export default {
     },
   },
   command: {
+    level: {
+      title: (level, rank) => `Lv.${level} · ${rank}ランク`,
+      nextLevel: (n, level) => `Lv.${level}まであと${n}コミット`,
+      nextRank: (n, rank) => `${rank}まであと${n}コミット`,
+      maxed: 'レベルMAX。真のレジェンドだよ 👑',
+      ladder: 'ランク一覧',
+    },
     pat: ['*うれしくてクネクネ* なでなでありがと! 💕', 'なでなでもいいけど、コミットはもっといい 😋', (v) => `${v.name}もキミが大好き! 💖`],
     checkup: '健康診断',
     commands: 'コマンド',
@@ -106,6 +127,7 @@ export default {
       status: 'ボクの気分とその理由',
       pat: 'なでなでする',
       checkup: '健康診断だけ',
+      level: 'ボクのレベルとランク、次までのコミット数',
       trophies: 'ボクのトロフィー棚',
       vacation: 'N日間おなかがすかなくなる。例: `/pet vacation 14` (メンテナー限定)',
       back: '休暇を早めに切り上げる (メンテナー限定)',
@@ -148,6 +170,8 @@ export default {
     fasted: '今日はごはんなし',
     treat: (user, pr) => `@${user}からおやつをもらった (#${pr})`,
     unlocked: (list) => `実績解除: ${list}`,
+    levelUp: (level) => `Lv.${level}にレベルアップ`,
+    rankUp: (level, rank) => `Lv.${level}で${rank}ランクに到達`,
     vacation: (until) => `${until}まで休暇中 🏖️`,
   },
   alert: {

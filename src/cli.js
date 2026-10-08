@@ -6,7 +6,7 @@ import { parseArgs } from 'node:util';
 import {
   buildPet, checkup, collectPark, collectSnapshot, createClient, insertSnippet, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
   parseRemote, PLAYGROUND, renderBadge, renderCard, renderFiles, renderMini, renderPark, resolveParkRepos,
-  snippetFor, HOMES, renderStats, SPECIES_IDS, terminalArt, workflowYaml,
+  snippetFor, HOMES, RANKS, renderStats, SPECIES_IDS, terminalArt, workflowYaml,
 } from './index.js';
 
 const HELP = `
@@ -30,7 +30,7 @@ Options
 
   init:    --repo <owner/name>  --style card|mini|badge|park  --park auto|<repos>  --force
   park:    --size <1-8>
-  demo:    --mood ${MOODS.join('|')}  --stage egg|baby|adult|elder  --shiny  --aura  --holiday <id>
+  demo:    --mood ${MOODS.join('|')}  --stage egg|baby|adult|elder  --shiny  --aura  --level-up  --commits <n>  --holiday <id>
   render, demo:  --vacation "until 2027-01-05"  preview the pet on vacation
 
 Preview any repo in the browser: ${PLAYGROUND}
@@ -46,6 +46,8 @@ const { values: opts, positionals } = parseArgs({
     stage: { type: 'string' },
     shiny: { type: 'boolean' },
     aura: { type: 'boolean' },
+    'level-up': { type: 'boolean' },
+    commits: { type: 'string' },
     holiday: { type: 'string' },
     name: { type: 'string' },
     lang: { type: 'string', default: 'en' },
@@ -169,14 +171,15 @@ Next steps
   3. Refresh your README. Say hi to your pet!`);
 }
 
-function demoPet({ mood = 'happy', species = 'auto', scenery, vacation, stage, shiny, aura, holiday = null, season, lang = 'en', name, fullName, now = new Date() }) {
+function demoPet({ mood = 'happy', species = 'auto', scenery, vacation, stage, shiny, aura, levelUp, commits, holiday = null, season, lang = 'en', name, fullName, now = new Date() }) {
   const snapshot = mockSnapshot({ mood, stage: stage ?? 'adult', now, fullName });
-  return buildPet({ snapshot, now, options: { species, scenery, vacation, mood, stage, shiny: shiny ?? false, aura: aura ?? false, holiday, season, lang, name } });
+  if (commits != null) snapshot.commits.total = Number(commits); // sets the level: √commits + 1
+  return buildPet({ snapshot, now, options: { species, scenery, vacation, mood, stage, shiny: shiny ?? false, aura: aura ?? false, levelUp, holiday, season, lang, name } });
 }
 
 function demo() {
   const pet = demoPet({
-    mood: opts.mood ?? 'happy', species: opts.species, scenery: opts.scenery, vacation: opts.vacation, stage: opts.stage, shiny: opts.shiny, aura: opts.aura,
+    mood: opts.mood ?? 'happy', species: opts.species, scenery: opts.scenery, vacation: opts.vacation, stage: opts.stage, shiny: opts.shiny, aura: opts.aura, levelUp: opts['level-up'], commits: opts.commits,
     holiday: opts.holiday ?? null, lang: opts.lang, name: opts.name,
   });
   write(opts.out, 'demo.svg', renderCard(pet, { theme: opts.theme }));
@@ -250,6 +253,12 @@ function gallery() {
   ]);
   add('Homes at night', HOMES.map((home) => ({ label: home, src: mini('homes', `${home}-night.svg`, demoPet({ mood: 'happy', species: HOME_DEMO[home][0], scenery: home, season: home === 'meadow' ? 'winter' : 'summer', now }), 'dark'), dark: true })));
   add('Shiny variants (1 in 64 repos)', SPECIES_IDS.map((species) => ({ label: `✨ ${species}`, src: mini('shiny', `${species}.svg`, demoPet({ mood: 'ecstatic', species, shiny: true, now })) })));
+  add('Ranks (one per level tier)', RANKS.map((r) => ({ label: `${r.emoji} ${r.id} (Lv.${r.min}+)`, src: save('ranks', `${r.id}.svg`, renderBadge(demoPet({ mood: 'happy', species: 'cat', commits: (r.min - 1) ** 2, now, name: 'Mochi' }))) })));
+  add('Level up and rank up', [
+    { label: 'level up', src: card('ranks', 'level-up.svg', demoPet({ mood: 'happy', species: 'ninja', commits: 144, levelUp: true, now })), wide: true },
+    { label: 'rank up', src: card('ranks', 'rank-up.svg', demoPet({ mood: 'ecstatic', species: 'dragon', commits: 1200, levelUp: 'rank', now })), wide: true },
+    { label: 'lên hạng', src: card('ranks', 'rank-up-vi.svg', demoPet({ mood: 'party', species: 'bunny', commits: 361, levelUp: 'rank', lang: 'vi', now })), wide: true },
+  ]);
   add('Super form (7 ecstatic days in a row)', HERO_SQUAD.map((species) => ({ label: `💥 ${species}`, src: mini('aura', `${species}.svg`, demoPet({ mood: 'ecstatic', species, aura: true, now })) })));
   add('Languages', Object.entries(LANG_DEMO).map(([lang, species]) => ({ label: LANG_NAMES[lang], src: card('langs', `${lang}.svg`, demoPet({ mood: 'happy', species, lang, now, fullName: 'Tanx-1811/legacypet' })), wide: true })));
   add('Life stages', ['egg', 'baby', 'adult', 'elder'].map((stage) => ({ label: stage, src: mini('stages', `${stage}.svg`, demoPet({ mood: stage === 'egg' ? 'egg' : 'happy', species: 'octopus', stage, now })) })));

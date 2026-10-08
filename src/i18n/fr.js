@@ -33,6 +33,11 @@ export default {
     hibernating: 'le Rêveur', egg: 'le Pas-Encore-Éclos',
   },
   displayName: (name, title) => `${name} ${title}`,
+  ranks: {
+    rookie: 'Recrue', bronze: 'Bronze', silver: 'Argent', gold: 'Or',
+    platinum: 'Platine', diamond: 'Diamant', legend: 'Légende',
+  },
+  levelUpBanner: 'NIVEAU +1!',
   stats: { fullness: 'Satiété', health: 'Santé', joy: 'Joie', energy: 'Énergie', hygiene: 'Hygiène' },
   level: (n) => `Niv.${n}`,
   shiny: 'Chromatique',
@@ -48,6 +53,7 @@ export default {
     stars100: 'Étoile montante', stars1k: 'Superstar', team: 'La bande', spotless: 'Impeccable',
     inboxZero: 'Inbox zéro', elder: 'Vieux sage',
     superForm: 'Super forme', responder: 'Premier secours', anniversary: 'Anniversaire',
+    veteran: 'Vétéran', master: 'Maître', maxLevel: 'Niveau max',
   },
   lines: {
     revived: [(v) => `JE VIS!! Merci de revenir sur ${v.repoName} 💚`, 'Cerveauuu... attends, des commits? Je REVIS!'],
@@ -77,6 +83,14 @@ export default {
       (v) => `En vacances jusqu'au ${v.until} 🌴 À bientôt!`,
       (v) => `À la plage jusqu'au ${v.until} 🏖️ Pas besoin de commits`,
       'Hors du bureau. Crème solaire oui, notifs non 😎',
+    ],
+    levelUp: [
+      (v) => `Niveau supérieur! Me voilà Niv.${v.level} ⬆️`,
+      (v) => `Niv.${v.level}! Chaque commit me rend plus fort 💪`,
+    ],
+    rankUp: [
+      (v) => `Promotion! ${v.rankEmoji} Rang ${v.rank} débloqué!`,
+      (v) => `${v.rankEmoji} ${v.rank} au Niv.${v.level}! Regarde-moi briller ✨`,
     ],
     aura: [
       'PUISSANCE MAXIMALE! Une semaine de bonheur ✨',
@@ -117,6 +131,13 @@ export default {
     },
   },
   command: {
+    level: {
+      title: (level, rank) => `Niv.${level} · rang ${rank}`,
+      nextLevel: (n, level) => `Encore ${n} ${plural(n, 'commit', 'commits')} avant le Niv.${level}`,
+      nextRank: (n, rank) => `Encore ${n} ${plural(n, 'commit', 'commits')} avant le rang ${rank}`,
+      maxed: 'Niveau max. Une vraie légende 👑',
+      ladder: 'Rangs',
+    },
     pat: ['*frétille* Merci pour la caresse! 💕', "Les caresses, c'est bien. Les commits, c'est mieux 😋", (v) => `${v.name} t'aime aussi! 💖`],
     checkup: 'Bilan de santé',
     commands: 'Commandes',
@@ -125,6 +146,7 @@ export default {
       status: 'comment je vais et pourquoi',
       pat: 'me faire une caresse',
       checkup: 'juste le bilan',
+      level: "mon niveau, mon rang et ce qu'il faut pour passer au suivant",
       trophies: 'mon étagère à trophées',
       vacation: 'mettre ma faim en pause pendant N jours, par ex. `/pet vacation 14` (mainteneurs)',
       back: 'écourter les vacances (mainteneurs)',
@@ -167,6 +189,8 @@ export default {
     fasted: "rien à manger aujourd'hui",
     treat: (user, pr) => `a reçu une friandise de @${user} (#${pr})`,
     unlocked: (list) => `a débloqué ${list}`,
+    levelUp: (level) => `est passé au Niv.${level}`,
+    rankUp: (level, rank) => `a atteint le rang ${rank} au Niv.${level}`,
     vacation: (until) => `en vacances jusqu'au ${until} 🏖️`,
   },
   alert: {

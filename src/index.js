@@ -14,6 +14,7 @@ export { buildPet } from './engine/pet.js';
 export { checkup } from './engine/checkup.js';
 export { AURA_DAYS, MOODS, MOOD_EMOJI } from './engine/mood.js';
 export { ACHIEVEMENTS } from './engine/achievements.js';
+export { levelProgress, MAX_LEVEL, RANKS, rankFor } from './engine/rank.js';
 export { nextState, updateDiary, diaryEntry, moodStrip } from './engine/memory.js';
 export { HOMES, SPECIES, SPECIES_IDS } from './sprites/index.js';
 export { LANGS, LANG_NAMES } from './i18n/index.js';

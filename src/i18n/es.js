@@ -27,6 +27,11 @@ export default {
     hibernating: 'el Soñador', egg: 'el Por Nacer',
   },
   displayName: (name, title) => `${name} ${title}`,
+  ranks: {
+    rookie: 'Novato', bronze: 'Bronce', silver: 'Plata', gold: 'Oro',
+    platinum: 'Platino', diamond: 'Diamante', legend: 'Leyenda',
+  },
+  levelUpBanner: '¡NUEVO NIVEL!',
   stats: { fullness: 'Saciedad', health: 'Salud', joy: 'Alegría', energy: 'Energía', hygiene: 'Higiene' },
   level: (n) => `Nv.${n}`,
   shiny: 'Brillante',
@@ -42,6 +47,7 @@ export default {
     stars100: 'Estrella en ascenso', stars1k: 'Superestrella', team: 'Pandilla', spotless: 'Impecable',
     inboxZero: 'Bandeja vacía', elder: 'Sabio anciano',
     superForm: 'Forma súper', responder: 'Primera respuesta', anniversary: 'Aniversario',
+    veteran: 'Veterano', master: 'Maestro', maxLevel: 'Nivel máximo',
   },
   lines: {
     revived: [(v) => `¡¡ESTOY VIVO!! Gracias por volver a ${v.repoName} 💚`, 'Cereeebros... ¿commits frescos? ¡Me siento VIVO!'],
@@ -71,6 +77,14 @@ export default {
       (v) => `De vacaciones hasta el ${v.until} 🌴 ¡Vuelvo pronto!`,
       (v) => `Me fui a la playa hasta el ${v.until} 🏖️ Commits no, gracias`,
       'Fuera de la oficina. Protector solar on, avisos off 😎',
+    ],
+    levelUp: [
+      (v) => `¡Subí de nivel! Ya soy Nv.${v.level} ⬆️`,
+      (v) => `¡Nv.${v.level}! Cada commit me hace más fuerte 💪`,
+    ],
+    rankUp: [
+      (v) => `¡Subí de rango! ${v.rankEmoji} ¡Rango ${v.rank} desbloqueado!`,
+      (v) => `¡${v.rankEmoji} ${v.rank} en Nv.${v.level}! Mira cómo brillo ✨`,
     ],
     aura: [
       '¡PODER AL MÁXIMO! Una semana entera de dicha ✨',
@@ -107,6 +121,13 @@ export default {
     },
   },
   command: {
+    level: {
+      title: (level, rank) => `Nv.${level} · rango ${rank}`,
+      nextLevel: (n, level) => `${n} ${plural(n, 'commit', 'commits')} más para Nv.${level}`,
+      nextRank: (n, rank) => `${n} ${plural(n, 'commit', 'commits')} más para ${rank}`,
+      maxed: 'Nivel máximo. Toda una leyenda 👑',
+      ladder: 'Rangos',
+    },
     pat: ['*meneo feliz* ¡Gracias por la caricia! 💕', 'Las caricias molan. Los commits, más 😋', (v) => `¡${v.name} también te quiere! 💖`],
     checkup: 'Chequeo',
     commands: 'Comandos',
@@ -115,6 +136,7 @@ export default {
       status: 'cómo me siento y por qué',
       pat: 'dame una caricia',
       checkup: 'solo el chequeo',
+      level: 'mi nivel, mi rango y cuánto falta para el siguiente',
       trophies: 'mi estante de trofeos',
       vacation: 'pausa mi hambre N días, p. ej. `/pet vacation 14` (maintainers)',
       back: 'termina las vacaciones antes de tiempo (maintainers)',
@@ -157,6 +179,8 @@ export default {
     fasted: 'hoy no comió nada',
     treat: (user, pr) => `recibió una golosina de @${user} (#${pr})`,
     unlocked: (list) => `desbloqueó ${list}`,
+    levelUp: (level) => `subió a Nv.${level}`,
+    rankUp: (level, rank) => `alcanzó el rango ${rank} en Nv.${level}`,
     vacation: (until) => `de vacaciones hasta el ${until} 🏖️`,
   },
   alert: {

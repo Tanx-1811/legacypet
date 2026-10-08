@@ -25,6 +25,11 @@ export default {
     hibernating: '梦游家', egg: '蛋宝宝',
   },
   displayName: (name, title) => `${name}·${title}`,
+  ranks: {
+    rookie: '新手', bronze: '青铜', silver: '白银', gold: '黄金',
+    platinum: '铂金', diamond: '钻石', legend: '传说',
+  },
+  levelUpBanner: '升级啦！',
   stats: { fullness: '饱腹', health: '健康', joy: '快乐', energy: '精力', hygiene: '整洁' },
   level: (n) => `Lv.${n}`,
   shiny: '闪光',
@@ -40,6 +45,7 @@ export default {
     stars100: '新星', stars1k: '超级巨星', team: '小分队', spotless: '一尘不染',
     inboxZero: '收件箱清零', elder: '睿智长老',
     superForm: '超级形态', responder: '急先锋', anniversary: '周年纪念',
+    veteran: '老将', master: '大师', maxLevel: '满级',
   },
   lines: {
     revived: [(v) => `我活过来啦！！谢谢你回到 ${v.repoName} 💚`, '脑子……等等，新提交？我复活了！'],
@@ -66,6 +72,14 @@ export default {
       (v) => `度假中，${v.until} 回来 🌴 很快见！`,
       (v) => `去海边玩到 ${v.until} 🏖️ 不用喂 commit 啦`,
       '休假中。涂好防晒，消息免打扰 😎',
+    ],
+    levelUp: [
+      (v) => `升级啦！我现在是 Lv.${v.level} 了 ⬆️`,
+      (v) => `Lv.${v.level}！每个 commit 都让我更强 💪`,
+    ],
+    rankUp: [
+      (v) => `段位提升！${v.rankEmoji} ${v.rank}段位解锁！`,
+      (v) => `${v.rankEmoji} Lv.${v.level} 晋升${v.rank}！看我闪闪发光 ✨`,
     ],
     aura: [
       '能量全开！幸福了一整周 ✨',
@@ -99,6 +113,13 @@ export default {
     },
   },
   command: {
+    level: {
+      title: (level, rank) => `Lv.${level} · ${rank}段位`,
+      nextLevel: (n, level) => `再吃 ${n} 个 commit 升到 Lv.${level}`,
+      nextRank: (n, rank) => `再吃 ${n} 个 commit 晋升${rank}`,
+      maxed: '已满级，真正的传说 👑',
+      ladder: '段位',
+    },
     pat: ['*开心扭扭* 谢谢摸摸！💕', '摸头很好，commit 更好 😋', (v) => `${v.name} 也爱你！💖`],
     checkup: '体检',
     commands: '指令',
@@ -107,6 +128,7 @@ export default {
       status: '我的心情和原因',
       pat: '摸摸我',
       checkup: '只看体检报告',
+      level: '我的等级、段位，以及升到下一级还差多少',
       trophies: '我的奖杯架',
       vacation: '让我暂停饿肚子 N 天，例如 `/pet vacation 14`（仅维护者）',
       back: '提前结束假期（仅维护者）',
@@ -149,6 +171,8 @@ export default {
     fasted: '今天没东西吃',
     treat: (user, pr) => `收到 @${user} 的零食 (#${pr})`,
     unlocked: (list) => `解锁了 ${list}`,
+    levelUp: (level) => `升到了 Lv.${level}`,
+    rankUp: (level, rank) => `在 Lv.${level} 晋升${rank}段位`,
     vacation: (until) => `度假中，${until} 回来 🏖️`,
   },
   alert: {
