@@ -5,6 +5,7 @@ export default {
   home: 'meadow',
   modifiers: { healthFloor: 40 },
   food: 'kibble',
+  move: 'fly',
   palette: {
     o: '#3b2412', b: '#f2c27b', l: '#ffe3b3', s: '#d99a4e', e: '#a0612b', w: '#fff6e6', n: '#2b1a0e',
     r: '#e63946', t: '#2b59c3', y: '#ffd23f',

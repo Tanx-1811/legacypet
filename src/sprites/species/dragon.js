@@ -5,6 +5,7 @@ export default {
   home: 'desert',
   modifiers: { xpRate: 1.5 },
   food: 'kibble',
+  move: 'coil',
   palette: {
     o: '#123c3a', b: '#2ec4b6', l: '#bff5ec', s: '#1f8f86', m: '#ff6b6b', y: '#ffd23f', w: '#ffe08a',
   },

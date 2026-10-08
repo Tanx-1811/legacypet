@@ -5,6 +5,7 @@ export default {
   home: 'jungle',
   modifiers: { hungerRate: 0.6 },
   food: 'kibble',
+  move: 'slither',
   palette: { o: '#16351f', b: '#6fcf6f', l: '#b6f0a8', s: '#44a454', d: '#2f7a3d' },
   grid: [
     '................',

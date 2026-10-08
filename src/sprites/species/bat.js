@@ -5,6 +5,7 @@ export default {
   home: 'jungle',
   modifiers: { inboxJoy: 15 },
   food: 'kibble',
+  move: 'backflip',
   palette: {
     o: '#120c1f', b: '#3a3358', l: '#6a5f94', s: '#29233f', f: '#d8cce8', c: '#2b2250', p: '#8a6fbf',
   },

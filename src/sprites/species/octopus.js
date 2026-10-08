@@ -5,6 +5,7 @@ export default {
   home: 'reef',
   modifiers: { teamEnergy: 6 },
   food: 'kibble',
+  move: 'wiggle',
   palette: { o: '#2a1840', b: '#b388ff', l: '#e2d1ff', s: '#8a5cf0' },
   grid: [
     '................',

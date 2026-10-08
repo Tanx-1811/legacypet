@@ -5,6 +5,7 @@ export default {
   home: 'desert',
   modifiers: { ciEnergyFloor: 40 },
   food: 'kibble',
+  move: 'jet',
   palette: {
     o: '#1b2238', b: '#3d6bff', l: '#8fb0ff', s: '#2a4bc0', f: '#eef3ff',
     y: '#ffd23f', r: '#ff3b3b', e: '#8892a6',

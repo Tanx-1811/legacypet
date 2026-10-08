@@ -5,6 +5,7 @@ export default {
   home: 'desert',
   modifiers: { hungerRate: 0.25 },
   food: 'water',
+  move: 'sway',
   palette: {
     o: '#1d3b23', b: '#58b368', l: '#9be3a3', s: '#3c8a4b', d: '#e4f7d2',
     p: '#e8875a', P: '#b8553a',

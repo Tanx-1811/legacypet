@@ -1,6 +1,7 @@
 import * as A from '../sprites/accessories.js';
 import { createRng } from '../util/rng.js';
 import { composePet } from './compose.js';
+import { FLAME, MOVE_MOODS, MOVES, moveCss, moveOf } from './moves.js';
 import { rectsFromPixels, stamp } from './pixels.js';
 import { farFx, frontFx, homeOf, propsFx, SANDY, SCENERY, skyFx } from './scenery.js';
 
@@ -158,8 +159,34 @@ function petGroup(s, comp) {
   }
   inner += rectsFromPixels(comp.gear, px, ox, oy);
   // Rotations and squashes pivot on the pet's feet: translate there, animate, translate back.
-  return `<g transform="translate(${cx} ${footY})"><g class="${cls}" style="animation-duration:${sec(dur)}">`
-    + `<g transform="translate(${-cx} ${-footY})" class="lp-px">${inner}</g></g></g>`;
+  const body = `<g class="${cls}" style="animation-duration:${sec(dur)}">`
+    + `<g transform="translate(${-cx} ${-footY})" class="lp-px">${inner}</g></g>`;
+  return `<g transform="translate(${cx} ${footY})">${signatureMove(s, comp, body)}</g>`;
+}
+
+// On good days the pet shows off its species' signature move every few seconds (see moves.js).
+function signatureMove(s, comp, body) {
+  const { pet, cx, footY, ox, oy, px, bw, mini } = s;
+  if (pet.mood === 'egg' || !MOVE_MOODS.has(pet.mood)) return body;
+  const id = moveOf(pet.species);
+  const move = MOVES[id];
+  const rng = createRng(`${pet.repo.fullName}|${pet.date}|move`);
+  const clock = `animation-duration:${sec(move.duration ?? 7)};animation-delay:${sec(rng.range(0.6, 3))}`;
+  const height = (comp.bbox.maxY - comp.bbox.minY + 1) * px;
+  const origin = move.pivot === 'center' ? `;transform-origin:0 ${-Math.round(height / 2)}px` : '';
+  let before = '';
+  let under = '';
+  if (move.effect === 'clones') {
+    const ghost = rectsFromPixels([...comp.base, ...comp.eyesOpen, ...comp.gear], px, ox, oy);
+    const dx = Math.round(bw * 0.6);
+    before = `<g class="lp-fx-clones lp-px" style="${clock}">`
+      + `<g transform="translate(${-cx - dx} ${-footY})">${ghost}</g><g transform="translate(${-cx + dx} ${-footY})">${ghost}</g></g>`;
+  } else if (move.effect === 'flames') {
+    const fp = Math.max(2, Math.round(px * (mini ? 0.6 : 0.7)));
+    const flame = (x) => stamp(FLAME.rows, FLAME.colors, fp, x - 2 * fp, -fp);
+    under = `<g class="lp-fx-flames lp-px" style="${clock}">${flame(-bw * 0.22)}${flame(bw * 0.22)}</g>`;
+  }
+  return `<style>${moveCss(id)}</style>${before}<g class="lp-mv-${id}" style="${clock}${origin}">${under}${body}</g>`;
 }
 
 const rise = (s, x, y, content, dur, delay) => at(x, y, content, 'lp-rise lp-px', `animation-duration:${sec(dur)};animation-delay:${sec(delay)}`);

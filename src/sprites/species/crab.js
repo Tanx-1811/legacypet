@@ -5,6 +5,7 @@ export default {
   home: 'beach',
   modifiers: { releaseJoy: 15 },
   food: 'kibble',
+  move: 'sidestep',
   palette: { o: '#3a1010', b: '#ff6b5b', l: '#ffa596', s: '#d94c3d' },
   grid: [
     '................',

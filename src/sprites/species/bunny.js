@@ -5,6 +5,7 @@ export default {
   home: 'garden',
   modifiers: { starJoy: 2 },
   food: 'kibble',
+  move: 'twirl',
   palette: {
     o: '#4a2040', b: '#fff0f7', l: '#ffffff', s: '#f3c6dc', p: '#ff9ec7', y: '#ffd23f', g: '#ff5fa2',
   },

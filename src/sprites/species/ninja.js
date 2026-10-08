@@ -5,6 +5,7 @@ export default {
   home: 'jungle',
   modifiers: { streakEnergy: 4 },
   food: 'kibble',
+  move: 'clone',
   palette: {
     o: '#3a1a08', b: '#ff8c42', l: '#ffc48f', s: '#d9661f', w: '#fff4e6', p: '#ff9eb5',
     h: '#1f3a68', m: '#c9d3e0', M: '#7d8aa0',

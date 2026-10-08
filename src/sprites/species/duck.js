@@ -5,6 +5,7 @@ export default {
   home: 'pond',
   modifiers: { ciPenalty: 0.65 },
   food: 'kibble',
+  move: 'waddle',
   palette: { o: '#3d2c00', b: '#ffd93d', l: '#fff3a6', s: '#f2b705', a: '#ff8c1a', A: '#d96a00' },
   grid: [
     '................',
