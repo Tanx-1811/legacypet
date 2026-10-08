@@ -6,6 +6,7 @@ import {
   MOOD_EMOJI, moodStrip, nextState, parkSummary, petUrls, publishFiles, renderFiles, renderPark, resolveParkRepos, snippetFor,
   VERSION, whatsNew, activeVacation, parseAlerts, syncAlert,
 } from './index.js';
+import { questLines } from './github/command.js';
 import { strings } from './i18n/index.js';
 
 const CHECK_ICON = { good: '✅', warn: '⚠️', bad: '❌', tip: '💡' };
@@ -87,6 +88,7 @@ function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prev
 ` : '',
     pet.newAchievements.length ? `🏆 New: ${pet.achievements.filter((a) => a.isNew).map((a) => `${a.emoji} ${tr.achievements[a.id]}`).join(', ')}\n` : '',
     news ?? '',
+    pet.quests.list.length ? `### 📜 ${tr.questBoard.title} · ⭐ ${pet.questStars}\n\n${questLines(pet, tr).join('\n')}\n` : '',
     '### 🩺 Checkup',
     '',
     ...checkup(pet, snapshot).map((item) => `- ${CHECK_ICON[item.level]} ${item.icon} ${item.text}`),
@@ -165,6 +167,7 @@ async function main() {
   const options = {
     species: input('species', 'auto'), scenery: input('scenery', 'auto'), name: input('name'), lang: input('lang', 'en'),
     vacation: input('vacation'),
+    wear: input('wear') || undefined,
   };
   const alertMoods = parseAlerts(input('alerts', 'false'));
   // `/pet vacation 14` and `/pet back` change the pet's memory, so only maintainers may use them.
@@ -172,6 +175,9 @@ async function main() {
   if (request?.maintainer && (request.command === 'vacation' || request.command === 'back')) {
     options.vacationCommand = { name: request.command, days: request.days };
   }
+  // Snacks, games and pats are for everyone; dressing the pet up is for maintainers.
+  if (request && ['feed', 'play', 'pat'].includes(request.command)) options.care = { name: request.command, user: request.user };
+  if (request?.maintainer && request.command === 'wear') options.wearCommand = request.arg ?? 'none';
 
   const client = createClient({ token });
   const now = new Date();
@@ -190,6 +196,9 @@ async function main() {
   const pet = buildPet({ snapshot, prevState: previous.state, options, now });
   const wasOnVacation = Boolean(activeVacation(previous.state?.vacations ?? [], pet.date));
   if (pet.vacation) console.log(`🏖️ On vacation until ${pet.vacation.until}: hunger is paused.`);
+  for (const [id, why] of pet.wardrobe.rejected) warn(`Can't wear "${id}": ${why === 'locked' ? 'not unlocked yet (see /pet wardrobe)' : 'no such item'}.`);
+  if (pet.path) console.log(`🧬 ${pet.events.includes('evolved') ? 'Evolved into' : 'Path:'} ${pet.path.emoji} ${pet.path.id}`);
+  if (pet.quests.fresh.length) console.log(`📜 Quests done: ${pet.quests.fresh.join(', ')} (⭐ ${pet.questStars})`);
 
   // Care alerts run before publishing so pet.json remembers the issue they opened.
   if (alertMoods && !dryRun) {
@@ -247,8 +256,10 @@ async function main() {
 
   if (comment?.request) {
     try {
-      const cardUrl = dryRun ? null : `${petUrls(pet.repo.fullName, branch).card}?run=${process.env.GITHUB_RUN_ID ?? Date.now()}`;
-      await answerCommand(client, { owner, repo, request: comment.request, pet, snapshot, cardUrl, wasOnVacation });
+      const run = process.env.GITHUB_RUN_ID ?? Date.now();
+      const cardUrl = dryRun ? null : `${petUrls(pet.repo.fullName, branch).card}?run=${run}`;
+      const miniUrl = dryRun ? null : `${petUrls(pet.repo.fullName, branch).mini}?run=${run}`;
+      await answerCommand(client, { owner, repo, request: comment.request, pet, snapshot, cardUrl, miniUrl, wasOnVacation });
       console.log(`💬 Answered /pet ${comment.request.command} on #${comment.request.issue}`);
     } catch (err) {
       warn(`Could not answer the /pet command (${err.status ?? err.message}). Add \`issues: write\` and \`pull-requests: write\` to the workflow permissions.`);
@@ -268,6 +279,10 @@ async function main() {
     rank: pet.rank.id,
     'on-vacation': Boolean(pet.vacation),
     'alert-issue': pet.alert && !pet.alert.muted ? pet.alert.issue : '',
+    path: pet.path?.id ?? '',
+    'quest-stars': pet.questStars,
+    'quests-done': pet.quests.list.filter((q) => q.done).map((q) => q.id).join(','),
+    wearing: pet.wardrobe.worn.join(','),
   });
   writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prevState: previous.state, news });
 }

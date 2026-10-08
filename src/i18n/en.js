@@ -48,6 +48,46 @@ export default {
     inboxZero: 'Inbox Zero', elder: 'Wise Elder',
     superForm: 'Super Form', responder: 'First Responder', anniversary: 'Anniversary',
     veteran: 'Veteran', master: 'Master', maxLevel: 'Max Level',
+    quester: 'Quester', perfectWeek: 'Perfect Week', evolved: 'Evolved', beloved: 'Beloved',
+  },
+  // Evolution paths (engine/evolution.js) and what grows each one.
+  paths: { swift: 'Swift', guardian: 'Guardian', social: 'Social', sage: 'Sage' },
+  pathHints: {
+    swift: 'frequent commits and long streaks',
+    guardian: 'CI that stays green',
+    social: 'many contributors, merged PRs and answered issues',
+    sage: 'a complete community profile and releases',
+  },
+  // Weekly quests (engine/quests.js). Every quest is a function of its goal.
+  quests: {
+    feast: (n) => `Commit on ${n} different days`,
+    marathon: (n) => `Make ${n} commits`,
+    doctor: (n) => `Keep CI green for ${n} days`,
+    replies: () => 'Answer every waiting issue',
+    merge: (n) => `Merge ${n} pull requests`,
+    ship: () => 'Publish a release',
+    squad: (n) => `Get commits from ${n} people`,
+    sunny: (n) => `Keep me happy for ${n} days`,
+    tidy: () => 'Leave no issue or PR stale',
+  },
+  questBoard: {
+    title: 'Quests this week',
+    ends: (date) => `until ${date}`,
+    stars: (n) => `${n} quest ${plural(n, 'star', 'stars')}`,
+    reward: 'Each finished quest: ⭐ +1 and +5 joy until Monday. All three: ⭐ +2 more.',
+  },
+  // The wardrobe (engine/items.js).
+  items: {
+    cap: 'Cap', bow: 'Bow', beanie: 'Beanie', headphones: 'Headphones', halo: 'Halo', tiara: 'Tiara',
+    wizard: 'Wizard Hat', crown: 'Crown', glasses: 'Glasses', shades: 'Shades', monocle: 'Monocle',
+    chick: 'Chick', bird: 'Bluebird', butterfly: 'Butterfly', ghost: 'Ghost', drone: 'Mini UFO',
+  },
+  slots: { hat: 'Hats', face: 'Face', pal: 'Pals' },
+  unlock: {
+    free: 'Free',
+    achievement: (name) => `Trophy: ${name}`,
+    stars: (n) => `${n} quest ${plural(n, 'star', 'stars')}`,
+    friends: (n) => `${n} pats, snacks or games`,
   },
   lines: {
     revived: [(v) => `I'M ALIVE!! Thanks for coming back to ${v.repoName} 💚`, 'Braaai... wait, fresh commits? I feel ALIVE!'],
@@ -88,6 +128,18 @@ export default {
       "This isn't even my final form 💥",
       (v) => `${v.auraDays} days of pure joy. I'm glowing! ✨`,
     ],
+    evolved: [
+      (v) => `I evolved! ${v.path} path ✨`,
+      (v) => `*glow* I took the ${v.path} path. Thanks for raising me like this!`,
+    ],
+    questDone: [(v) => `Quest done: ${v.quest} ⭐`, (v) => `Another quest star! ⭐ ${v.stars} so far`],
+    perfectWeek: ['All three quests done. Perfect week! 🌈', 'Perfect week! Bonus stars for us ⭐⭐'],
+    paths: {
+      swift: ['Faster than a force-push 🌪️', 'Commit, commit, commit! Gotta go fast 🌪️'],
+      guardian: ['I guard the green build 🛡️', 'No red CI on my watch 🛡️'],
+      social: ['So many friends in this repo 💞', 'Every contributor is family 💞'],
+      sage: ['A good README is half the code 📚', 'Docs first, then snacks 📚'],
+    },
     // Signature lines, mixed in on good days.
     species: {
       ninja: ['*poof* Shadow clone commit jutsu! 🍥', 'A true ninja never leaves a TODO behind 🥷'],
@@ -125,6 +177,44 @@ export default {
     pat: ['*happy wiggle* Thanks for the pat! 💕', 'Pats are nice. Commits are nicer 😋', (v) => `${v.name} loves you too! 💖`],
     checkup: 'Checkup',
     commands: 'Commands',
+    feed: [
+      'Nom nom! A snack! 🍪 (commits are still my real food)',
+      (v) => `Thanks for the treat, @${v.user}! 🍙`,
+      '*crunch crunch* Delicious! 😋',
+    ],
+    play: [
+      '*zoomies* Again! Again! 🎾',
+      (v) => `@${v.user} wants to play! Best day ever 🪀`,
+      "Tag, you're it! 🏃",
+    ],
+    again: {
+      feed: "I'm full from your last snack. Come back tomorrow! 😊",
+      play: "Phew, I'm tired from our last game. Tomorrow? 💤",
+      pat: 'More pats? I already feel so loved today 💕',
+    },
+    cant: {
+      egg: "I'm still an egg. I can't eat or play yet! 🥚",
+      zombie: 'Braaains... no. Only commits can wake me up 🧟',
+      hibernating: 'Zzz... this repo is archived. Let me sleep 💤',
+    },
+    snack: (n) => `Today's snacks and games: +${n}`,
+    friends: 'Best friends',
+    quests: {
+      title: 'Quests this week',
+      none: 'No quests this week.',
+    },
+    wardrobe: {
+      title: (n, total) => `Wardrobe: ${n} of ${total} unlocked`,
+      wearing: 'Wearing',
+      nothing: 'nothing yet',
+      how: 'Maintainers dress me with `/pet wear <item>` (or `/pet wear none`), or the `wear` input in the workflow.',
+    },
+    wear: {
+      done: (list) => `Thanks! I'm wearing ${list} now ✨`,
+      removed: 'Everything off. Back to my natural look!',
+      locked: (item, how) => `I haven't unlocked ${item} yet (${how}).`,
+      unknown: (item) => `I don't have anything called "${item}". Try \`/pet wardrobe\`.`,
+    },
     help: 'Talk to me in any issue or pull request:',
     usage: {
       status: 'how I feel and why',
@@ -132,6 +222,11 @@ export default {
       checkup: 'just the checkup',
       level: 'my level, my rank and what the next one takes',
       trophies: 'my trophy shelf',
+      feed: 'give me a snack (once a day each)',
+      play: 'play with me (once a day each)',
+      quests: "this week's quests and my quest stars",
+      wardrobe: "what I can wear and what's still locked",
+      wear: 'dress me up, e.g. `/pet wear cap` (maintainers)',
       vacation: 'pause my hunger for N days, e.g. `/pet vacation 14` (maintainers)',
       back: 'end the vacation early (maintainers)',
       help: 'this list',
@@ -164,6 +259,7 @@ export default {
     streak: (n) => `${n}-day commit streak. Don't break it!`,
     archived: 'This repo is archived, so your pet is hibernating peacefully.',
     vacation: (until) => `On vacation until ${until}. Hunger is paused and these days won't count.`,
+    quests: (done, total, next) => `Quests this week: ${done} of ${total} done.${next ? ` Next up: ${next}.` : ' All done! 🌈'}`,
   },
   diary: {
     title: (name) => `# 📔 ${name}'s Diary`,
@@ -176,6 +272,9 @@ export default {
     levelUp: (level) => `leveled up to Lv.${level}`,
     rankUp: (level, rank) => `reached ${rank} rank at Lv.${level}`,
     vacation: (until) => `on vacation until ${until} 🏖️`,
+    evolved: (path) => `evolved into the ${path} path`,
+    quests: (list) => `finished ${list}`,
+    perfectWeek: 'a perfect week 🌈',
   },
   alert: {
     title: {

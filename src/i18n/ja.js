@@ -45,6 +45,46 @@ export default {
     inboxZero: 'インボックスゼロ', elder: '賢き長老',
     superForm: '覚醒フォーム', responder: '即レス隊', anniversary: '記念日',
     veteran: 'ベテラン', master: 'マスター', maxLevel: 'レベルMAX',
+    quester: 'クエストハンター', perfectWeek: 'パーフェクトウィーク', evolved: '進化', beloved: '愛されっ子',
+  },
+  // Evolution paths (engine/evolution.js) and what grows each one.
+  paths: { swift: '疾風', guardian: '守護者', social: '人気者', sage: '賢者' },
+  pathHints: {
+    swift: 'こまめなコミットと長い連続記録',
+    guardian: 'グリーンを保ち続けるCI',
+    social: 'たくさんのコントリビューター、マージされたPR、返信済みのissue',
+    sage: '充実したコミュニティプロフィールとリリース',
+  },
+  // Weekly quests (engine/quests.js). Every quest is a function of its goal.
+  quests: {
+    feast: (n) => `${n}日に分けてコミットする`,
+    marathon: (n) => `${n}コミットする`,
+    doctor: (n) => `CIを${n}日間グリーンに保つ`,
+    replies: () => '返事待ちのissueに全部返信する',
+    merge: (n) => `プルリクエストを${n}件マージする`,
+    ship: () => 'リリースを公開する',
+    squad: (n) => `${n}人からコミットをもらう`,
+    sunny: (n) => `${n}日間ボクをごきげんにする`,
+    tidy: () => '放置されたissueやPRをゼロにする',
+  },
+  questBoard: {
+    title: '今週のクエスト',
+    ends: (date) => `${date}まで`,
+    stars: (n) => `クエストスター${n}個`,
+    reward: 'クエストを1つ達成するごとに ⭐ +1、月曜までごきげん +5。3つ全部で ⭐ さらに +2。',
+  },
+  // The wardrobe (engine/items.js).
+  items: {
+    cap: 'キャップ', bow: 'リボン', beanie: 'ニット帽', headphones: 'ヘッドホン', halo: '天使の輪', tiara: 'ティアラ',
+    wizard: '魔法使いの帽子', crown: '王冠', glasses: 'メガネ', shades: 'サングラス', monocle: 'モノクル',
+    chick: 'ひよこ', bird: '青い鳥', butterfly: 'ちょうちょ', ghost: 'おばけ', drone: 'ミニUFO',
+  },
+  slots: { hat: '帽子', face: '顔まわり', pal: 'おとも' },
+  unlock: {
+    free: '最初から',
+    achievement: (name) => `トロフィー: ${name}`,
+    stars: (n) => `クエストスター${n}個`,
+    friends: (n) => `なでなで・おやつ・あそび ${n}回`,
   },
   lines: {
     revived: [(v) => `生き返ったー!! ${v.repoName}に戻ってくれてありがと 💚`, 'コミーット… え、新しいコミット? 生き返る!'],
@@ -85,6 +125,18 @@ export default {
       'まだまだ最終形態じゃないよ 💥',
       (v) => `${v.auraDays}日間ずっとハッピー。光ってる! ✨`,
     ],
+    evolved: [
+      (v) => `進化したよ! ${v.path}ルート ✨`,
+      (v) => `*キラーン* ${v.path}ルートに進んだよ。こんなふうに育ててくれてありがと!`,
+    ],
+    questDone: [(v) => `クエスト達成: ${v.quest} ⭐`, (v) => `またクエストスター! ⭐ これで${v.stars}個`],
+    perfectWeek: ['クエスト3つ全部クリア。パーフェクトウィーク! 🌈', 'パーフェクトウィーク! ボーナススターだよ ⭐⭐'],
+    paths: {
+      swift: ['force-pushより速いよ 🌪️', 'コミット、コミット、コミット! 全速力 🌪️'],
+      guardian: ['グリーンビルドはボクが守る 🛡️', 'ボクがいる限り、CIは赤くさせないよ 🛡️'],
+      social: ['このリポジトリ、友だちがいっぱい 💞', 'コントリビューターはみんな家族 💞'],
+      sage: ['良いREADMEはコードの半分 📚', 'まずドキュメント、おやつはそのあと 📚'],
+    },
     // Signature lines, mixed in on good days.
     species: {
       ninja: ['*ドロン* 分身コミットの術! 🍥', '真の忍はTODOを残さぬ 🥷'],
@@ -122,6 +174,44 @@ export default {
     pat: ['*うれしくてクネクネ* なでなでありがと! 💕', 'なでなでもいいけど、コミットはもっといい 😋', (v) => `${v.name}もキミが大好き! 💖`],
     checkup: '健康診断',
     commands: 'コマンド',
+    feed: [
+      'もぐもぐ! おやつだ! 🍪 (でも本当のごはんはコミットだよ)',
+      (v) => `おやつありがと、@${v.user}! 🍙`,
+      '*カリカリ* おいしい! 😋',
+    ],
+    play: [
+      '*ダッシュ* もっかい! もっかい! 🎾',
+      (v) => `@${v.user}が遊んでくれる! 最高の日 🪀`,
+      'タッチ! 次はキミが鬼ね! 🏃',
+    ],
+    again: {
+      feed: 'さっきのおやつでおなかいっぱい。また明日来てね! 😊',
+      play: 'ふぅ、さっき遊んで疲れちゃった。また明日? 💤',
+      pat: 'まだなでなで? 今日はもう愛されすぎてるよ 💕',
+    },
+    cant: {
+      egg: 'まだたまごだから、食べたり遊んだりできないよ! 🥚',
+      zombie: 'ノーミソ… じゃなくて。ボクを起こせるのはコミットだけ 🧟',
+      hibernating: 'Zzz… このリポジトリはアーカイブ済み。寝かせてね 💤',
+    },
+    snack: (n) => `今日のおやつとあそび: +${n}`,
+    friends: 'なかよし',
+    quests: {
+      title: '今週のクエスト',
+      none: '今週のクエストはないよ。',
+    },
+    wardrobe: {
+      title: (n, total) => `クローゼット: ${total}個中${n}個解除`,
+      wearing: '着ているもの',
+      nothing: 'まだなにも',
+      how: 'メンテナーは`/pet wear <item>` (または`/pet wear none`)、もしくはワークフローの`wear`入力でボクを着せかえできるよ。',
+    },
+    wear: {
+      done: (list) => `ありがと! いま${list}を身につけてるよ ✨`,
+      removed: 'ぜんぶ外したよ。ありのままのボクに戻った!',
+      locked: (item, how) => `${item}はまだ解除してないよ (${how})。`,
+      unknown: (item) => `「${item}」っていうものは持ってないよ。\`/pet wardrobe\`を見てみて。`,
+    },
     help: 'issueやプルリクエストで話しかけてね:',
     usage: {
       status: 'ボクの気分とその理由',
@@ -129,6 +219,11 @@ export default {
       checkup: '健康診断だけ',
       level: 'ボクのレベルとランク、次までのコミット数',
       trophies: 'ボクのトロフィー棚',
+      feed: 'おやつをあげる (1人1日1回)',
+      play: 'いっしょに遊ぶ (1人1日1回)',
+      quests: '今週のクエストとボクのクエストスター',
+      wardrobe: '着られるものと、まだ未解除のもの',
+      wear: '着せかえ。例: `/pet wear cap` (メンテナー限定)',
       vacation: 'N日間おなかがすかなくなる。例: `/pet vacation 14` (メンテナー限定)',
       back: '休暇を早めに切り上げる (メンテナー限定)',
       help: 'この一覧',
@@ -161,6 +256,7 @@ export default {
     streak: (n) => `${n}日連続コミット中。途切れさせないでね!`,
     archived: 'このリポジトリはアーカイブ済みなので、ペットは静かに冬眠中です。',
     vacation: (until) => `${until}まで休暇中です。おなかは減らず、この期間はカウントされません。`,
+    quests: (done, total, next) => `今週のクエストは${total}個中${done}個達成。${next ? `次は「${next}」です。` : 'すべて完了! 🌈'}`,
   },
   diary: {
     title: (name) => `# 📔 ${name}の日記`,
@@ -173,6 +269,9 @@ export default {
     levelUp: (level) => `Lv.${level}にレベルアップ`,
     rankUp: (level, rank) => `Lv.${level}で${rank}ランクに到達`,
     vacation: (until) => `${until}まで休暇中 🏖️`,
+    evolved: (path) => `${path}ルートに進化`,
+    quests: (list) => `クエスト達成: ${list}`,
+    perfectWeek: 'パーフェクトウィーク達成 🌈',
   },
   alert: {
     title: {

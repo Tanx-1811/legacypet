@@ -34,6 +34,89 @@ export const HATS = {
     rows: ['.pp.', 'pyyp', '.pp.'],
     colors: { p: '#ff7eb6', y: '#ffd23f' },
   },
+  // Wardrobe hats (engine/items.js).
+  cap: {
+    rows: ['..oooo....', '.obbbbo...', 'obbwwbbo..', 'obbbbbbovv', 'oooooooooo'],
+    colors: { o: '#1b2a4a', b: '#e63946', w: '#ffffff', v: '#b0222d' },
+  },
+  bow: {
+    rows: ['oo....oo', 'orroorro', 'orrkkrro', 'orroorro', 'oo....oo'],
+    colors: { o: '#7a1d3a', r: '#ff5fa2', k: '#ffd23f' },
+  },
+  beanie: {
+    rows: ['...ww...', '..obbo..', '.obbbbo.', 'obbbbbbo', 'rrrrrrrr'],
+    colors: { o: '#1f3b57', b: '#4cc9f0', w: '#ffffff', r: '#2b8fb3' },
+  },
+  headphones: {
+    rows: [
+      '....oooooooo....', '...o........o...', '..o..........o..', '.o............o.',
+      'cc............cc', 'cC............Cc', 'cc............cc',
+    ],
+    colors: { o: '#2f343b', c: '#ff5fa2', C: '#ffd23f' },
+    dy: 3,
+  },
+  halo: {
+    rows: ['.yyyyyy.', 'y......y', '.yyyyyy.'],
+    colors: { y: '#ffe066' },
+    dy: -3,
+  },
+  tiara: {
+    rows: ['...pp...', '.y.yy.y.', 'yyyyyyyy'],
+    colors: { y: '#e0e6ff', p: '#ff7eb6' },
+  },
+  wizard: {
+    rows: ['......oo..', '.....obo..', '....obbo..', '...obybo..', '..obbbbbo.', '.obbybbbbo', 'oooooooooo'],
+    colors: { o: '#1a1a3d', b: '#3a56d4', y: '#ffd23f' },
+  },
+};
+
+// Pals follow the pet around (engine/items.js).
+export const PALS = {
+  chick: {
+    rows: ['.oooo..', 'oyyyyo.', 'oykyyob', 'oyyyyo.', '.oooo..'],
+    colors: { o: '#c99a06', y: '#ffe066', k: '#1b1b2f', b: '#ff8c42' },
+    motion: 'hop',
+  },
+  bird: {
+    rows: ['..ooo..', '.obbkoy', 'obbbbo.', '.obbbbo', '..o.o..'],
+    colors: { o: '#1b3a5c', b: '#5ec8ff', k: '#1b1b2f', y: '#ffb703' },
+    motion: 'fly',
+  },
+  butterfly: {
+    rows: ['pp...pp', 'pPpkpPp', '.ppkpp.', 'pPpkpPp', 'pp...pp'],
+    colors: { p: '#ff7eb6', P: '#ffd23f', k: '#3b2416' },
+    motion: 'fly',
+  },
+  ghost: {
+    rows: ['.ooooo.', 'owwwwwo', 'owkwkwo', 'owwwwwo', 'owwwwwo', 'owowowo'],
+    colors: { o: '#9aa0ae', w: '#f5f7ff', k: '#1b1b2f' },
+    motion: 'fly',
+  },
+  drone: {
+    rows: ['...ccc...', '..cwwwc..', 'ommmmmmmo', '.oyoyoyo.'],
+    colors: { c: '#a8e6ff', w: '#e4f7ff', m: '#8a93a6', o: '#4a4f5c', y: '#ffd23f' },
+    motion: 'fly',
+  },
+};
+
+// Evolution emblems (engine/evolution.js), floating by the pet's head.
+export const EMBLEMS = {
+  swift: {
+    rows: ['....kk.', '...kyk.', '..kyyk.', '.kyyyyk', '..kyyk.', '.kyk...', '.kk....'],
+    colors: { k: '#12324a', y: '#5ec8ff' },
+  },
+  guardian: {
+    rows: ['kkkkkkk', 'kgGGGgk', 'kgGGGgk', 'kgGGGgk', '.kgGgk.', '..kgk..', '...k...'],
+    colors: { k: '#163d22', g: '#2f8f46', G: '#7ee081' },
+  },
+  social: {
+    rows: ['.kk.kk.', 'kppkppk', 'kpPpppk', 'kpppppk', '.kpppk.', '..kpk..', '...k...'],
+    colors: { k: '#5c0f2e', p: '#ff5fa2', P: '#ffd0e4' },
+  },
+  sage: {
+    rows: ['...k...', '..ksk..', 'kkssskk', 'ksSsSsk', '.ksssk.', '.ksksk.', '.kk.kk.'],
+    colors: { k: '#2d1a5c', s: '#8a5cf6', S: '#e2d4ff' },
+  },
 };
 
 export const GEAR_COLORS = { monocle: '#ffd23f', glasses: '#4c6ef5', shades: '#1b1b2f', glint: '#8fa6d6' };

@@ -28,6 +28,10 @@ export const ACHIEVEMENTS = [
   { id: 'veteran', emoji: '🎖️', test: (c) => c.growth.level >= 25 },
   { id: 'master', emoji: '🏅', test: (c) => c.growth.level >= 50 },
   { id: 'maxLevel', emoji: '🏆', test: (c) => c.growth.level >= 99 },
+  { id: 'quester', emoji: '📜', test: (c) => (c.quests?.stars ?? 0) >= 1 },
+  { id: 'perfectWeek', emoji: '🌈', test: (c) => Boolean(c.quests?.perfect) },
+  { id: 'evolved', emoji: '🧬', test: (c) => Boolean(c.evolution) },
+  { id: 'beloved', emoji: '💝', test: (c) => (c.care?.total ?? 0) >= 25 },
 ];
 
 export function evaluateAchievements(context, unlocked = {}, today) {

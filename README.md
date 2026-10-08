@@ -16,7 +16,7 @@ fed by commits, healed by green CI, cheered up when issues get answered.
 
 <img src="docs/gallery/hero/hero.svg" alt="Mochi the Radiant, an ecstatic rubber duck wearing a crown" width="520">
 
-**🆕 New in 1.1:** [the hero squad](#-the-hero-squad) · [7 languages](#it-talks-about-your-repo) · [`/pet` command](#talk-to-your-pet-pet) · [super form](#-super-form) · [homes](#homes) · [full changelog](CHANGELOG.md)
+**🆕 New in 1.3:** [weekly quests](#-weekly-quests) · [evolution](#-evolution) · [wardrobe](#-wardrobe) · [`/pet feed` and `/pet play`](#talk-to-your-pet-pet) · [a playground you can raise a pet in](#️-the-playground) · [full changelog](CHANGELOG.md)
 
 </div>
 
@@ -287,6 +287,65 @@ The spirit dragon counts every commit for 1.5, so it climbs the ranks faster.
 
 <img src="docs/gallery/ranks/rank-up.svg" width="520" alt="A spirit dragon ranking up to Gold">
 
+## Play with it
+
+### 📜 Weekly quests
+
+Every Monday the pet picks three small goals from what your repo really does: commit on 3 different days,
+make 10 commits, keep CI green for 4 days, answer every waiting issue, merge 2 pull requests, publish a release,
+get commits from 2 people, keep it happy for 3 days, or leave nothing stale. A repo without CI never gets the CI quest.
+
+Each finished quest earns a ⭐ quest star and +5 joy until the week ends; finishing all three earns two more stars.
+The card shows the week's progress (`📜 2/3 · ⭐ 14`), `/pet quests` shows the details and the diary celebrates each one.
+
+### 🧬 Evolution
+
+After a week as an adult, the pet grows into one of four paths, chosen by how you've been caring for the repo.
+The path is permanent, adds a floating emblem and +6 to the vital that matches it. On an elder the emblem glows.
+
+| Path | Grows from | Bonus |
+| --- | --- | --- |
+| 🌪️ Swift | frequent commits and long streaks | +6 energy |
+| 🛡️ Guardian | CI that stays green | +6 health |
+| 💞 Social | many contributors, merged PRs and answered issues | +6 joy |
+| 📚 Sage | a complete community profile and releases | +6 fullness |
+
+<img src="docs/gallery/evolution/swift.svg" width="110"> <img src="docs/gallery/evolution/guardian.svg" width="110"> <img src="docs/gallery/evolution/social.svg" width="110"> <img src="docs/gallery/evolution/sage.svg" width="110">
+
+### 👗 Wardrobe
+
+Sixteen items to dress your pet in: eight hats, three face items and five pals that follow it around.
+Each one unlocks by playing: a trophy (🎧 headphones at 100 commits, 🧙 a wizard hat at Lv.50, 👻 a ghost pal for coming back from the dead),
+quest stars (🐦 a bluebird after your first, 🛸 a mini UFO at 25) or friends (🐤 a chick after 5 pats, snacks or games).
+
+```yaml
+      - uses: Tanx-1811/legacypet@v1
+        with:
+          wear: cap, bird   # one hat, one face item, one pal
+```
+
+Or let maintainers dress it from any issue with `/pet wear headphones` (and `/pet wear none`). `/pet wardrobe` lists everything and how to unlock it.
+Hats that say something about the day (a party hat, an ice pack when sick, a nightcap) still win for that day.
+
+<img src="docs/gallery/wardrobe/card.svg" width="520" alt="A cat in a cap with a bluebird pal and the Swift emblem">
+
+### 🍪 Snacks and games
+
+Anyone can comment `/pet feed`, `/pet play` or `/pet pat`. The pet answers with a picture of itself, and a snack or a game gives
+a small boost for the day (+4 each, at most +12). Each person can do each one once a day, so a comment storm can't keep a neglected pet alive:
+commits are still the real food. The pet remembers its best friends.
+
+### 🕹️ The playground
+
+[The playground](https://tanx-1811.github.io/legacypet/) runs the same engine in your browser, in English or Vietnamese:
+
+- **Hatch** any public repo and see its checkup, this week's quests and which path it leans towards.
+- **Raise** a pet day by day: choose what the repo does each day (commits, CI, PRs, issues, releases), feed it, play,
+  dress it up, type `/pet` commands, fast-forward a week or let an autoplay habit run it. Toasts tell you about level-ups, quests and trophies.
+- **Codex**: every species, mood, path, item, quest, rank, trophy and home, each with how to get it.
+- **Park**: build a Pet Park from any repos.
+- **Adopt**: pick everything once and copy the command, the workflow and the README snippet.
+
 ## Trophies
 
 Trophies are permanent. Once earned, they stay on the card even if the streak breaks.
@@ -313,6 +372,10 @@ Trophies are permanent. Once earned, they stay on the card even if the streak br
 | 🎖️ | Veteran | Reach Lv.25 |
 | 🏅 | Master | Reach Lv.50 |
 | 🏆 | Max Level | Reach Lv.99 |
+| 📜 | Quester | Finish a first weekly quest |
+| 🌈 | Perfect Week | Finish all three quests in a week |
+| 🧬 | Evolved | Take an evolution path |
+| 💝 | Beloved | 25 snacks, games or pats |
 
 ## Seasons, holidays and night mode
 
@@ -347,6 +410,10 @@ Comment on any issue or pull request and your pet answers in the thread, in its 
 | --- | --- |
 | `/pet` | its card, how it feels, its vitals and a full checkup |
 | `/pet pat` | a happy wiggle 💕 |
+| `/pet feed` · `/pet play` | a snack or a game, with a picture of itself (once a day per person) |
+| `/pet quests` | this week's quests, progress bars and quest stars |
+| `/pet wardrobe` | every item, what it's wearing and what's still locked |
+| `/pet wear cap` | dresses it up (`/pet wear none` to undress). Maintainers only |
 | `/pet checkup` | just the checkup |
 | `/pet level` | its level, rank and XP bar, and how many commits the next level and rank take |
 | `/pet trophies` | its trophy shelf, with unlock dates and what's still locked |
@@ -461,11 +528,12 @@ The default token can read your public repos. To include private ones, pass a pe
 | `commands` | `true` | Answer [`/pet` commands](#talk-to-your-pet-pet) in issue and PR comments |
 | `vacation` | | `until 2027-01-05` or `2026-12-20..2027-01-05`. See [vacation mode](#vacation-mode) |
 | `alerts` | `false` | `true` (sick + zombie), or a list of `sick`, `zombie`, `hungry`, `sad`. See [care alerts](#care-alerts) |
+| `wear` | | Unlocked items to wear, like `cap, bird`. Empty lets `/pet wear` decide. See [wardrobe](#-wardrobe) |
 | `dry-run` | `false` | Render without publishing |
 | `repository` | current repo | Visit another repo's pet |
 | `github-token` | `github.token` | Token used for the API |
 
-**Outputs:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `level-up`, `rank`, `on-vacation`, `alert-issue`, `svg-path`.
+**Outputs:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `level-up`, `rank`, `on-vacation`, `alert-issue`, `path`, `quest-stars`, `quests-done`, `wearing`, `svg-path`.
 For example, ping your team only when the pet *just* got sick:
 
 ```yaml
@@ -487,6 +555,7 @@ npx github:Tanx-1811/legacypet render vercel/next.js      # draw any repo's pet 
 npx github:Tanx-1811/legacypet park sindresorhus          # draw someone's Pet Park
 npx github:Tanx-1811/legacypet demo --mood zombie --species cat --lang vi
 npx github:Tanx-1811/legacypet demo --species crab --scenery reef
+npx github:Tanx-1811/legacypet demo --species dragon --path sage --wear "wizard, drone"
 ```
 
 In a terminal with true color, it draws the pet right in your shell.

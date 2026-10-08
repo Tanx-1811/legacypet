@@ -46,6 +46,46 @@ export default {
     inboxZero: '收件箱清零', elder: '睿智长老',
     superForm: '超级形态', responder: '急先锋', anniversary: '周年纪念',
     veteran: '老将', master: '大师', maxLevel: '满级',
+    quester: '任务达人', perfectWeek: '完美一周', evolved: '进化', beloved: '万人迷',
+  },
+  // Evolution paths (engine/evolution.js) and what grows each one.
+  paths: { swift: '迅捷', guardian: '守护', social: '社交', sage: '贤者' },
+  pathHints: {
+    swift: '频繁提交和长时间连续提交',
+    guardian: '一直保持绿色的 CI',
+    social: '众多贡献者、合并的 PR 和有回复的 issue',
+    sage: '完整的社区资料和版本发布',
+  },
+  // Weekly quests (engine/quests.js). Every quest is a function of its goal.
+  quests: {
+    feast: (n) => `在 ${n} 个不同的日子提交`,
+    marathon: (n) => `提交 ${n} 次`,
+    doctor: (n) => `让 CI 保持绿色 ${n} 天`,
+    replies: () => '回复所有等待中的 issue',
+    merge: (n) => `合并 ${n} 个 pull request`,
+    ship: () => '发布一个新版本',
+    squad: (n) => `收到 ${n} 个人的提交`,
+    sunny: (n) => `让我开心 ${n} 天`,
+    tidy: () => '不让任何 issue 或 PR 被搁置',
+  },
+  questBoard: {
+    title: '本周任务',
+    ends: (date) => `截至 ${date}`,
+    stars: (n) => `${n} 颗任务星`,
+    reward: '每完成一个任务：⭐ +1，快乐 +5 持续到周一。三个全部完成：再得 ⭐ +2。',
+  },
+  // The wardrobe (engine/items.js).
+  items: {
+    cap: '棒球帽', bow: '蝴蝶结', beanie: '毛线帽', headphones: '耳机', halo: '光环', tiara: '小皇冠',
+    wizard: '巫师帽', crown: '王冠', glasses: '眼镜', shades: '墨镜', monocle: '单片眼镜',
+    chick: '小鸡', bird: '青鸟', butterfly: '蝴蝶', ghost: '小幽灵', drone: '迷你 UFO',
+  },
+  slots: { hat: '帽子', face: '脸部', pal: '小伙伴' },
+  unlock: {
+    free: '免费',
+    achievement: (name) => `奖杯：${name}`,
+    stars: (n) => `${n} 颗任务星`,
+    friends: (n) => `${n} 次摸摸、零食或游戏`,
   },
   lines: {
     revived: [(v) => `我活过来啦！！谢谢你回到 ${v.repoName} 💚`, '脑子……等等，新提交？我复活了！'],
@@ -86,6 +126,18 @@ export default {
       '这还不是我的最终形态 💥',
       (v) => `连续开心 ${v.auraDays} 天，我在发光！✨`,
     ],
+    evolved: [
+      (v) => `我进化啦！${v.path}路线 ✨`,
+      (v) => `*发光* 我走上了${v.path}路线。谢谢你把我养得这么好！`,
+    ],
+    questDone: [(v) => `任务完成：${v.quest} ⭐`, (v) => `又一颗任务星！⭐ 目前共 ${v.stars} 颗`],
+    perfectWeek: ['三个任务全部完成，完美一周！🌈', '完美一周！奖励星星到手 ⭐⭐'],
+    paths: {
+      swift: ['比 force-push 还快 🌪️', '提交、提交、再提交！冲冲冲 🌪️'],
+      guardian: ['我守护绿色构建 🛡️', '有我在，CI 休想变红 🛡️'],
+      social: ['这个仓库里好多朋友 💞', '每个贡献者都是一家人 💞'],
+      sage: ['好的 README 抵得上一半代码 📚', '先写文档，再吃零食 📚'],
+    },
     // Signature lines, mixed in on good days.
     species: {
       ninja: ['*嘭* 提交之术·影分身！🍥', '真正的忍者从不留下 TODO 🥷'],
@@ -123,6 +175,44 @@ export default {
     pat: ['*开心扭扭* 谢谢摸摸！💕', '摸头很好，commit 更好 😋', (v) => `${v.name} 也爱你！💖`],
     checkup: '体检',
     commands: '指令',
+    feed: [
+      '吧唧吧唧！有零食！🍪（不过 commit 才是我的正餐）',
+      (v) => `谢谢你的小零食，@${v.user}！🍙`,
+      '*咔嚓咔嚓* 好好吃！😋',
+    ],
+    play: [
+      '*满地疯跑* 再来！再来！🎾',
+      (v) => `@${v.user} 要陪我玩！今天是最棒的一天 🪀`,
+      '抓到你啦，换你当鬼！🏃',
+    ],
+    again: {
+      feed: '上次的零食还撑着呢，明天再来吧！😊',
+      play: '呼，上次玩累了。明天再玩？💤',
+      pat: '还要摸摸？我今天已经被爱得满满的了 💕',
+    },
+    cant: {
+      egg: '我还是个蛋，还不能吃东西也不能玩！🥚',
+      zombie: '脑子……不对。只有 commit 才能唤醒我 🧟',
+      hibernating: 'Zzz……这个仓库已归档，让我睡吧 💤',
+    },
+    snack: (n) => `今天的零食和游戏：+${n}`,
+    friends: '好朋友',
+    quests: {
+      title: '本周任务',
+      none: '本周没有任务。',
+    },
+    wardrobe: {
+      title: (n, total) => `衣橱：已解锁 ${n} / ${total}`,
+      wearing: '正在穿戴',
+      nothing: '还什么都没有',
+      how: '维护者可以用 `/pet wear <item>`（或 `/pet wear none`）给我换装，也可以用 workflow 里的 `wear` 输入。',
+    },
+    wear: {
+      done: (list) => `谢谢！${list} 已经穿戴好啦 ✨`,
+      removed: '全部脱掉啦，恢复本来的样子！',
+      locked: (item, how) => `我还没解锁${item}（${how}）。`,
+      unknown: (item) => `我没有叫 "${item}" 的东西。试试 \`/pet wardrobe\`。`,
+    },
     help: '在任意 issue 或 pull request 里跟我说话：',
     usage: {
       status: '我的心情和原因',
@@ -130,6 +220,11 @@ export default {
       checkup: '只看体检报告',
       level: '我的等级、段位，以及升到下一级还差多少',
       trophies: '我的奖杯架',
+      feed: '给我一份零食（每人每天一次）',
+      play: '陪我玩（每人每天一次）',
+      quests: '本周任务和我的任务星',
+      wardrobe: '我能穿戴什么，还有什么没解锁',
+      wear: '给我换装，例如 `/pet wear cap`（仅维护者）',
       vacation: '让我暂停饿肚子 N 天，例如 `/pet vacation 14`（仅维护者）',
       back: '提前结束假期（仅维护者）',
       help: '显示这个列表',
@@ -162,6 +257,7 @@ export default {
     streak: (n) => `已连续提交 ${n} 天，别断了哦！`,
     archived: '这个仓库已归档，你的宠物正在安详地冬眠。',
     vacation: (until) => `度假中，${until} 回来。饥饿已暂停，这几天不计入。`,
+    quests: (done, total, next) => `本周任务：已完成 ${done} / ${total}。${next ? `下一个：${next}。` : '全部完成！🌈'}`,
   },
   diary: {
     title: (name) => `# 📔 ${name} 的日记`,
@@ -174,6 +270,9 @@ export default {
     levelUp: (level) => `升到了 Lv.${level}`,
     rankUp: (level, rank) => `在 Lv.${level} 晋升${rank}段位`,
     vacation: (until) => `度假中，${until} 回来 🏖️`,
+    evolved: (path) => `进化为 ${path}路线`,
+    quests: (list) => `完成了 ${list}`,
+    perfectWeek: '完美的一周 🌈',
   },
   alert: {
     title: {

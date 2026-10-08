@@ -2,9 +2,21 @@
 // and tells the owner about anything newer in the job summary, so people pinned to the
 // floating `@v1` tag hear about new features (and the rare workflow change they need).
 // Keep VERSION in sync with package.json (a test checks it).
-export const VERSION = '1.2.0';
+export const VERSION = '1.3.0';
 
 export const CHANGELOG = [
+  {
+    version: '1.3.0',
+    items: [
+      '📜 Weekly quests: three goals a week picked from what your repo really does. Each one earns a quest star and +5 joy until Monday; all three earn two more stars',
+      '🧬 Evolution: after a week as an adult, your pet takes a path that matches how you care for the repo (Swift, Guardian, Social or Sage), with an emblem and a small boost',
+      '👗 Wardrobe: 16 hats, face items and pals unlocked by trophies, quest stars and friends. Dress up with the `wear` input or `/pet wear cap`',
+      '🍪 New commands: `/pet feed`, `/pet play`, `/pet quests`, `/pet wardrobe` and `/pet wear` (maintainers). Snacks and games give a small boost, once a day per person',
+      '🏆 New trophies: Quester, Perfect Week, Evolved and Beloved',
+      '🕹️ The playground is now a full app: hatch a repo, play with a pet day by day in the simulator, browse the codex and build a Pet Park',
+      '📤 New outputs: `path`, `quest-stars`, `quests-done`, `wearing`',
+    ],
+  },
   {
     version: '1.2.0',
     items: [

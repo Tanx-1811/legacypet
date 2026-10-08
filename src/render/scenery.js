@@ -290,7 +290,7 @@ const reef = {
     let out = '';
     for (let i = 0; i < (mini ? 6 : 9) * Math.max(1, Math.round(w / 200)); i++) {
       const r = rng.range(1.5, 3.5) * (mini ? 0.7 : 1);
-      out += at(x + rng.range(0.03, 0.97) * w, groundY - rng.range(0, 10), `<circle r="${r1(r)}" class="lp-bubble-c"/>`, 'lp-bubble', anim(rng.range(4, 7), rng.range(0, 7)));
+      out += at(x + rng.range(0.03, 0.97) * w, groundY - rng.range(0, 10), `<circle r="${r1(r)}" class="lp-bubble-c"/>`, 'lp-bubbling', anim(rng.range(4, 7), rng.range(0, 7)));
     }
     for (let i = 0; i < 2 * Math.max(1, Math.round(w / 200)); i++) {
       const color = rng.pick(['#ffb703', '#ff7096', '#4cc9f0']);

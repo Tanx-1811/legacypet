@@ -148,7 +148,7 @@ const STATIC_CSS = `
 .lp-wave{animation:lp-wave 3s ease-in-out infinite}
 .lp-tide{animation:lp-tide 4s ease-in-out infinite}
 .lp-ripple{animation:lp-ripple 3s ease-out infinite both}
-.lp-bubble{animation:lp-bubble 5s ease-in infinite both}
+.lp-bubbling{animation:lp-bubble 5s ease-in infinite both}
 .lp-swim{animation:lp-swim 14s linear infinite}
 .lp-roll{animation:lp-roll 9s linear infinite}
 .lp-ray{animation:lp-ray 5s ease-in-out infinite}
@@ -161,6 +161,12 @@ const STATIC_CSS = `
 .lp-new{animation:lp-float 1.6s ease-in-out infinite}
 .lp-lvup{font:700 11px ${FONT};stroke:#3d2c00;stroke-width:2.5px;paint-order:stroke;stroke-linejoin:round}
 .lp-aura{opacity:.8;animation:lp-aura 1.1s ease-in-out infinite}
+.lp-pal-fly{animation:lp-pal-fly 3.4s ease-in-out infinite}
+.lp-pal-hop{animation:lp-pal-hop 1.6s ease-in-out infinite}
+.lp-quest{font:700 11px ${FONT};fill:var(--lp-muted)}
+.lp-more{font:700 10px ${FONT};fill:var(--lp-muted)}
+@keyframes lp-pal-fly{0%,100%{transform:translate(0,0)}25%{transform:translate(2px,-4px)}50%{transform:translate(0,-6px)}75%{transform:translate(-2px,-3px)}}
+@keyframes lp-pal-hop{0%,55%,100%{transform:translateY(0)}25%{transform:translateY(-5px)}}
 @keyframes lp-aura{0%,100%{opacity:.45}50%{opacity:.95}}
 @keyframes lp-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes lp-hop{0%,100%{transform:translateY(0)}35%{transform:translateY(-14px)}55%{transform:translateY(0)}65%{transform:translateY(-3px)}}

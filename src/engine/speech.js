@@ -31,7 +31,14 @@ export function speechVars(pet, snapshot) {
 }
 
 export function chooseSpeech(pet, snapshot, tr, rng) {
-  const v = { ...speechVars(pet, snapshot), rank: tr.ranks?.[pet.rank?.id] };
+  const fresh = pet.quests?.list.find((q) => q.isNew);
+  const v = {
+    ...speechVars(pet, snapshot),
+    rank: tr.ranks?.[pet.rank?.id],
+    path: pet.path ? `${pet.path.emoji} ${tr.paths[pet.path.id]}` : '',
+    quest: fresh ? tr.quests[fresh.id](fresh.goal) : '',
+    stars: pet.questStars ?? 0,
+  };
   const say = (line) => (typeof line === 'function' ? line(v) : line);
   const pick = (lines) => say(rng.pick(lines));
   const { lines } = tr;
@@ -46,7 +53,9 @@ export function chooseSpeech(pet, snapshot, tr, rng) {
   if (holiday && lines.holiday[holiday]) return pick(lines.holiday[holiday]);
   if (events.includes('birthday')) return pick(lines.birthday);
   if (events.includes('release') && v.tag) return pick(lines.release);
+  if (events.includes('evolved') && v.path) return pick(lines.evolved);
   if (events.includes('rankUp')) return pick(lines.rankUp);
+  if (events.includes('perfectWeek') && mood !== 'hungry' && mood !== 'sad') return pick(lines.perfectWeek);
   if (events.includes('levelUp') && ['happy', 'ecstatic', 'party', 'sleepy'].includes(mood)) return pick(lines.levelUp);
   if (pet.aura && pet.auraDays === AURA_DAYS) return pick(lines.aura); // the day it powers up
 
@@ -58,6 +67,8 @@ export function chooseSpeech(pet, snapshot, tr, rng) {
   if (v.streak >= 3 && chatty) pool.push(...lines.streak);
   if (snapshot.ci?.state === 'unknown' && (chatty || mood === 'sleepy')) pool.push(...lines.noCi);
   if (pet.aura) pool.push(...lines.aura);
+  if (v.quest && (chatty || mood === 'party')) pool.push(...lines.questDone);
+  if (pet.path && chatty) pool.push(...(lines.paths?.[pet.path.id] ?? []));
   if (chatty || mood === 'party') pool.push(...(lines.species?.[pet.speciesId] ?? []));
   return pick(pool);
 }

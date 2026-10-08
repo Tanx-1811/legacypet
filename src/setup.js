@@ -17,13 +17,16 @@ export function snippetFor(fullName, style = 'card', branch = 'legacypet') {
   return `[![LegacyPet](https://raw.githubusercontent.com/${fullName}/${branch}/${file})](https://github.com/${fullName}/blob/${branch}/DIARY.md)`;
 }
 
-export function workflowYaml({ lang = 'en', species = 'auto', scenery = 'auto', name = '', park = '' } = {}) {
+export function workflowYaml({ lang = 'en', species = 'auto', scenery = 'auto', name = '', park = '', wear = '', alerts = '', vacation = '' } = {}) {
   const inputs = [];
   if (lang && lang !== 'en') inputs.push(`lang: ${lang}`);
   if (species && species !== 'auto') inputs.push(`species: ${species}`);
   if (scenery && scenery !== 'auto') inputs.push(`scenery: ${scenery}`);
   if (name) inputs.push(`name: ${JSON.stringify(name)}`);
   if (park) inputs.push(`park: ${park}`);
+  if (wear) inputs.push(`wear: ${JSON.stringify(wear)}`);
+  if (alerts) inputs.push(`alerts: ${alerts}`);
+  if (vacation) inputs.push(`vacation: ${JSON.stringify(vacation)}`);
   return [
     'name: LegacyPet',
     '',
@@ -33,7 +36,7 @@ export function workflowYaml({ lang = 'en', species = 'auto', scenery = 'auto', 
     '  release:',
     '    types: [published] # throw a party the moment you ship',
     '  issue_comment:',
-    '    types: [created] # talk to your pet: /pet, /pet pat, /pet checkup',
+    '    types: [created] # talk to your pet: /pet, /pet feed, /pet play, /pet quests',
     '  workflow_dispatch:',
     '',
     'permissions:',

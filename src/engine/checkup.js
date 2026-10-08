@@ -39,5 +39,11 @@ export function checkup(pet, snapshot) {
   else if (hygiene != null) add('tip', '🧼', tr.hygiene(hygiene));
 
   if (pet.facts.streak >= 3) add('good', '🔥', tr.streak(pet.facts.streak));
+  const quests = pet.quests;
+  if (quests?.list.length && !snapshot.repo.archived) {
+    const next = quests.list.find((q) => !q.done);
+    const text = tr.quests(quests.completed, quests.list.length, next && strings(pet.lang).quests[next.id](next.goal));
+    add(next ? 'tip' : 'good', '📜', text);
+  }
   return items;
 }

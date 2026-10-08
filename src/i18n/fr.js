@@ -54,6 +54,46 @@ export default {
     inboxZero: 'Inbox zéro', elder: 'Vieux sage',
     superForm: 'Super forme', responder: 'Premier secours', anniversary: 'Anniversaire',
     veteran: 'Vétéran', master: 'Maître', maxLevel: 'Niveau max',
+    quester: 'Aventurier', perfectWeek: 'Semaine parfaite', evolved: 'Évolué', beloved: 'Chouchou',
+  },
+  // Evolution paths (engine/evolution.js) and what grows each one.
+  paths: { swift: 'Véloce', guardian: 'Gardien', social: 'Social', sage: 'Sage' },
+  pathHints: {
+    swift: 'des commits fréquents et de longues séries',
+    guardian: 'une CI qui reste verte',
+    social: 'beaucoup de contributeurs, des PR mergées et des issues qui ont une réponse',
+    sage: 'un profil communautaire complet et des releases',
+  },
+  // Weekly quests (engine/quests.js). Every quest is a function of its goal.
+  quests: {
+    feast: (n) => `Fais des commits sur ${n} ${plural(n, 'jour', 'jours différents')}`,
+    marathon: (n) => `Fais ${n} ${plural(n, 'commit', 'commits')}`,
+    doctor: (n) => `Garde la CI verte pendant ${n} ${plural(n, 'jour', 'jours')}`,
+    replies: () => 'Réponds à toutes les issues en attente',
+    merge: (n) => `Merge ${n} ${plural(n, 'pull request', 'pull requests')}`,
+    ship: () => 'Publie une release',
+    squad: (n) => `Reçois des commits de ${n} ${plural(n, 'personne', 'personnes')}`,
+    sunny: (n) => `Garde-moi heureux pendant ${n} ${plural(n, 'jour', 'jours')}`,
+    tidy: () => "Ne laisse aucune issue ni PR à l'abandon",
+  },
+  questBoard: {
+    title: 'Quêtes de la semaine',
+    ends: (date) => `jusqu'au ${date}`,
+    stars: (n) => `${n} ${plural(n, 'étoile', 'étoiles')} de quête`,
+    reward: "Chaque quête terminée: ⭐ +1 et +5 de joie jusqu'à lundi. Les trois: ⭐ +2 en bonus.",
+  },
+  // The wardrobe (engine/items.js).
+  items: {
+    cap: 'Casquette', bow: 'Nœud', beanie: 'Bonnet', headphones: 'Casque audio', halo: 'Auréole', tiara: 'Diadème',
+    wizard: 'Chapeau de magicien', crown: 'Couronne', glasses: 'Lunettes', shades: 'Lunettes de soleil', monocle: 'Monocle',
+    chick: 'Poussin', bird: 'Oiseau bleu', butterfly: 'Papillon', ghost: 'Fantôme', drone: 'Mini OVNI',
+  },
+  slots: { hat: 'Chapeaux', face: 'Visage', pal: 'Copains' },
+  unlock: {
+    free: 'Gratuit',
+    achievement: (name) => `Trophée: ${name}`,
+    stars: (n) => `${n} ${plural(n, 'étoile', 'étoiles')} de quête`,
+    friends: (n) => `${n} caresses, goûters ou jeux`,
   },
   lines: {
     revived: [(v) => `JE VIS!! Merci de revenir sur ${v.repoName} 💚`, 'Cerveauuu... attends, des commits? Je REVIS!'],
@@ -97,6 +137,18 @@ export default {
       "Ce n'est même pas ma forme finale 💥",
       (v) => `${v.auraDays} jours de pure joie. Je brille! ✨`,
     ],
+    evolved: [
+      (v) => `J'ai évolué! Voie ${v.path} ✨`,
+      (v) => `*brille* J'ai pris la voie ${v.path}. Merci de m'avoir élevé comme ça!`,
+    ],
+    questDone: [(v) => `Quête accomplie: ${v.quest} ⭐`, (v) => `Encore une étoile de quête! ⭐ Déjà ${v.stars}`],
+    perfectWeek: ['Les trois quêtes terminées. Semaine parfaite! 🌈', 'Semaine parfaite! Des étoiles bonus pour nous ⭐⭐'],
+    paths: {
+      swift: ["Plus rapide qu'un force-push 🌪️", 'Commit, commit, commit! À toute vitesse 🌪️'],
+      guardian: ['Je veille sur le build vert 🛡️', 'Pas de CI rouge sous ma garde 🛡️'],
+      social: ["Tant d'amis dans ce repo 💞", 'Chaque contributeur fait partie de la famille 💞'],
+      sage: ["Un bon README, c'est la moitié du code 📚", "D'abord la doc, ensuite le goûter 📚"],
+    },
     // Signature lines, mixed in on good days.
     species: {
       ninja: ['*pouf* Technique secrète: multi-clonage de commits! 🍥', 'Un vrai ninja ne laisse jamais traîner un TODO 🥷'],
@@ -141,6 +193,44 @@ export default {
     pat: ['*frétille* Merci pour la caresse! 💕', "Les caresses, c'est bien. Les commits, c'est mieux 😋", (v) => `${v.name} t'aime aussi! 💖`],
     checkup: 'Bilan de santé',
     commands: 'Commandes',
+    feed: [
+      'Miam miam! Un snack! 🍪 (mais mon vrai repas, ce sont les commits)',
+      (v) => `Merci pour la friandise, @${v.user}! 🍙`,
+      '*crunch crunch* Délicieux! 😋',
+    ],
+    play: [
+      '*course folle* Encore! Encore! 🎾',
+      (v) => `@${v.user} veut jouer! Le plus beau jour de ma vie 🪀`,
+      "Chat! C'est toi le chat! 🏃",
+    ],
+    again: {
+      feed: "J'ai encore le ventre plein de ton dernier snack. Reviens demain! 😊",
+      play: "Ouf, notre dernière partie m'a épuisé. Demain? 💤",
+      pat: "Encore des caresses? Je me sens déjà tellement aimé aujourd'hui 💕",
+    },
+    cant: {
+      egg: 'Je suis encore un œuf. Je ne peux ni manger ni jouer! 🥚',
+      zombie: 'Cerveaux... non. Seuls les commits peuvent me réveiller 🧟',
+      hibernating: 'Zzz... ce repo est archivé. Laisse-moi dormir 💤',
+    },
+    snack: (n) => `Snacks et jeux du jour: +${n}`,
+    friends: 'Meilleurs amis',
+    quests: {
+      title: 'Quêtes de la semaine',
+      none: 'Pas de quêtes cette semaine.',
+    },
+    wardrobe: {
+      title: (n, total) => `Garde-robe: ${n} sur ${total} ${plural(n, 'débloqué', 'débloqués')}`,
+      wearing: 'Je porte',
+      nothing: 'rien pour le moment',
+      how: "Les mainteneurs m'habillent avec `/pet wear <item>` (ou `/pet wear none`), ou avec l'input `wear` du workflow.",
+    },
+    wear: {
+      done: (list) => `Merci! Je porte maintenant ${list} ✨`,
+      removed: 'Tout enlevé. Retour à mon look naturel!',
+      locked: (item, how) => `Je n'ai pas encore débloqué ${item} (${how}).`,
+      unknown: (item) => `Je n'ai rien qui s'appelle "${item}". Essaie \`/pet wardrobe\`.`,
+    },
     help: "Parle-moi dans n'importe quelle issue ou pull request:",
     usage: {
       status: 'comment je vais et pourquoi',
@@ -148,6 +238,11 @@ export default {
       checkup: 'juste le bilan',
       level: "mon niveau, mon rang et ce qu'il faut pour passer au suivant",
       trophies: 'mon étagère à trophées',
+      feed: 'me donner un snack (une fois par jour et par personne)',
+      play: 'jouer avec moi (une fois par jour et par personne)',
+      quests: 'les quêtes de la semaine et mes étoiles de quête',
+      wardrobe: 'ce que je peux porter et ce qui reste à débloquer',
+      wear: "m'habiller, par ex. `/pet wear cap` (mainteneurs)",
       vacation: 'mettre ma faim en pause pendant N jours, par ex. `/pet vacation 14` (mainteneurs)',
       back: 'écourter les vacances (mainteneurs)',
       help: 'cette liste',
@@ -180,6 +275,7 @@ export default {
     streak: (n) => `${n} jours de commits d'affilée. Ne casse pas la série!`,
     archived: 'Ce repo est archivé, alors ton compagnon hiberne paisiblement.',
     vacation: (until) => `En vacances jusqu'au ${until}. La faim est en pause et ces jours ne comptent pas.`,
+    quests: (done, total, next) => `Quêtes de la semaine: ${done} sur ${total} ${plural(done, 'terminée', 'terminées')}.${next ? ` Prochaine: ${next}.` : ' Tout est fait! 🌈'}`,
   },
   diary: {
     title: (name) => `# 📔 Le journal de ${name}`,
@@ -192,6 +288,9 @@ export default {
     levelUp: (level) => `est passé au Niv.${level}`,
     rankUp: (level, rank) => `a atteint le rang ${rank} au Niv.${level}`,
     vacation: (until) => `en vacances jusqu'au ${until} 🏖️`,
+    evolved: (path) => `a évolué vers la voie ${path}`,
+    quests: (list) => `a terminé ${list}`,
+    perfectWeek: 'une semaine parfaite 🌈',
   },
   alert: {
     title: {

@@ -46,6 +46,46 @@ export default {
     inboxZero: '인박스 제로', elder: '지혜로운 원로',
     superForm: '슈퍼 폼', responder: '응답 1등', anniversary: '기념일',
     veteran: '베테랑', master: '마스터', maxLevel: '만렙',
+    quester: '퀘스트 헌터', perfectWeek: '완벽한 한 주', evolved: '진화', beloved: '사랑둥이',
+  },
+  // Evolution paths (engine/evolution.js) and what grows each one.
+  paths: { swift: '질풍', guardian: '수호자', social: '인싸', sage: '현자' },
+  pathHints: {
+    swift: '잦은 커밋과 긴 연속 기록',
+    guardian: '늘 초록색인 CI',
+    social: '많은 기여자, 머지된 PR, 답변한 이슈',
+    sage: '완성된 커뮤니티 프로필과 릴리스',
+  },
+  // Weekly quests (engine/quests.js). Every quest is a function of its goal.
+  quests: {
+    feast: (n) => `서로 다른 ${n}일에 커밋하기`,
+    marathon: (n) => `커밋 ${n}개 하기`,
+    doctor: (n) => `CI를 ${n}일 동안 초록색으로 유지하기`,
+    replies: () => '기다리는 이슈에 모두 답하기',
+    merge: (n) => `PR ${n}개 머지하기`,
+    ship: () => '릴리스 내기',
+    squad: (n) => `${n}명에게서 커밋 받기`,
+    sunny: (n) => `${n}일 동안 나를 행복하게 해주기`,
+    tidy: () => '방치된 이슈나 PR 없애기',
+  },
+  questBoard: {
+    title: '이번 주 퀘스트',
+    ends: (date) => `${date}까지`,
+    stars: (n) => `퀘스트 별 ${n}개`,
+    reward: '퀘스트 하나 완료할 때마다 ⭐ +1, 월요일까지 기쁨 +5. 세 개 모두 완료하면 ⭐ +2 추가.',
+  },
+  // The wardrobe (engine/items.js).
+  items: {
+    cap: '캡모자', bow: '리본', beanie: '비니', headphones: '헤드폰', halo: '천사 링', tiara: '티아라',
+    wizard: '마법사 모자', crown: '왕관', glasses: '안경', shades: '선글라스', monocle: '외알 안경',
+    chick: '병아리', bird: '파랑새', butterfly: '나비', ghost: '유령', drone: '미니 UFO',
+  },
+  slots: { hat: '모자', face: '얼굴', pal: '친구' },
+  unlock: {
+    free: '기본 제공',
+    achievement: (name) => `트로피: ${name}`,
+    stars: (n) => `퀘스트 별 ${n}개`,
+    friends: (n) => `쓰담·간식·놀이 ${n}번`,
   },
   lines: {
     revived: [(v) => `살아났다!! ${v.repoName}에 돌아와줘서 고마워 💚`, '뇌애애... 어? 새 커밋? 살아난 기분이야!'],
@@ -86,6 +126,18 @@ export default {
       '이건 아직 내 최종 형태가 아니야 💥',
       (v) => `${v.auraDays}일째 행복 가득. 몸이 빛나! ✨`,
     ],
+    evolved: [
+      (v) => `진화했어! ${v.path} 루트 ✨`,
+      (v) => `*반짝* ${v.path} 루트를 골랐어. 이렇게 키워줘서 고마워!`,
+    ],
+    questDone: [(v) => `퀘스트 완료: ${v.quest} ⭐`, (v) => `퀘스트 별 하나 더! ⭐ 지금까지 ${v.stars}개`],
+    perfectWeek: ['퀘스트 세 개 모두 완료. 완벽한 한 주! 🌈', '완벽한 한 주! 보너스 별이다 ⭐⭐'],
+    paths: {
+      swift: ['force-push보다 빠르다 🌪️', '커밋, 커밋, 커밋! 전속력으로 달려 🌪️'],
+      guardian: ['초록 빌드는 내가 지킨다 🛡️', '내가 지키는 한 빨간 CI는 없어 🛡️'],
+      social: ['이 레포엔 친구가 정말 많아 💞', '모든 기여자는 가족이야 💞'],
+      sage: ['좋은 README는 코드의 절반 📚', '문서 먼저, 간식은 그다음 📚'],
+    },
     // Signature lines, mixed in on good days.
     species: {
       ninja: ['*펑* 그림자 분신 커밋술! 🍥', '진정한 닌자는 TODO를 남기지 않아 🥷'],
@@ -123,6 +175,44 @@ export default {
     pat: ['*꼬물꼬물* 쓰다듬어줘서 고마워! 💕', '쓰담쓰담도 좋지만 커밋이 더 좋아 😋', (v) => `${v.name}도 너를 사랑해! 💖`],
     checkup: '건강검진',
     commands: '명령어',
+    feed: [
+      '냠냠! 간식이다! 🍪 (그래도 진짜 밥은 커밋이야)',
+      (v) => `간식 고마워, @${v.user} 님! 🍙`,
+      '*바삭바삭* 맛있어! 😋',
+    ],
+    play: [
+      '*우다다다* 또! 또! 🎾',
+      (v) => `@${v.user} 님이 놀아준대! 최고의 날이야 🪀`,
+      '잡았다, 이제 네가 술래! 🏃',
+    ],
+    again: {
+      feed: '아까 간식 먹어서 아직 배불러. 내일 또 와! 😊',
+      play: '휴, 아까 놀아서 지쳤어. 내일 또 놀자? 💤',
+      pat: '또 쓰다듬어 줄 거야? 오늘은 벌써 사랑을 듬뿍 받았어 💕',
+    },
+    cant: {
+      egg: '난 아직 알이야. 먹거나 놀 수 없어! 🥚',
+      zombie: '뇌애애... 아니. 날 깨울 수 있는 건 커밋뿐이야 🧟',
+      hibernating: 'Zzz... 보관된 레포야. 그냥 자게 해줘 💤',
+    },
+    snack: (n) => `오늘의 간식과 놀이: +${n}`,
+    friends: '단짝 친구',
+    quests: {
+      title: '이번 주 퀘스트',
+      none: '이번 주엔 퀘스트가 없어.',
+    },
+    wardrobe: {
+      title: (n, total) => `옷장: ${total}개 중 ${n}개 해금`,
+      wearing: '착용 중',
+      nothing: '아직 없음',
+      how: '메인테이너는 `/pet wear <item>` (또는 `/pet wear none`)이나 워크플로의 `wear` 입력으로 나를 꾸며줄 수 있어.',
+    },
+    wear: {
+      done: (list) => `고마워! 이제 ${list} 착용 중 ✨`,
+      removed: '전부 벗었어. 원래 모습으로 돌아왔어!',
+      locked: (item, how) => `${item}은(는) 아직 해금 안 됐어 (${how}).`,
+      unknown: (item) => `"${item}"(이)라는 건 없어. \`/pet wardrobe\`를 확인해 봐.`,
+    },
     help: '아무 이슈나 PR에서 말을 걸어줘:',
     usage: {
       status: '내 기분과 그 이유',
@@ -130,6 +220,11 @@ export default {
       checkup: '건강검진만 보기',
       level: '내 레벨, 랭크, 다음 단계까지 남은 커밋',
       trophies: '내 트로피 진열장',
+      feed: '간식 주기 (한 사람당 하루 한 번)',
+      play: '같이 놀기 (한 사람당 하루 한 번)',
+      quests: '이번 주 퀘스트와 내 퀘스트 별',
+      wardrobe: '내가 입을 수 있는 것과 아직 잠긴 것',
+      wear: '꾸며주기, 예: `/pet wear cap` (메인테이너 전용)',
       vacation: 'N일 동안 배고픔 멈추기, 예: `/pet vacation 14` (메인테이너 전용)',
       back: '휴가 일찍 끝내기 (메인테이너 전용)',
       help: '이 목록',
@@ -162,6 +257,7 @@ export default {
     streak: (n) => `${n}일 연속 커밋 중이에요. 끊기지 않게 해요!`,
     archived: '보관된 레포라서 펫이 평화롭게 겨울잠을 자고 있어요.',
     vacation: (until) => `${until}까지 휴가 중이에요. 배고픔이 멈춰 있고, 이 기간은 계산되지 않아요.`,
+    quests: (done, total, next) => `이번 주 퀘스트 ${total}개 중 ${done}개를 완료했어요.${next ? ` 다음 목표: ${next}.` : ' 모두 끝났어요! 🌈'}`,
   },
   diary: {
     title: (name) => `# 📔 ${name}의 일기`,
@@ -174,6 +270,9 @@ export default {
     levelUp: (level) => `Lv.${level} 달성`,
     rankUp: (level, rank) => `Lv.${level}에서 ${rank} 랭크 달성`,
     vacation: (until) => `${until}까지 휴가 중 🏖️`,
+    evolved: (path) => `${path} 루트로 진화`,
+    quests: (list) => `${list} 완료`,
+    perfectWeek: '완벽한 한 주 🌈',
   },
   alert: {
     title: {

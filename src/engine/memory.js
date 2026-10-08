@@ -46,6 +46,12 @@ export function nextState(pet, prevState = null) {
     achievements: pet.achievementsMap,
     events: pet.eventDates,
     vacations: pet.vacations ?? [],
+    // The game: this week's quests, lifetime quest stars, the evolution path, snacks and friends, the wardrobe.
+    quests: pet.quests ? { week: pet.quests.week, ids: pet.quests.ids, done: pet.quests.done } : prevState?.quests ?? null,
+    questStars: pet.questStars ?? prevState?.questStars ?? 0,
+    evolution: pet.evolution ?? prevState?.evolution ?? null,
+    care: pet.care ? { day: pet.care.day, today: pet.care.today, total: pet.care.total, friends: pet.care.friends } : prevState?.care ?? null,
+    wardrobe: { worn: pet.wardrobe?.worn ?? prevState?.wardrobe?.worn ?? [] },
     // The open care-alert issue (see github/alerts.js); undefined means alerts did not run.
     alert: pet.alert !== undefined ? pet.alert : prevState?.alert ?? null,
     history,
@@ -73,6 +79,10 @@ export function diaryEntry(pet, snapshot) {
   else parts.push(pet.vacation ? tr.diary.vacation(pet.vacation.until) : tr.diary.fasted);
   if (pet.events.includes('rankUp')) parts.push(tr.diary.rankUp(pet.level, `${pet.rank.emoji} ${tr.ranks[pet.rank.id]}`));
   else if (pet.events.includes('levelUp')) parts.push(tr.diary.levelUp(pet.level));
+  if (pet.events.includes('evolved') && pet.path) parts.push(tr.diary.evolved(`${pet.path.emoji} ${tr.paths[pet.path.id]}`));
+  const quests = pet.quests?.list.filter((q) => q.isNew) ?? [];
+  if (quests.length) parts.push(tr.diary.quests(quests.map((q) => `${q.emoji} ${tr.quests[q.id](q.goal)}`).join(', ')));
+  if (pet.events.includes('perfectWeek')) parts.push(tr.diary.perfectWeek);
   const treat = snapshot.treats?.[0];
   if (treat && Date.parse(pet.generatedAt) - Date.parse(treat.mergedAt) < 86_400_000) {
     parts.push(tr.diary.treat(treat.user, treat.number));

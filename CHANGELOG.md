@@ -4,6 +4,37 @@ Every release of LegacyPet. `@v1` always points to the newest 1.x release, so pe
 the first run on a new version also lists these notes in the job summary.
 Releases that need a change to your workflow file say so.
 
+## 1.3.0 (unreleased)
+
+### New
+
+- 📜 **Weekly quests**: three goals a week, picked from what the repo really does (commit days, CI, replies, merged PRs,
+  releases, teamwork, happy days, nothing stale). Each finished quest earns a quest star and +5 joy until Monday;
+  all three earn two more. Shown on the card, in the diary, the job summary and `/pet quests`.
+- 🧬 **Evolution**: after a week as an adult, the pet takes a permanent path that mirrors how the repo is cared for
+  (Swift, Guardian, Social or Sage), with a floating emblem (glowing on elders) and +6 to the matching vital.
+- 👗 **Wardrobe**: 16 hats, face items and pals, unlocked by trophies, quest stars and friends.
+  Dress up with the new `wear` input or `/pet wear <item>`; `/pet wardrobe` shows everything.
+- 🍪 **Snacks and games**: `/pet feed` and `/pet play` (plus `/pet pet`, `/pet hug`, `/pet snack` as aliases).
+  A small boost for the day, once a day per person and capped, and the pet remembers its best friends.
+- 🏆 **New trophies**: Quester, Perfect Week, Evolved and Beloved (24 in total). A full shelf keeps the newest trophies and shows `+N`.
+- 🕹️ **The playground is now an app**: Hatch, Raise (a day-by-day simulator with feeding, playing, dressing up,
+  autoplay habits and a `/pet` console), Codex, Park builder and Adopt, in English and Vietnamese, with light/dark themes,
+  keyboard shortcuts and choices that carry over between views.
+- 📤 **New outputs**: `path`, `quest-stars`, `quests-done`, `wearing`. The CLI demo takes `--wear` and `--path`.
+
+### Fixed
+
+- The speech bubble (and the name tags in the Pet Park) no longer float away: they shared a class with the reef's rising bubbles.
+
+### Changed
+
+- The command hint under each `/pet` reply lists just the command names; `/pet help` explains them.
+
+### Workflow
+
+Nothing to change. `wear` is optional.
+
 ## 1.2.0 (2026-10-08)
 
 ### New

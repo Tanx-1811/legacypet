@@ -316,6 +316,31 @@ function levelUpFx(s) {
   return at(cx, headTop - (mini ? 4 : 8), `<text text-anchor="middle" class="lp-lvup" style="fill:${color}${mini ? ';font-size:9px' : ''}">${escapeXml(text)}</text>`, 'lp-rise', 'animation-duration:2.6s');
 }
 
+// A pal from the wardrobe keeps the pet company on its left, hopping or hovering.
+function palFx(s) {
+  const { pet, cx, bw, footY, headTop, mini } = s;
+  const pal = A.PALS[pet.accessories?.pal];
+  if (!pal || pet.mood === 'egg') return '';
+  const p = mini ? 2.5 : 4;
+  const w = pal.rows[0].length * p;
+  const h = pal.rows.length * p;
+  const px = Math.round(cx - bw / 2 - w - (mini ? 2 : 4));
+  const py = pal.motion === 'hop' ? footY - h : Math.round((headTop + footY) / 2 - h);
+  return at(px, py, stamp(pal.rows, pal.colors, p, 0, 0), `lp-px lp-pal-${pal.motion}`);
+}
+
+// The evolution emblem floats by the pet's head; an elder's emblem glows.
+function emblemFx(s) {
+  const { pet, cx, bw, headTop, mini } = s;
+  const emblem = pet.path && A.EMBLEMS[pet.path.id];
+  if (!emblem || pet.mood === 'egg') return '';
+  const p = mini ? 2 : 3;
+  const ex = Math.round(cx - bw / 2 - 4);
+  const ey = Math.round(headTop - 7 * p + (mini ? 4 : 6));
+  const art = stamp(emblem.rows, emblem.colors, p, 0, 0);
+  return at(ex, ey, pet.stage === 'elder' ? `<g class="lp-glow">${art}</g>` : art, 'lp-px lp-float', 'animation-duration:2.8s');
+}
+
 // The pet with its shadow and mood effects, standing with its feet at (cx, footY).
 // `frame` is the box it lives in (x, y, w, h, groundY, groundH), used by effects like confetti.
 export function renderActor(pet, frame) {
@@ -328,7 +353,9 @@ export function renderActor(pet, frame) {
   const s = { ...frame, pet, bw, ox, oy, pp: frame.mini ? 2 : 3, headTop: oy + minY * px };
   const shadow = `<ellipse cx="${cx}" cy="${footY - 1}" rx="${Math.round(bw * 0.38)}" ry="${Math.max(2, Math.round(px * 0.6))}" class="lp-shadow"/>`;
   const body = shadow
+    + palFx(s)
     + petGroup(s, comp)
+    + emblemFx(s)
     + moodFx(s)
     + (pet.shiny && pet.mood !== 'egg' ? sparkles(s, 4, ['#ffe066', '#ffffff']) : '')
     + (pet.aura && pet.mood !== 'egg' ? sparkles(s, 5, ['#ffd23f', '#fff3a6', '#ffffff']) : '')

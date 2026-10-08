@@ -8,7 +8,7 @@ on:
     types: [published] # throw a party the moment you ship
   workflow_dispatch: # "Run workflow" button for impatient owners
   issue_comment:
-    types: [created] # talk to your pet: /pet, /pet pat, /pet checkup
+    types: [created] # talk to your pet: /pet, /pet feed, /pet play, /pet quests
 
 permissions:
   contents: write # publish the pet to the `legacypet` branch
@@ -32,3 +32,4 @@ jobs:
           # scenery: beach   # auto | meadow | garden | pond | beach | reef | jungle | desert
           # alerts: true     # open an issue when the pet stays sick or turns zombie
           # vacation: until 2027-01-05  # going away? the pet won't starve meanwhile
+          # wear: cap, bird  # dress it up with unlocked items (see /pet wardrobe)

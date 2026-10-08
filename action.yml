@@ -54,6 +54,9 @@ inputs:
   vacation:
     description: 'Going away? "until 2027-01-05" or "2026-12-20..2027-01-05". Hunger pauses, the pet relaxes on the beach and the days away never count. Max 60 days. Maintainers can also comment /pet vacation 14 and /pet back.'
     default: ''
+  wear:
+    description: 'Dress the pet up with items it has unlocked: one hat, one face item and one pal, e.g. "cap, bird". Comment /pet wardrobe to see them. Leave empty to let maintainers use /pet wear instead; "none" for nothing.'
+    default: ''
   alerts:
     description: 'Open one GitHub issue when the pet needs care, kept up to date and closed when it recovers. true (sick + zombie), false, or a list: sick, zombie, hungry, sad. Needs issues: write.'
     default: 'false'
@@ -92,6 +95,14 @@ outputs:
     description: 'true while the pet is on vacation'
   alert-issue:
     description: 'Number of the open care-alert issue, or empty'
+  path:
+    description: 'Evolution path once the pet has evolved: swift, guardian, social or sage (empty before)'
+  quest-stars:
+    description: 'Quest stars earned so far'
+  quests-done:
+    description: "Comma-separated ids of this week's finished quests"
+  wearing:
+    description: 'Comma-separated ids of the items the pet wears'
 
 runs:
   using: 'node24'

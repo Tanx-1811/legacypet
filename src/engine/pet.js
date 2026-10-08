@@ -4,8 +4,13 @@ import { createRng } from '../util/rng.js';
 import { DAY, isoDay } from '../util/time.js';
 import { evaluateAchievements } from './achievements.js';
 import { holidayFor, seasonFor } from './calendar.js';
+import { applyCare, careBonus } from './care.js';
+import { applyPathBonus, evolve, pathById } from './evolution.js';
 import { isShiny, petName } from './identity.js';
 import { AURA_DAYS, blissStreak, chooseAccessories, deriveMood } from './mood.js';
+import { itemById, parseWear, resolveWear, unlockedItems, wearCommand } from './items.js';
+import { VITALS } from './memory.js';
+import { evaluateQuests, questJoy } from './quests.js';
 import { levelEvents, levelProgress, rankFor } from './rank.js';
 import { chooseSpeech } from './speech.js';
 import { activeVacation, lastDay, parseVacation, resolveVacations, vacationDays } from './vacation.js';
@@ -16,8 +21,10 @@ import { computeFacts, computeGrowth, computeVitals } from './vitals.js';
 //
 // options: species, name, lang, scenery (the pet's home; auto = the species' own),
 //          vacation (the input, e.g. "until 2027-01-05"), vacationCommand ({ name: 'vacation', days } | { name: 'back' }),
-//          plus preview-only overrides (shiny, mood, stage, holiday, season, aura, levelUp: true | 'rank')
-//          used by the gallery and demos.
+//          wear (the input, e.g. "cap, bird"), wearCommand (the argument of `/pet wear`),
+//          care ({ name: 'feed' | 'play' | 'pat', user } from a `/pet` comment),
+//          plus preview-only overrides (shiny, mood, stage, holiday, season, aura, levelUp: true | 'rank',
+//          path, unlockAll: wear locked items) used by the gallery, demos and the playground.
 export function buildPet({ snapshot, prevState = null, options = {}, now = new Date() }) {
   const lang = resolveLang(options.lang);
   const tr = strings(lang);
@@ -44,29 +51,59 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
   if (options.stage) growth.stage = options.stage;
   const holiday = options.holiday !== undefined ? options.holiday : holidayFor(now);
   const season = options.season ?? seasonFor(now);
+  const history = prevState?.history ?? [];
 
-  const derived = options.mood
+  // Boosts the pet earned by playing: its evolution path, quests finished earlier this week
+  // and today's snacks and games. They count before the mood is chosen.
+  const evolution = evolve({
+    stage: growth.stage, history, prev: prevState?.evolution, preview: options.path, date, snapshot, facts,
+  });
+  applyPathBonus(vitals, evolution);
+  vitals.joy = Math.min(100, vitals.joy + questJoy(prevState?.quests, now));
+  const moodOf = () => (options.mood
     ? { mood: options.mood, events: [] }
-    : deriveMood({ snapshot, facts, vitals, growth, modifiers, prevState, now, holiday });
+    : deriveMood({ snapshot, facts, vitals, growth, modifiers, prevState, now, holiday }));
+  const { care, outcome: careOutcome } = applyCare({
+    prev: prevState?.care, action: options.care, date, mood: options.care ? moodOf().mood : null,
+  });
+  const bonus = careBonus(care, date);
+  for (const key of ['fullness', 'energy', 'joy']) vitals[key] = Math.min(100, vitals[key] + bonus[key]);
+
+  const derived = moodOf();
   const { mood, events } = derived;
   if (mood !== 'egg') {
     const leveled = options.levelUp ? ['levelUp', ...(options.levelUp === 'rank' ? ['rankUp'] : [])] : levelEvents(prevState, growth.level);
     events.push(...leveled);
   }
   if (mood === 'egg') growth.stage = 'egg';
+  if (evolution?.fresh && mood !== 'egg') events.push('evolved');
+
+  const quests = evaluateQuests({
+    snapshot, history, prev: prevState?.quests, stars: prevState?.questStars ?? 0, fullName, now,
+    today: { date, mood, vitals: VITALS.map((k) => vitals[k] ?? null) },
+  });
+  if (quests.fresh.length) events.push('questDone');
+  if (quests.perfect && quests.earned > quests.fresh.length) events.push('perfectWeek');
 
   const auraDays = blissStreak(mood, date, prevState?.history);
   const aura = options.aura ?? auraDays >= AURA_DAYS;
   const shiny = options.shiny ?? isShiny(fullName);
   const home = vacation ? 'beach' : pickHome(options.scenery, species);
   const name = options.name?.trim() || petName(fullName);
-  const accessories = chooseAccessories({ mood, holiday, events, growth, facts, vitals, species });
-  if (vacation && mood !== 'egg' && mood !== 'zombie') accessories.face = 'sunglasses';
   const achievements = evaluateAchievements(
-    { snapshot, facts, vitals, growth, events, shiny, mood, aura },
+    { snapshot, facts, vitals, growth, events, shiny, mood, aura, quests, evolution, care },
     prevState?.achievements ?? {},
     date,
   );
+
+  // The wardrobe: the `wear` input is the source of truth when set; otherwise `/pet wear`
+  // changes what the pet wore last time.
+  const progress = { achievements: achievements.map, stars: quests.stars, friends: care.total };
+  const previousWear = prevState?.wardrobe?.worn ?? [];
+  const requested = parseWear(options.wear) ?? (options.wearCommand != null ? wearCommand(previousWear, options.wearCommand) : previousWear);
+  const wardrobe = { ...resolveWear(requested, progress, { all: options.unlockAll }), unlocked: unlockedItems(progress) };
+  const accessories = dress(chooseAccessories({ mood, holiday, events, growth, facts, vitals, species }), wardrobe.worn, mood);
+  if (vacation && mood !== 'egg' && mood !== 'zombie') accessories.face = 'sunglasses';
 
   const pet = {
     repo: { fullName, owner: snapshot.repo.owner, name: snapshot.repo.name },
@@ -101,7 +138,30 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
     achievements: achievements.list,
     achievementsMap: achievements.map,
     newAchievements: achievements.fresh,
+    evolution: evolution ? { path: evolution.path, since: evolution.since } : null,
+    path: evolution ? pathById(evolution.path) : null,
+    quests,
+    questStars: quests.stars,
+    care,
+    careOutcome,
+    wardrobe,
   };
   pet.speech = chooseSpeech(pet, snapshot, tr, createRng(`${fullName}|${date}|speech`));
   return pet;
+}
+
+// Hats that tell you something about today beat the hat the pet was dressed in.
+const SITUATIONAL_HATS = new Set(['party', 'witch', 'santa', 'nightcap', 'icepack']);
+const FACE_GEAR = { shades: 'sunglasses', glasses: 'glasses', monocle: 'monocle' };
+
+function dress(accessories, worn, mood) {
+  const out = { ...accessories, pal: null };
+  if (mood === 'egg') return out;
+  for (const id of worn) {
+    const { slot } = itemById(id);
+    if (slot === 'face') out.face = FACE_GEAR[id];
+    else if (slot === 'pal') out.pal = id;
+    else if (!SITUATIONAL_HATS.has(out.hat)) out.hat = id;
+  }
+  return out;
 }

@@ -24,6 +24,7 @@ export function describe(pet) {
 function subline(pet, tr) {
   const parts = [`${pet.rank.emoji} ${tr.level(pet.level)}`, tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])];
   if (pet.shiny) parts.push(`✨ ${tr.shiny}`);
+  if (pet.path) parts.push(`${pet.path.emoji} ${tr.paths[pet.path.id]}`);
   const withTrait = [...parts, tr.traits[pet.species.trait]].join(' · ');
   return textWidth(withTrait) <= 42 ? withTrait : truncate(parts.join(' · '), 42);
 }
@@ -60,12 +61,26 @@ function stats(pet, tr) {
   return out;
 }
 
+// The trophy shelf, and on the right this week's quests and the pet's quest stars.
 function trophies(pet, tr) {
-  if (!pet.achievements.length) return `<text x="${X}" y="226" class="lp-foot">${esc(tr.noAchievements)}</text>`;
-  return pet.achievements
-    .slice(0, 12)
+  const q = pet.quests;
+  const quest = q?.list.length && pet.mood !== 'egg' && pet.mood !== 'hibernating'
+    ? `<text x="${R}" y="228" text-anchor="end" class="lp-quest">📜 ${q.completed}/${q.list.length} · ⭐ ${pet.questStars ?? 0}</text>`
+    : '';
+  if (!pet.achievements.length) return `<text x="${X}" y="226" class="lp-foot">${esc(tr.noAchievements)}</text>${quest}`;
+  const max = quest ? 8 : 12;
+  // When the shelf is full, keep the newest trophies on it (in their usual order).
+  const newest = [...pet.achievements]
+    .sort((a, b) => Number(b.isNew) - Number(a.isNew) || String(b.unlockedAt).localeCompare(String(a.unlockedAt)))
+    .slice(0, max - 1)
+    .map((a) => a.id);
+  const shown = pet.achievements.length > max ? pet.achievements.filter((a) => newest.includes(a.id)) : pet.achievements;
+  const more = pet.achievements.length - shown.length;
+  return shown
     .map((a, i) => `<text x="${X + i * 23}" y="228" class="lp-trophy${a.isNew ? ' lp-new' : ''}">${a.emoji}</text>`)
-    .join('');
+    .join('')
+    + (more ? `<text x="${X + shown.length * 23 + 2}" y="226" class="lp-more">+${more}</text>` : '')
+    + quest;
 }
 
 export function renderCard(pet, { theme = 'auto' } = {}) {

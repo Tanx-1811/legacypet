@@ -16,7 +16,7 @@ Một con thú pixel sống trong README, cảm nhận đúng tình trạng dự
 
 <img src="docs/gallery/hero/hero-vi.svg" alt="Bánh Bao Đói Meo, một con mèo đang đói" width="520">
 
-**🆕 Bản 1.1:** [biệt đội anh hùng](#-biệt-đội-anh-hùng) · [7 ngôn ngữ](#-7-ngôn-ngữ) · [lệnh `/pet`](#-nói-chuyện-với-thú-pet) · [siêu hình thái](#-siêu-hình-thái) · [quê nhà](#️-quê-nhà-của-từng-loài) · [xem tất cả](CHANGELOG.md)
+**🆕 Bản 1.3:** [nhiệm vụ tuần](#-nhiệm-vụ-tuần) · [tiến hóa](#-tiến-hóa) · [tủ đồ](#-tủ-đồ) · [cho ăn, chơi với thú](#-ăn-vặt-và-chơi-đùa) · [playground nuôi thử](#️-playground) · [xem tất cả](CHANGELOG.md)
 
 </div>
 
@@ -235,6 +235,65 @@ Ban đêm (dark mode) có sao băng, mùa đông có cả cực quang:
 Tâm trạng cũng đổi cảnh: phấn khích hay tiệc tùng thì có cầu vồng, ngày tiệc giăng cờ dây, còn thú zombie thì cây trụi lá, dơi bay và sương mù phủ kín.
 Muốn chuyển nhà? Đặt `scenery: beach` (hoặc `--scenery beach` trong CLI).
 
+## 🎮 Chơi cùng thú
+
+### 📜 Nhiệm vụ tuần
+
+Mỗi thứ Hai, thú chọn ba mục tiêu nhỏ dựa trên những gì repo của bạn thật sự làm: commit vào 3 ngày khác nhau, đẩy 10 commit,
+giữ CI xanh 4 ngày, trả lời mọi issue đang chờ, merge 2 PR, phát hành một bản release, có commit từ 2 người, giữ thú vui 3 ngày,
+hoặc không để gì bị bỏ xó. Repo không có CI sẽ không bao giờ nhận nhiệm vụ về CI.
+
+Mỗi nhiệm vụ xong được ⭐ một sao nhiệm vụ và +5 niềm vui tới hết tuần; xong cả ba được thêm hai sao.
+Thẻ hiện tiến độ tuần (`📜 2/3 · ⭐ 14`), `/pet quests` cho xem chi tiết và nhật ký ghi lại từng nhiệm vụ.
+
+### 🧬 Tiến hóa
+
+Sau một tuần trưởng thành, thú tiến hóa theo một trong bốn hệ, tùy cách bạn chăm repo.
+Hệ đã chọn là vĩnh viễn, có huy hiệu lơ lửng cạnh đầu và +6 cho chỉ số tương ứng. Ở giai đoạn lão làng, huy hiệu phát sáng.
+
+| Hệ | Đến từ | Thưởng |
+| --- | --- | --- |
+| 🌪️ Tốc Hành | commit đều tay, chuỗi dài | +6 năng lượng |
+| 🛡️ Hộ Vệ | CI luôn xanh | +6 sức khỏe |
+| 💞 Kết Nối | nhiều người đóng góp, PR được merge, issue được trả lời | +6 niềm vui |
+| 📚 Hiền Triết | hồ sơ cộng đồng đầy đủ và có release | +6 độ no |
+
+<img src="docs/gallery/evolution/swift.svg" width="110"> <img src="docs/gallery/evolution/guardian.svg" width="110"> <img src="docs/gallery/evolution/social.svg" width="110"> <img src="docs/gallery/evolution/sage.svg" width="110">
+
+### 👗 Tủ đồ
+
+16 món đồ: 8 loại mũ, 3 món cho khuôn mặt và 5 bạn đồng hành bay theo thú.
+Món nào cũng mở khóa bằng cách chơi: nhờ cúp (🎧 tai nghe khi đạt 100 commit, 🧙 mũ phù thủy ở Lv.50, 👻 ma nhỏ khi hồi sinh),
+sao nhiệm vụ (🐦 chim xanh sau sao đầu tiên, 🛸 đĩa bay mini ở 25 sao) hoặc bạn bè (🐤 gà con sau 5 lần xoa đầu, cho ăn hay chơi).
+
+```yaml
+      - uses: Tanx-1811/legacypet@v1
+        with:
+          wear: cap, bird   # một mũ, một món cho mặt, một bạn đồng hành
+```
+
+Hoặc để maintainer mặc đồ ngay trong issue bằng `/pet wear headphones` (`/pet wear none` để cởi). `/pet wardrobe` liệt kê mọi món và cách mở khóa.
+Mũ mang ý nghĩa trong ngày (mũ tiệc, túi chườm khi ốm, mũ ngủ) vẫn được ưu tiên hôm đó.
+
+<img src="docs/gallery/wardrobe/card-vi.svg" width="520" alt="Thỏ đeo nơ, có bướm bay theo và huy hiệu hệ Kết Nối">
+
+### 🍪 Ăn vặt và chơi đùa
+
+Ai cũng có thể bình luận `/pet feed`, `/pet play` hay `/pet pat`. Thú trả lời kèm ảnh của nó, và mỗi bữa ăn vặt hay trò chơi
+cộng một chút chỉ số trong ngày (+4 mỗi lần, tối đa +12). Mỗi người chỉ được làm mỗi việc một lần mỗi ngày, nên spam bình luận
+không thể nuôi một con thú bị bỏ bê: commit vẫn là bữa chính. Thú nhớ cả những người bạn thân nhất.
+
+### 🕹️ Playground
+
+[Playground](https://tanx-1811.github.io/legacypet/) chạy đúng engine đó ngay trong trình duyệt, có tiếng Việt:
+
+- **Nở thú**: xem repo công khai bất kỳ nở ra con gì, kèm khám sức khỏe, nhiệm vụ tuần này và hệ tiến hóa đang nghiêng về.
+- **Nuôi thử**: tự quyết repo làm gì mỗi ngày (commit, CI, PR, issue, release), cho ăn, chơi, mặc đồ, gõ lệnh `/pet`,
+  tua nhanh một tuần hoặc để chế độ tự chơi chạy. Có thông báo mỗi lần lên cấp, xong nhiệm vụ hay mở cúp.
+- **Sổ tay**: mọi loài, tâm trạng, hệ tiến hóa, món đồ, nhiệm vụ, cấp bậc, cúp và quê nhà, kèm cách đạt được.
+- **Công viên**: ghép Công viên thú từ các repo bất kỳ.
+- **Nhận nuôi**: chọn một lần, chép lệnh, file workflow và đoạn README.
+
 ## 💬 Nói chuyện với thú: `/pet`
 
 Bình luận trong bất kỳ issue hay pull request nào, thú sẽ trả lời ngay trong thread, bằng ngôn ngữ của nó:
@@ -243,6 +302,10 @@ Bình luận trong bất kỳ issue hay pull request nào, thú sẽ trả lời
 | --- | --- |
 | `/pet` | Thẻ, tâm trạng, chỉ số và kết quả khám sức khỏe |
 | `/pet pat` | Xoa đầu 💕 |
+| `/pet feed` · `/pet play` | Cho ăn vặt hoặc chơi cùng, thú trả lời kèm ảnh (mỗi người một lần mỗi ngày) |
+| `/pet quests` | Nhiệm vụ tuần này, thanh tiến độ và số sao nhiệm vụ |
+| `/pet wardrobe` | Mọi món đồ, đồ đang mặc và đồ còn khóa |
+| `/pet wear cap` | Mặc đồ cho thú (`/pet wear none` để cởi). Chỉ maintainer |
 | `/pet checkup` | Chỉ phần khám sức khỏe |
 | `/pet level` | Cấp, hạng, thanh XP và số commit cần để lên cấp, lên hạng |
 | `/pet trophies` | Kệ cúp, kèm ngày mở khóa và các cúp còn khóa |
@@ -297,7 +360,7 @@ Rồng Thần tính mỗi commit bằng 1,5 nên leo hạng nhanh hơn.
 ## Còn gì nữa?
 
 - 🎂 Lớn lên: Trứng → Bé (có mầm cây) → Trưởng thành → Lão làng (đeo kính một tròng)
-- 🏆 20 cúp vĩnh viễn: Bốc lửa (chuỗi 7 ngày), Hồi sinh, Siêu sao (kèm vương miện), Siêu hình thái, Kỳ cựu (Lv.25), Bậc thầy (Lv.50), Cấp tối đa (Lv.99)…
+- 🏆 24 cúp vĩnh viễn: Bốc lửa (chuỗi 7 ngày), Hồi sinh, Siêu sao (kèm vương miện), Siêu hình thái, Kỳ cựu (Lv.25), Bậc thầy (Lv.50), Cấp tối đa (Lv.99)…
 - 🍂 Theo mùa: hoa xuân, đom đóm hè, lá thu, tuyết đông. Ở dark mode thì thành ban đêm có trăng sao, sao băng và cực quang mùa đông
 - 🧧 Ngày lễ: Tết có đèn lồng, pháo hoa và cành mai vàng rụng cánh, Halloween có mũ phù thủy và đàn dơi, Giáng sinh có mũ ông già Noel, người tuyết và dây đèn nhấp nháy
 - 💬 Lời thoại theo dữ liệu thật: *"Này... issue #12 chờ phản hồi 87 ngày rồi đó"*
@@ -316,9 +379,10 @@ Rồng Thần tính mỗi commit bằng 1,5 nên leo hạng nhanh hơn.
 | `commands` | `true` | Trả lời lệnh `/pet` trong issue và PR |
 | `vacation` | | Đi nghỉ: `until 2027-01-05` hoặc `2026-12-20..2027-01-05` (tối đa 60 ngày) |
 | `alerts` | `false` | `true` (ốm + zombie) hoặc danh sách `sick`, `zombie`, `hungry`, `sad`. Cần `issues: write` |
+| `wear` | | Đồ đã mở khóa muốn mặc, ví dụ `cap, bird`. Để trống thì dùng `/pet wear` |
 | `keepalive` | `true` | Không để GitHub tạm dừng lịch chạy sau 60 ngày im ắng (cần `actions: write`) |
 
-**Output:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `level-up`, `rank`, `on-vacation`, `alert-issue`, `svg-path`.
+**Output:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `level-up`, `rank`, `on-vacation`, `alert-issue`, `path`, `quest-stars`, `quests-done`, `wearing`, `svg-path`.
 Ví dụ, chỉ báo cho team khi thú *vừa* bị ốm:
 
 ```yaml
