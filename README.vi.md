@@ -66,17 +66,20 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  issue_comment:
+    types: [created] # nói chuyện với thú bằng /pet
 
 permissions:
   contents: write
   actions: write
-  issues: read
-  pull-requests: read
+  issues: write
+  pull-requests: write
   checks: read
   statuses: read
 
 jobs:
   legacypet:
+    if: github.event_name != 'issue_comment' || startsWith(github.event.comment.body, '/pet')
     runs-on: ubuntu-latest
     steps:
       - uses: Tanx-1811/legacypet@v1
@@ -107,7 +110,7 @@ Xong! Thú cưng sống trên nhánh riêng `legacypet`, nên lịch sử nhánh
 | 🤩 Phấn khích | Trung bình các chỉ số từ 80 trở lên |
 | 😊 Vui | Mọi thứ còn lại |
 
-## Bảy loài, mỗi loài một đặc tính
+## 13 loài, mỗi loài một đặc tính
 
 | Loài | Đặc tính | Tác dụng |
 | --- | --- | --- |
@@ -119,6 +122,27 @@ Xong! Thú cưng sống trên nhánh riêng `legacypet`, nên lịch sử nhánh
 | Rắn | Kiên nhẫn | Đói chậm hơn 40% (repo Python luôn ra rắn 🐍) |
 | Xương rồng | Chịu hạn | Đói chậm gấp 4 lần, hợp với dự án đã hoàn thành |
 
+### 🦸 Biệt đội anh hùng
+
+Sáu nhân vật nguyên bản lấy cảm hứng từ anime và phim hoạt hình siêu anh hùng, mỗi bé mang một luật chơi mới:
+
+| | Loài | Đặc tính | Tác dụng |
+| :-: | --- | --- | --- |
+| <img src="docs/gallery/species/ninja.svg" width="70"> | Cáo Ninja (`ninja`) | Phân thân | Mỗi ngày trong chuỗi commit +4 năng lượng (tối đa +24) |
+| <img src="docs/gallery/species/mecha.svg" width="70"> | Người máy Mecha (`mecha`) | Lò phản ứng | CI xanh thì năng lượng không bao giờ dưới 40 |
+| <img src="docs/gallery/species/dragon.svg" width="70"> | Rồng Thần (`dragon`) | Sức mạnh cổ xưa | Lên cấp nhanh hơn 50% |
+| <img src="docs/gallery/species/bunny.svg" width="70"> | Thỏ Phép Thuật (`bunny`) | Ánh sao | +2 niềm vui cho mỗi 100 sao (tối đa +20) |
+| <img src="docs/gallery/species/bat.svg" width="70"> | Hiệp sĩ Bóng đêm (`bat`) | Canh gác | +15 niềm vui khi không issue nào phải chờ phản hồi |
+| <img src="docs/gallery/species/hero.svg" width="70"> | Siêu Cún (`hero`) | Thân thép | CI đỏ cũng không kéo sức khỏe xuống dưới 40 |
+
+Thú đã nở thì giữ nguyên loài, kể cả khi có loài mới được thêm vào.
+
+### 💥 Siêu hình thái
+
+Giữ cho thú **phấn khích 7 ngày liền** là nó biến hình: hào quang vàng rực và cúp 💥 Siêu hình thái.
+
+<img src="docs/gallery/aura/ninja.svg" width="90"> <img src="docs/gallery/aura/dragon.svg" width="90"> <img src="docs/gallery/aura/bunny.svg" width="90"> <img src="docs/gallery/aura/hero.svg" width="90">
+
 Cứ 64 repo thì có 1 repo nở ra thú **lấp lánh (shiny)** ✨, và không có cách nào quay lại.
 
 ### Chọn kiểu hiển thị
@@ -129,6 +153,25 @@ Cứ 64 repo thì có 1 repo nở ra thú **lấp lánh (shiny)** ✨, và khôn
 | `pet-mini.svg` | Thẻ nhỏ, đặt ở sidebar hoặc bảng |
 | `pet-badge.svg` | Badge <img src="docs/gallery/badges/ecstatic.svg"> đặt cạnh các badge khác |
 | `park.svg` | Công viên thú trên profile README |
+| `pet-shields.json` | Badge kiểu [shields.io](https://shields.io/badges/endpoint-badge) |
+
+## 💬 Nói chuyện với thú: `/pet`
+
+Bình luận trong bất kỳ issue hay pull request nào, thú sẽ trả lời ngay trong thread, bằng ngôn ngữ của nó:
+
+| Lệnh | Thú trả lời |
+| --- | --- |
+| `/pet` | Thẻ, tâm trạng, chỉ số và kết quả khám sức khỏe |
+| `/pet pat` | Xoa đầu 💕 |
+| `/pet checkup` | Chỉ phần khám sức khỏe |
+| `/pet help` | Danh sách lệnh |
+
+Cần trigger `issue_comment` và quyền `issues: write` / `pull-requests: write` (đã có sẵn trong workflow mẫu ở trên).
+
+## 🌍 7 ngôn ngữ
+
+`lang:` nhận `en`, `vi`, `ja` (日本語), `zh` (中文), `ko` (한국어), `es` (Español), `fr` (Français).
+Tiếng Nhật, Trung, Hàn được ngắt dòng đúng trong bong bóng thoại.
 
 ## 🏞️ Công viên thú
 
@@ -144,11 +187,13 @@ ví dụ *"3 issue từ cộng đồng đang chờ phản hồi đầu tiên. L�
 ## Còn gì nữa?
 
 - 🎂 Lớn lên: Trứng → Bé (có mầm cây) → Trưởng thành → Lão làng (đeo kính một tròng)
-- 🏆 14 cúp vĩnh viễn: Bốc lửa (chuỗi 7 ngày), Hồi sinh, Siêu sao (kèm vương miện)…
+- 🏆 17 cúp vĩnh viễn: Bốc lửa (chuỗi 7 ngày), Hồi sinh, Siêu sao (kèm vương miện), Phản hồi thần tốc, Kỷ niệm…
 - 🍂 Theo mùa: hoa xuân, đom đóm hè, lá thu, tuyết đông. Ở dark mode thì thành ban đêm có trăng sao
 - 🧧 Ngày lễ: Tết có đèn lồng và pháo hoa, Halloween có mũ phù thủy, Giáng sinh có mũ ông già Noel
 - 💬 Lời thoại theo dữ liệu thật: *"Này... issue #12 chờ phản hồi 87 ngày rồi đó"*
 - ♿ Hỗ trợ trình đọc màn hình và tự tắt chuyển động khi người xem bật reduced motion
+
+- 🆕 Tự báo tính năng mới: `@v1` luôn trỏ tới bản 1.x mới nhất nên bạn được cập nhật tự động. Lần đầu chạy bản mới, trang Actions hiện thông báo và job summary liệt kê **có gì mới**, kèm hướng dẫn nếu cần sửa workflow
 
 Xem chi tiết công thức tính chỉ số, cấu hình và FAQ trong [README tiếng Anh](README.md).
 

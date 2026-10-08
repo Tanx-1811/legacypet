@@ -22,7 +22,9 @@ node src/cli.js demo --species cat --mood party   # try one pet
    - `cheeks`: the left pixel of each 2×1 blush.
    - `hat`: `[center column, top row of the head]`. Hats sit on that row.
 4. Give it a `trait`: one rule it bends. The options in `modifiers` are
-   `hungerRate`, `ciPenalty`, `issuePenalty`, `releaseJoy` and `teamEnergy` (see `src/engine/vitals.js`).
+   `hungerRate`, `ciPenalty`, `issuePenalty`, `releaseJoy`, `teamEnergy`, `streakEnergy`, `ciEnergyFloor`,
+   `inboxJoy`, `healthFloor`, `xpRate` and `starJoy` (see `src/engine/vitals.js`).
+   Optional: catchphrases in `lines.species.<id>` of each language file, mixed in on good days.
    A brand-new kind of trait is welcome too, as long as you explain it in the PR.
 5. Register it in `src/sprites/index.js`, and add its name and trait to every file in `src/i18n/`.
 6. Run `npm run gallery`, open `docs/gallery/index.html` and look at it in every mood, in light and dark.
@@ -34,13 +36,31 @@ Tips: draw in a monospace editor, keep it to about 6 colors, and make sure the s
 
 Copy `src/i18n/en.js` to `src/i18n/<code>.js`, translate it, and register it in `src/i18n/index.js`.
 Lines can be plain strings or functions of `v` (see `speechVars` in `src/engine/speech.js` for every variable).
-Keep the speech bubble short: two lines of about 36 characters.
+Keep the speech bubble short: two lines of about 36 characters (CJK characters count double).
+Keys you leave out fall back to English, and `node --test` lists any that are missing.
 
 ## Add dialogue, a holiday or a trophy
 
 - **Dialogue** lives in `lines` in each language file. Funnier, kinder and more specific beats generic.
 - **Holidays** live in `src/engine/calendar.js`. Add the hat or scene effect in `src/engine/mood.js` and `src/render/scene.js`.
 - **Trophies** live in `src/engine/achievements.js`. They should reward a good maintenance habit, never grinding.
+
+## Ship a release (maintainers)
+
+Users pin `Tanx-1811/legacypet@v1`, so a release reaches everyone on their next run. To tell them what changed:
+
+1. Add an entry at the top of `CHANGELOG` in `src/whatsnew.js`, and bump `VERSION` there and in `package.json` (a test checks they match).
+   If a feature needs users to edit their workflow, give the entry a `workflow: { why, test }` so the summary tells them how.
+2. Update `examples/legacypet.yml` and `workflowYaml` in `src/setup.js` if the workflow changed.
+3. Tag and move the major tag:
+
+   ```sh
+   git tag v1.1.0 && git tag -f v1 && git push origin v1.1.0 && git push -f origin v1
+   ```
+
+4. Publish a GitHub Release for `v1.1.0` with the same notes, so people watching releases get an email.
+
+Breaking changes (renamed inputs, new required permissions) go to a new major tag: `v2`.
 
 ## Ground rules
 

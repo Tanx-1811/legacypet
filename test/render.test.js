@@ -108,6 +108,6 @@ test('each species lives in a known home, and scenery can move it', () => {
 test('the park gets scenery too and stays a reasonable size', () => {
   const pets = SPECIES_IDS.slice(0, 8).map((species) => buildPet({ snapshot: mockSnapshot({ mood: 'party', now: NOW, fullName: `me/${species}` }), now: NOW, options: { species, holiday: 'christmas' } }));
   const svg = renderPark(pets, { owner: 'me' });
-  assertValidSvg(svg.replace(/^/, ''), 'park');
+  assertValidSvg(svg, 'park');
   assert.match(svg, /lp-spin/);
 });

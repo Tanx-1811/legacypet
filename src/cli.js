@@ -226,7 +226,7 @@ function gallery() {
   add('Badges', MOODS.map((mood) => ({ label: mood, src: save('badges', `${mood}.svg`, renderBadge(demoPet({ mood, species: MOOD_STARS[mood], now, name: 'Mochi' }))) })));
   add('Moods', MOODS.map((mood) => ({ label: mood, src: mini('moods', `${mood}.svg`, demoPet({ mood, species: MOOD_STARS[mood], now })) })));
   add('Species', SPECIES_IDS.map((species) => ({ label: species, src: mini('species', `${species}.svg`, demoPet({ mood: 'happy', species, now })) })));
-  add('Homes (each species lives somewhere special; set `scenery` to move)', HOMES.map((home) => ({ label: home, src: card('homes', `${home}.svg`, demoPet({ mood: HOME_DEMO[home][1], species: HOME_DEMO[home][0], scenery: home, season: 'summer', now })), wide: true })));
+  add('Homes (each species lives somewhere special; set `scenery` to move)', HOMES.map((home) => ({ label: home, src: mini('homes', `${home}.svg`, demoPet({ mood: HOME_DEMO[home][1], species: HOME_DEMO[home][0], scenery: home, season: 'summer', now })) })));
   add('Homes at night', HOMES.map((home) => ({ label: home, src: mini('homes', `${home}-night.svg`, demoPet({ mood: 'happy', species: HOME_DEMO[home][0], scenery: home, season: home === 'meadow' ? 'winter' : 'summer', now }), 'dark'), dark: true })));
   add('Shiny variants (1 in 64 repos)', SPECIES_IDS.map((species) => ({ label: `✨ ${species}`, src: mini('shiny', `${species}.svg`, demoPet({ mood: 'ecstatic', species, shiny: true, now })) })));
   add('Super form (7 ecstatic days in a row)', HERO_SQUAD.map((species) => ({ label: `💥 ${species}`, src: mini('aura', `${species}.svg`, demoPet({ mood: 'ecstatic', species, aura: true, now })) })));
