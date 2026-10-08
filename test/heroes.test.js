@@ -143,3 +143,26 @@ test('what\'s new: only for existing pets, only releases they have not seen', ()
   assert.ok(wf.workflow.test('on:\n  issue_comment:\n'));
   assert.ok(!wf.workflow.test('on:\n  schedule:\n'));
 });
+
+test('every species has a signature move, shown only on good days', async () => {
+  const { MOVES, moveOf } = await import('../src/render/moves.js');
+  const { renderMini } = await import('../src/render/mini.js');
+  const seen = new Set();
+  for (const [id, species] of Object.entries(SPECIES)) {
+    assert.ok(MOVES[species.move], `${id} needs a move from moves.js, got ${species.move}`);
+    seen.add(species.move);
+    const happy = renderCard(buildPet({ snapshot: mockSnapshot({ mood: 'happy', now: NOW }), now: NOW, options: { species: id, mood: 'happy', holiday: null } }));
+    assert.match(happy, new RegExp(`class="lp-mv-${moveOf(species)}"`), id);
+    assert.match(happy, new RegExp(`@keyframes lp-mv-${moveOf(species)}\{`), id);
+    const sick = renderMini(buildPet({ snapshot: mockSnapshot({ mood: 'sick', now: NOW }), now: NOW, options: { species: id, mood: 'sick', holiday: null } }));
+    assert.doesNotMatch(sick, /lp-mv-/, `${id} should not show off while sick`);
+  }
+  assert.equal(seen.size, Object.keys(SPECIES).length, 'every species moves its own way');
+  const ninja = renderCard(buildPet({ snapshot: mockSnapshot({ mood: 'party', now: NOW }), now: NOW, options: { species: 'ninja', mood: 'party', holiday: null } }));
+  const ref = /<use href="#([^"]+)"/.exec(ninja)?.[1];
+  assert.ok(ref && ninja.includes(`id="${ref}"`), 'shadow clones point at the drawn pet');
+  const mecha = renderCard(buildPet({ snapshot: mockSnapshot({ mood: 'ecstatic', now: NOW }), now: NOW, options: { species: 'mecha', mood: 'ecstatic', holiday: null } }));
+  assert.match(mecha, /lp-fx-flames/);
+  const egg = renderCard(buildPet({ snapshot: mockSnapshot({ mood: 'egg', now: NOW }), now: NOW, options: { species: 'ninja', holiday: null } }));
+  assert.doesNotMatch(egg, /lp-mv-|<use /);
+});
