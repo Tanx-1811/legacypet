@@ -1,7 +1,7 @@
 // LegacyPet for the desktop: the same app as `legacypet app`, in its own window, with a
 // menu bar (tray) icon, a pet that sits on the desktop and native notifications.
 // All the work happens in ../src (bundled into ./bundle for the packaged app).
-import { app, BrowserWindow, dialog, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -232,6 +232,12 @@ function notify(event) {
   note.on('click', () => showMain(`#/home/${event.projectId}`));
   note.show();
 }
+
+// The desktop pet's ↗ button opens the main window on that pet.
+ipcMain.on('legacypet:show-main', (event, hash) => {
+  if (!isOwn(event.senderFrame?.url ?? '')) return;
+  showMain(/^#\/[\w/-]*$/.test(hash) ? hash : undefined);
+});
 
 app.on('window-all-closed', () => { /* stay in the menu bar / tray */ });
 app.on('activate', () => showMain());
