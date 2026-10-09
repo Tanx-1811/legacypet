@@ -3,7 +3,9 @@
 import { api, byNeed, desktop, LOCAL, MODE, petOf } from './local.js';
 
 export function homeViews(kit) {
-  const { h, img, svgSrc, toast, t, tr, store, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP } = kit;
+  const { h, svgSrc, toast, t, tr, store, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP } = kit;
+  // replaceChildren() would print "null" for a missing piece: drop those first.
+  const fill = (el, ...kids) => el.replaceChildren(...kids.flat().filter((k) => k != null && k !== false && k !== ''));
 
   // ----- Shared state from the local server --------------------------------------
   let state = null;
@@ -73,7 +75,7 @@ export function homeViews(kit) {
     const pathInput = h('input', { type: 'text', placeholder: T.typePath, class: 'mono', spellcheck: 'false', autocomplete: 'off' });
 
     function drawList() {
-      list.replaceChildren(...[...chosen.values()].map((s) => {
+      fill(list, ...[...chosen.values()].map((s) => {
         const box = h('input', { type: 'checkbox', checked: s.checked });
         box.onchange = () => { s.checked = box.checked; };
         const tag = s.label === '~' ? T.wholeHome : s.exists === null ? T.maybe : s.current ? T.current : T.found;
@@ -100,7 +102,7 @@ export function homeViews(kit) {
       const roots = [...chosen.values()].filter((s) => s.checked).map((s) => s.path);
       if (!roots.length) { status.textContent = T.pickOne; status.className = 'status bad'; return; }
       allowBtn.disabled = true;
-      root.replaceChildren(scanningScreen());
+      fill(root, scanningScreen());
       try {
         use(await api('allow', { roots }));
         kit.render();
@@ -111,7 +113,7 @@ export function homeViews(kit) {
     };
 
     const eggs = ['egg', 'happy', 'party'].map((mood, i) => h('img.mini-img', {
-      src: svgSrc(LP.renderMini(kit.demoPet({ mood, species: ['bunny', 'duck', 'cat'][i] }), { theme: cardTheme() })), alt: '',
+      src: svgSrc(LP.renderMini(kit.demoPet({ mood, species: ['bunny', 'duck', 'cat'][i], fullName: `you/${['notes', 'app', 'website'][i]}` }), { theme: cardTheme() })), alt: '',
     }));
     drawList();
     root.append(h('section.onboard',
@@ -132,7 +134,7 @@ export function homeViews(kit) {
   function scanningScreen() {
     const T = t().home;
     return h('div.scanning',
-      h('img.mini-img.wobble', { src: svgSrc(LP.renderMini(kit.demoPet({ mood: 'egg', species: 'duck' }), { theme: cardTheme() })), alt: '' }),
+      h('img.mini-img.wobble', { src: svgSrc(LP.renderMini(kit.demoPet({ mood: 'egg', species: 'duck', fullName: 'you/app' }), { theme: cardTheme() })), alt: '' }),
       h('p', T.scanning));
   }
 
@@ -175,7 +177,8 @@ export function homeViews(kit) {
         h('div.pet-info',
           h('div.pet-name', h('b', s.name), h('span.lv', `Lv.${s.level}`)),
           h('div.pet-repo.mono', p.github ? p.fullName : p.folder),
-          h('div.pet-mood', `${s.emoji} ${L.moods[s.mood]}`, h('span.muted', ` · ${last ? T.lastCommit(ago(last)) : T.noCommits}`)),
+          h('div.pet-mood', `${s.emoji} ${L.moods[s.mood]}`),
+          h('div.pet-when', last ? T.lastCommit(ago(last)) : T.noCommits),
           vitalBars(s.vitals),
           h('div.pills', chips)));
     }
@@ -186,25 +189,25 @@ export function homeViews(kit) {
       const c = counts(all);
       summary.textContent = T.summary(c.all, c.care, c.live);
       updated.textContent = state.scanning ? T.refreshing : state.projects[0]?.now ? T.updated(ago(state.projects.map((p) => p.now).sort().pop())) : '';
-      filters.replaceChildren(...Object.entries(T.filters).map(([id, label]) => h('button', {
+      fill(filters, ...Object.entries(T.filters).map(([id, label]) => h('button', {
         type: 'button', 'aria-pressed': String(filter === id),
         onclick: () => { filter = id; store[filterKey] = id; kit.save(); draw(); },
       }, `${label} `, h('span.count', c[id]))));
       const q = search.value.trim().toLowerCase();
       const shown = all.filter((p) => (filter === 'all' || (filter === 'care' ? p.summary?.attention !== 'good' : p.status === filter))
         && (!q || `${p.folder} ${p.fullName} ${p.summary?.name ?? ''}`.toLowerCase().includes(q)));
-      if (!all.length) grid.replaceChildren(emptyState());
-      else if (!shown.length) grid.replaceChildren(h('div.empty', T.noMatch));
-      else grid.replaceChildren(...shown.map(tile));
+      if (!all.length) fill(grid, emptyState());
+      else if (!shown.length) fill(grid, h('div.empty', T.noMatch));
+      else fill(grid, ...shown.map(tile));
 
       const adoptable = all.filter((p) => p.status === 'none' && p.github && !p.empty);
-      banner.replaceChildren(...(adoptable.length && filter !== 'live'
+      fill(banner, ...(adoptable.length && filter !== 'live'
         ? [h('div.banner',
           h('span', `🥚 ${T.filters.none}: ${adoptable.length}`),
           h('button.primary', { type: 'button', onclick: () => adoptAll(adoptable) }, T.adoptAll(adoptable.length)))]
         : []));
       const recent = (state.events ?? []).filter((e) => Date.now() - Date.parse(e.at) < 3 * 86_400_000).slice(0, 4);
-      feed.replaceChildren(...(recent.length
+      fill(feed, ...(recent.length
         ? [h('div.feed', h('b.small', T.events), ...recent.map((e) => h('a.feed-item', { href: `#/home/${e.projectId}` }, e.text, h('span.muted.small', ` · ${ago(e.at)}`))))]
         : []));
     }
@@ -274,15 +277,15 @@ export function homeViews(kit) {
     async function go(publish) {
       pushBtn.disabled = true;
       onlyBtn.disabled = true;
-      out.replaceChildren(h('p.muted', T.working));
+      fill(out, h('p.muted', T.working));
       try {
         const res = await api(`projects/${project.id}/adopt`, { style, publish, force: update, readme: !update });
         await load();
-        out.replaceChildren(h('p.ok', publish ? (res.publish?.pushed ? T.adopted : '') : T.written));
+        fill(out, h('p.ok', publish ? (res.publish?.pushed ? T.adopted : '') : T.written));
         publishResult(out, res.publish, project);
         if (res.publish?.pushed || !publish) toast(publish ? T.adopted : T.written, 'good');
       } catch (err) {
-        out.replaceChildren(h('div.callout.bad', err.message));
+        fill(out, h('div.callout.bad', err.message));
       } finally {
         pushBtn.disabled = false;
         onlyBtn.disabled = false;
@@ -313,7 +316,7 @@ export function homeViews(kit) {
       go.disabled = true;
       const picked = boxes.filter(([, b]) => b.checked).map(([p]) => p);
       let ok = 0;
-      out.replaceChildren();
+      fill(out);
       for (const p of picked) {
         const line = h('div.small', `⏳ ${p.fullName}`);
         out.append(line);
@@ -378,17 +381,17 @@ export function homeViews(kit) {
     function draw() {
       const p = state.projects.find((x) => x.id === id);
       if (!p) {
-        root.replaceChildren(h('a.back', { href: '#/home' }, T.back), h('div.empty', T.notFound));
+        fill(root, h('a.back', { href: '#/home' }, T.back), h('div.empty', T.notFound));
         return;
       }
       const L = tr();
       const pet = petOf(p, { lang: lang() });
       const s = p.summary;
-      box.title.replaceChildren(
+      fill(box.title,
         h('h2', `${s.emoji} ${pet.displayName}`),
         h('p.lead', { style: { margin: '2px 0 0' } }, h('span.mono', p.github ? p.fullName : p.folder), ` · ${L.moods[s.mood]} · ${pet.rank.emoji} ${L.level(pet.level)}`));
-      box.card.replaceChildren(h('img.card-img', { src: pic(p, 'card'), alt: `${pet.displayName}: ${pet.speech}` }));
-      box.vitals.replaceChildren(...['fullness', 'health', 'joy', 'energy'].map((k) => h('div.vital', L.stats[k], h('b', pet.vitals[k]))));
+      fill(box.card, h('img.card-img', { src: pic(p, 'card'), alt: `${pet.displayName}: ${pet.speech}` }));
+      fill(box.vitals, ...['fullness', 'health', 'joy', 'energy'].map((k) => h('div.vital', L.stats[k], h('b', pet.vitals[k]))));
 
       // GitHub: where the pet lives, and the one button that moves it there.
       const gh = [h('h3', `${T.status[p.status]}`)];
@@ -403,13 +406,13 @@ export function homeViews(kit) {
           type: 'button',
           onclick: async () => {
             btn.disabled = true;
-            out.replaceChildren(h('p.muted', T.working));
+            fill(out, h('p.muted', T.working));
             try {
               const res = await api(`projects/${p.id}/publish`, {});
-              out.replaceChildren();
+              fill(out);
               publishResult(out, res.publish, p);
               await load();
-            } catch (err) { out.replaceChildren(h('div.callout.bad', err.message)); }
+            } catch (err) { fill(out, h('div.callout.bad', err.message)); }
             btn.disabled = false;
           },
         }, T.pushNow);
@@ -417,7 +420,7 @@ export function homeViews(kit) {
       } else {
         gh.push(h('p.muted', T.noneNote), h('div.row', h('button.primary.big', { type: 'button', onclick: () => adoptDialog(p) }, T.adopt)));
       }
-      box.github.replaceChildren(...gh.filter(Boolean));
+      fill(box.github, ...gh.filter(Boolean));
 
       // To do: what only a local copy knows, then the regular checkup.
       const local = [
@@ -425,18 +428,18 @@ export function homeViews(kit) {
         p.ahead ? { level: 'warn', text: T.ahead(p.ahead) } : null,
         p.behind ? { level: 'tip', text: T.behind(p.behind) } : null,
       ].filter(Boolean);
-      box.todo.replaceChildren(
+      fill(box.todo,
         local.length ? h('ul.checkup', { style: { marginBottom: '10px' } }, local.map((x) => h(`li.${x.level}`, h('span.dot'), h('span', x.text)))) : null,
         checkupList(pet, p.snapshot),
         h('p.small.muted', { style: { margin: '10px 0 0' } }, p.snapshot.source === 'github' ? T.sourceGithub : T.sourceLocal));
-      box.quests.replaceChildren(questList(pet, L));
+      fill(box.quests, questList(pet, L));
       const history = p.prev?.history ?? [];
-      box.chart.replaceChildren(history.length >= 2
+      fill(box.chart, history.length >= 2
         ? h('img.card-img', { src: svgSrc(LP.renderStats(pet, [{ date: pet.date, mood: pet.mood, vitals: ['fullness', 'health', 'joy', 'energy'].map((k) => pet.vitals[k]) }, ...history.filter((x) => x.date !== pet.date)], { theme: cardTheme() })), alt: 'stats' })
         : h('p.muted', T.noStats));
 
       const isFloat = state.config.float && state.config.favorite === p.id;
-      box.actions.replaceChildren(
+      fill(box.actions,
         h('button', { type: 'button', onclick: () => api(`projects/${p.id}/reveal`, {}).catch((e) => toast(e.message)) }, T.openFolder),
         p.github && p.status !== 'live' ? h('a.button', { href: `https://github.com/${p.fullName}`, target: '_blank', rel: 'noopener' }, T.openGithub) : null,
         h('button', {
@@ -468,7 +471,7 @@ export function homeViews(kit) {
       };
       const name = h('input', { type: 'text', value: opts.name ?? '', placeholder: C.namePlaceholder, maxlength: 40 });
       name.onchange = () => set('name')(name.value.trim());
-      box.look.replaceChildren(
+      fill(box.look,
         h('div.fields',
           h('label.field', C.species, select([['auto', `${C.auto} 🎲`], ...LP.SPECIES_IDS.map((s) => [s, L.species[s]])], opts.species || 'auto', set('species'))),
           h('label.field', C.scenery, select([['auto', C.auto], ...LP.HOMES.map((x) => [x, t().homes[x]])], opts.scenery || 'auto', set('scenery'))),
@@ -525,7 +528,7 @@ export function homeViews(kit) {
       const notifyNote = h('p.small.muted', { style: { margin: 0 } });
       if (MODE !== 'desktop' && typeof Notification !== 'undefined' && Notification.permission === 'denied') notifyNote.textContent = T.notifyBlocked;
 
-      body.replaceChildren(
+      fill(body,
         h('section.panel.stack',
           h('h3', T.folders),
           h('p.small.muted', { style: { margin: 0 } }, T.foldersNote),
@@ -598,7 +601,7 @@ export function homeViews(kit) {
     const order = os ? [os, ...Object.keys(builds).filter((x) => x !== os)] : Object.keys(builds);
     root.append(
       h('section.get-hero',
-        h('div.onboard-pets', ['happy', 'party', 'sleepy'].map((mood, i) => h('img.mini-img', { src: svgSrc(LP.renderMini(kit.demoPet({ mood, species: ['cat', 'duck', 'octopus'][i] }), { theme: cardTheme() })), alt: '' }))),
+        h('div.onboard-pets', ['happy', 'party', 'sleepy'].map((mood, i) => h('img.mini-img', { src: svgSrc(LP.renderMini(kit.demoPet({ mood, species: ['cat', 'duck', 'octopus'][i], fullName: `you/${['api', 'app', 'blog'][i]}` }), { theme: cardTheme() })), alt: '' }))),
         h('h2', T.title),
         h('p.lead', T.lead)),
       h('div.grid2',
@@ -618,7 +621,7 @@ export function homeViews(kit) {
   function home(root, arg) {
     if (!state) {
       root.append(h('div.scanning', h('p.muted', '…')));
-      load().then(() => kit.render()).catch((err) => root.replaceChildren(h('div.empty', err.message)));
+      load().then(() => kit.render()).catch((err) => fill(root, h('div.empty', err.message)));
       return {};
     }
     if (!state.config.consented) return onboarding(root);

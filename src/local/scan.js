@@ -33,13 +33,13 @@ const isRepo = (dir) => existsSync(join(dir, '.git'));
 export function suggestFolders({ home = homedir(), platform = process.platform, cwd = null } = {}) {
   const out = [];
   const seen = new Set();
-  const add = (path, label, { exists, checked }) => {
+  const add = (path, label, { exists, checked, current = false }) => {
     const key = platform === 'linux' ? path : path.toLowerCase();
     if (seen.has(key)) return;
     seen.add(key);
-    out.push({ path, label, exists, checked });
+    out.push({ path, label, exists, checked, ...(current ? { current } : {}) });
   };
-  if (cwd && cwd !== home && isRepo(cwd)) add(cwd, cwd.replace(home, '~'), { exists: true, checked: true });
+  if (cwd && cwd !== home && isRepo(cwd)) add(cwd, cwd.replace(home, '~'), { exists: true, checked: true, current: true });
   for (const rel of CANDIDATES) {
     const path = join(home, ...rel.split('/'));
     const label = `~${sep}${rel.split('/').join(sep)}`;
