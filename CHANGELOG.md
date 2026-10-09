@@ -14,7 +14,13 @@ Releases that need a change to your workflow file say so.
   the workflow and the README pet and pushes), or all of them at once. Feed, play and pat them, see what needs care,
   and get notified when a pet gets hungry or levels up. The desktop app adds a menu bar icon and a pet that sits on your desktop.
   No account and no tracking: it reads only the folders you allow and talks to GitHub only when you turn on *GitHub details*.
-- 🎨 **A new look for the playground**: a sidebar on wide screens, scrolling tabs on phones, softer colors and a download page for the app.
+- 📊 **A dashboard in the app**: stat tiles, a year of commits on one activity calendar, the busiest repos this week and
+  the streaks at risk (plus an evening reminder before a streak ends). Each pet's page has tabs for its activity
+  (calendar, recent commits), quests and trophies, and its look; pin pets, sort them, or switch to a list.
+- ⌨️ **⌘K / Ctrl+K**: a command palette for every page, pet and action. Open a project in your code editor or a terminal
+  from its page, and bring the desktop app up from anywhere with ⌘⇧L / Ctrl+Shift+L.
+- 🎨 **A new look**: a cleaner design with Lucide icons, a sidebar that folds into icons, scrolling tabs on phones,
+  and a download page for the app.
 - 📜 **Weekly quests**: three goals a week, picked from what the repo really does (commit days, CI, replies, merged PRs,
   releases, teamwork, happy days, nothing stale). Each finished quest earns a quest star and +5 joy until Monday;
   all three earn two more. Shown on the card, in the diary, the job summary and `/pet quests`.

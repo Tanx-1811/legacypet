@@ -7,8 +7,9 @@ import { join, sep } from 'node:path';
 import { after, test } from 'node:test';
 import { startServer } from '../src/app/server.js';
 import { adoptLocal, gitHint, publishAdoption, workflowOptions } from '../src/local/adopt.js';
-import { communityHealth, guessLanguage, readRepo } from '../src/local/git.js';
-import { createProjects } from '../src/local/projects.js';
+import { communityHealth, dailyCounts, guessLanguage, readRepo } from '../src/local/git.js';
+import { detectTools, publicTools } from '../src/local/open.js';
+import { createProjects, localDay, STREAK_REMINDER_HOUR } from '../src/local/projects.js';
 import { findRepos, suggestFolders } from '../src/local/scan.js';
 import { createStore, projectId } from '../src/local/store.js';
 import { workflowYaml } from '../src/setup.js';
@@ -234,6 +235,7 @@ test('projects: allow, scan, raise, care, adopt, hide and forget', async () => {
   clock = new Date(NOW.getTime() + 30 * DAY);
   await projects.refresh();
   assert.ok(events.some((e) => e.kind === 'mood' && e.projectId === b.id), JSON.stringify(events));
+  assert.ok(events.every((e) => !/undefined/.test(e.text)), JSON.stringify(events));
 
   const adopted = await projects.adopt(b.id, { publish: true, options: { name: 'Mochi' } });
   assert.equal(adopted.publish.pushed, true);
@@ -321,5 +323,72 @@ test('the desktop app ships the same version as the action and CLI', () => {
   assert.deepEqual(Object.keys(root.dependencies ?? {}), [], 'the action and CLI stay dependency-free');
   for (const name of ['LegacyPet-mac-${arch}.${ext}', 'LegacyPet-win-x64.${ext}', 'LegacyPet-linux-x86_64.${ext}', 'LegacyPet-linux-amd64.${ext}']) {
     assert.ok(JSON.stringify(desktop.build).includes(name), `${name}: the download page links to it`);
+  }
+});
+
+test('dailyCounts groups commits by the committer\'s own day', () => {
+  assert.deepEqual(dailyCounts(['2026-10-08T23:30:00+07:00', '2026-10-08T01:00:00+07:00', '2026-10-07T10:00:00Z', 'nope']), { '2026-10-08': 2, '2026-10-07': 1 });
+});
+
+test('readRepo keeps a year of activity and the latest commits', async () => {
+  const { path } = makeRepo('active', { commits: [200, 30, 2, 1] });
+  const info = await readRepo(path, { now: NOW });
+  assert.equal(Object.values(info.activity).reduce((a, b) => a + b, 0), 4);
+  assert.equal(info.log.length, 4);
+  assert.equal(info.log[0].subject, 'change 3');
+  assert.match(info.log[0].sha, /^[0-9a-f]{7,}$/);
+});
+
+test('an evening nudge keeps a streak alive, once a day', async () => {
+  const root = dir('streaks');
+  // Commits on the three days before "today" (local time), none today.
+  const evening = new Date(2026, 9, 8, STREAK_REMINDER_HOUR + 1, 0, 0);
+  const daysAgo = (n) => (NOW.getTime() - new Date(2026, 9, 8 - n, 12).getTime()) / DAY;
+  makeRepo('streaky', { commits: [daysAgo(4), daysAgo(3), daysAgo(2), daysAgo(1)], parent: root });
+  const store = createStore(dir('streak-data'));
+  let clock = new Date(2026, 9, 8, 9);
+  const projects = createProjects({ store, now: () => clock, fetch: fakeGitHub });
+  const events = [];
+  projects.on((type, e) => { if (type === 'event') events.push(e); });
+  const [p] = await projects.allow([root]);
+  assert.ok(p.summary.streak >= 3, `streak ${p.summary.streak}`);
+  assert.equal(p.summary.committedToday, false);
+  assert.ok(p.activity[localDay(new Date(2026, 9, 7, 12))], 'yesterday counted');
+  await projects.refresh();
+  assert.equal(events.filter((e) => e.kind === 'streak').length, 0, 'not in the morning');
+  clock = evening;
+  await projects.refresh();
+  await projects.refresh();
+  const nudges = events.filter((e) => e.kind === 'streak');
+  assert.equal(nudges.length, 1, 'once a day');
+  assert.match(nudges[0].text, /streak/);
+});
+
+test('detectTools only offers what is installed, and never through a shell on Windows', () => {
+  const none = publicTools(detectTools({ platform: 'linux', env: { PATH: '' } }));
+  assert.deepEqual(none, { editors: [], terminals: [] });
+  const bin = dir('bin');
+  writeFileSync(join(bin, 'code'), '');
+  const linux = publicTools(detectTools({ platform: 'linux', env: { PATH: bin } }));
+  assert.deepEqual(linux.editors, [{ id: 'vscode', name: 'Visual Studio Code' }]);
+  const win = detectTools({ platform: 'win32', env: { PATH: '', LOCALAPPDATA: dir('appdata') } });
+  assert.deepEqual(win.editors, []);
+  assert.equal(win.terminals.at(-1).id, 'cmd');
+  assert.deepEqual(win.terminals.at(-1).args('C:\\a & b'), ['/c', 'start', 'cmd.exe'], 'the path is never part of a command line');
+});
+
+test('server: pins and tools in the state, and opening needs a real project', async () => {
+  const projects = createProjects({ store: createStore(dir('server-tools')), fetch: fakeGitHub });
+  const app = await startServer({ port: 0, projects, autoRefresh: false });
+  try {
+    const { port, secret } = app;
+    const state = (await call(port, '/api/state', { token: secret })).json();
+    assert.ok(Array.isArray(state.tools.editors) && Array.isArray(state.tools.terminals));
+    const pinned = (await call(port, '/api/config', { method: 'POST', token: secret, body: { pinned: ['abcdefabcdef'], editor: 'vscode' } })).json();
+    assert.deepEqual(pinned.config.pinned, ['abcdefabcdef']);
+    assert.equal(pinned.config.editor, 'vscode');
+    assert.equal((await call(port, '/api/projects/abcdefabcdef/open', { method: 'POST', token: secret, body: { with: 'editor' } })).status, 404);
+  } finally {
+    await app.close();
   }
 });

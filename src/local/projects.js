@@ -135,7 +135,7 @@ export function createProjects({ store = createStore(), now: clock = () => new D
     if (pet.events.includes('levelUp')) record({ ...base, kind: 'levelUp', text: say.levelUp(who, pet.level) });
     if (pet.events.includes('evolved')) record({ ...base, kind: 'evolved', text: say.evolved(who) });
     if (pet.events.includes('questDone')) record({ ...base, kind: 'quest', text: say.quest(who) });
-    for (const a of pet.newAchievements ?? []) {
+    for (const a of pet.achievements.filter((x) => x.isNew)) {
       record({ ...base, kind: 'trophy', text: say.trophy(who, `${a.emoji} ${strings(pet.lang).achievements[a.id] ?? a.id}`) });
     }
     if (prev.lastMood !== pet.mood && say[pet.mood] && attention(pet.mood) !== 'good') {

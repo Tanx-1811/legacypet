@@ -83,7 +83,9 @@ export function homeViews(kit) {
     return total;
   }
 
-  const VITAL_ICONS = { fullness: 'drumstick', health: 'heart', joy: 'smile', energy: 'zap' };
+  const VITAL_ICONS = { fullness: 'utensils', health: 'heart', joy: 'smile', energy: 'zap' };
+  // Just the pet's little world, without the name plate under it (the page already says that).
+  const scene = (p, cls = '', alt = '') => h(`div.scene${cls ? `.${cls}` : ''}`, h('img', { src: pic(p, 'mini'), alt, loading: 'lazy' }));
   function vitalBars(vitals) {
     const L = tr();
     return h('div.bars', ['fullness', 'health', 'joy', 'energy'].map((k) => {
@@ -94,15 +96,17 @@ export function homeViews(kit) {
     }));
   }
 
-  function statusPill(p) {
+  function statusPill(p, { quiet = false } = {}) {
+    // On cards, "not adopted" is the usual case: the filter and the banner already say it.
+    if (quiet && p.status === 'none') return null;
     return h(`span.pill.${p.status}`, h('i.dot'), t().home.status[p.status]);
   }
   function workPills(p) {
     const T = t().home;
     return [
-      p.dirty ? h('span.pill', { title: T.dirty(p.dirty) }, icon('git-commit-horizontal', { size: 12 }), p.dirty) : null,
-      p.ahead ? h('span.pill.warn', { title: T.ahead(p.ahead) }, icon('cloud-upload', { size: 12 }), p.ahead) : null,
-      p.summary?.streak >= 2 ? h('span.pill.flame', { title: t().home.facts.streak }, icon('flame', { size: 12 }), p.summary.streak) : null,
+      p.dirty ? h('span.pill', { title: T.dirty(p.dirty) }, icon('pencil', { size: 11 }), p.dirty) : null,
+      p.ahead ? h('span.pill.warn', { title: T.ahead(p.ahead) }, icon('cloud-upload', { size: 11 }), p.ahead) : null,
+      p.summary?.streak >= 2 ? h('span.pill.flame', { title: `${t().home.facts.streak}: ${t().home.kpi.days(p.summary.streak)}` }, icon('flame', { size: 11 }), p.summary.streak) : null,
     ];
   }
 
@@ -247,7 +251,7 @@ export function homeViews(kit) {
     let filter = store.homeFilter ?? 'all';
     const search = h('input', { type: 'search', placeholder: T.search, 'aria-label': T.search, autocomplete: 'off', spellcheck: 'false' });
     const box = {
-      summary: h('p.page-sub'), updated: h('span.small.muted'), kpis: h('div.kpis'), heat: h('div'), top: h('div'), side: h('div.stack'),
+      summary: h('p.page-sub'), updated: h('span.small.muted'), kpis: h('div.kpis'), heat: h('div'), top: h('div'), side: h('div.side-col'), notes: h('div.notes'),
       filters: h('div.seg.filters', { role: 'group' }), banner: h('div'), pets: h('div'),
     };
     const refreshBtn = btn(T.refresh, { icon: 'refresh-cw', onclick: (e) => refreshAll(e.currentTarget) });
@@ -266,14 +270,14 @@ export function homeViews(kit) {
       const last = p.snapshot?.commits?.lastDate;
       const pin = btn('', { icon: isPinned(p.id) ? 'pin-off' : 'pin', kind: `ghost pin${isPinned(p.id) ? ' on' : ''}`, title: isPinned(p.id) ? T.unpin : T.pin, onclick: (e) => { e.preventDefault(); togglePin(p.id); } });
       return h(`a.pet-card.${s.attention}`, { href: `#/home/${p.id}`, title: s.speech },
-        h('div.pet-stage', h('img', { src: pic(p, 'mini'), alt: s.displayName, loading: 'lazy', width: 120, height: 144 })),
+        scene(p, 'pet-stage', s.displayName),
         h('div.pet-info',
           h('div.pet-name', h('b', s.name), h('span.lv', `Lv.${s.level}`), pin),
           h('div.pet-repo.mono', p.github ? p.fullName : p.folder),
           h('div.pet-mood', h('span', s.emoji), ` ${L.moods[s.mood]}`),
           h('div.pet-when', icon('history', { size: 12 }), last ? ago(last) : T.noCommits),
           vitalBars(s.vitals),
-          h('div.pills', statusPill(p), workPills(p))));
+          h('div.pills', statusPill(p, { quiet: true }), workPills(p))));
     }
 
     function row(p) {
@@ -282,7 +286,7 @@ export function homeViews(kit) {
       if (!s) return h('div.pet-row.broken', h('span'), h('b', p.folder), h('span.small.muted', p.error ?? '?'));
       const last = p.snapshot?.commits?.lastDate;
       return h(`a.pet-row.${s.attention}`, { href: `#/home/${p.id}`, title: s.speech },
-        h('img.row-pet', { src: pic(p, 'mini'), alt: '', loading: 'lazy' }),
+        scene(p, 'row-pet'),
         h('div.row-main', h('div.pet-name', h('b', s.name), h('span.lv', `Lv.${s.level}`), isPinned(p.id) ? icon('pin', { size: 13, cls: 'pinned-mark' }) : null), h('div.pet-repo.mono', p.github ? p.fullName : p.folder)),
         h('div.row-mood', `${s.emoji} ${L.moods[s.mood]}`),
         h('div.row-vitals', vitalBars(s.vitals)),
@@ -308,17 +312,47 @@ export function homeViews(kit) {
       const total = Object.values(activity).reduce((a, b) => a + b, 0);
       fill(box.heat,
         h('div.panel-head', h('h3', T.activityTitle), h('span.small.muted', T.activityTotal(total))),
-        heatmap(activity, { locale: store.ui, title: T.activityTitle, value: (n) => T.cell(n, '').replace(/ · $/, ''), less: T.less, more: T.more }));
+        heatmap(activity, { locale: store.ui, title: T.activityTitle, value: (n) => T.cell(n, '').replace(/ · $/, ''), less: T.less, more: T.more }),
+        heatFacts(activity));
       const top = all.filter((p) => p.summary.commits7 > 0).sort((a, b) => b.summary.commits7 - a.summary.commits7).slice(0, 5);
       fill(box.top, h('h3', T.topTitle), top.length
         ? barList(top.map((p) => ({ label: p.summary.name, sub: p.folder, value: p.summary.commits7, href: `#/home/${p.id}` })), { format: num })
         : h('p.muted.small', T.topEmpty));
       const risky = all.filter((p) => p.summary.streak >= 2 && !p.summary.committedToday).sort((a, b) => b.summary.streak - a.summary.streak).slice(0, 4);
       const recent = (state.events ?? []).filter((e) => Date.now() - Date.parse(e.at) < 3 * 86_400_000).slice(0, 4);
-      fill(box.side,
-        h('section.panel', box.top),
-        risky.length ? h('section.panel', h('h3', icon('flame', { size: 16 }), T.atRisk), h('ul.mini-list', risky.map((p) => h('li', h('a', { href: `#/home/${p.id}` }, h('b', p.summary.name), h('span.muted', T.atRiskItem(p.summary.streak))))))) : null,
-        recent.length ? h('section.panel', h('h3', icon('bell', { size: 16 }), T.events), h('ul.mini-list', recent.map((e) => h('li', h('a', { href: `#/home/${e.projectId}` }, h('span', e.text), h('span.muted.small', ago(e.at))))))) : null);
+      fill(box.side, h('section.panel.top-panel', box.top));
+      fill(box.notes,
+        risky.length ? h('section.panel.note-panel', h('h3', icon('flame', { size: 16 }), T.atRisk), h('ul.mini-list', risky.map((p) => h('li', h('a', { href: `#/home/${p.id}` },
+          scene(p, 'mini-avatar'), h('span.mini-text', h('b', p.summary.name), h('span.muted.small', T.atRiskItem(p.summary.streak))), icon('chevron-right', { size: 14, cls: 'row-go' }))))))
+          : null,
+        recent.length ? h('section.panel.note-panel', h('h3', icon('bell', { size: 16 }), T.events), h('ul.mini-list', recent.map((e) => h('li', h('a', { href: `#/home/${e.projectId}` },
+          h('span.mini-text', h('span', e.text), h('span.muted.small', ago(e.at))), icon('chevron-right', { size: 14, cls: 'row-go' }))))))
+          : null);
+      box.notes.hidden = !risky.length && !recent.length;
+    }
+
+    // Three quick facts under the calendar: the busiest day, how many days saw a commit, today's run.
+    function heatFacts(activity) {
+      const F = T.heatFacts;
+      const d = new Date();
+      d.setHours(12);
+      let active = 0;
+      let streak = 0;
+      let counting = true;
+      for (let i = 0; i < 365; i++) {
+        const n = activity[localDayKey(d)] ?? 0;
+        if (n) active += 1;
+        if (counting && n) streak += 1;
+        else if (counting && i > 0) counting = false; // today may still be empty
+        d.setDate(d.getDate() - 1);
+      }
+      const best = Object.entries(activity).sort((a, b) => b[1] - a[1])[0];
+      const fmt = new Intl.DateTimeFormat(store.ui, { day: 'numeric', month: 'short', year: 'numeric' });
+      const fact = (label, value, sub) => h('div.heat-fact', h('span.small.muted', label), h('b', value), sub ? h('span.small.muted', sub) : null);
+      return h('div.heat-facts',
+        fact(F.best, best ? T.cell(best[1], '').replace(/ · $/, '') : '–', best ? fmt.format(new Date(`${best[0]}T12:00:00`)) : ''),
+        fact(F.active, F.of(active, 365)),
+        fact(F.streak, K.days(streak)));
     }
 
     function drawPets() {
@@ -361,7 +395,8 @@ export function homeViews(kit) {
         h('div', h('h1', T.title), box.summary),
         h('div.page-actions', box.updated, refreshBtn, btn('', { icon: 'folder-plus', title: T.addFolder, onclick: addFolder }))),
       box.kpis,
-      h('div.grid2.overview', h('section.panel', box.heat), box.side),
+      h('div.overview', h('section.panel', box.heat), box.side),
+      box.notes,
       h('div.toolbar-row', h('div.search-box', icon('search', { size: 16 }), search), box.filters, h('div.toolbar-end', sortSel, viewSeg)),
       box.banner,
       box.pets);
@@ -531,7 +566,7 @@ export function homeViews(kit) {
       fill(head,
         h('nav.crumbs', { 'aria-label': 'breadcrumb' }, h('a', { href: '#/home' }, T.title), icon('chevron-right', { size: 14 }), h('span', pet.name)),
         h('div.detail-title',
-          h('img.detail-avatar', { src: pic(p, 'mini'), alt: '' }),
+          scene(p, 'detail-avatar'),
           h('div',
             h('h1', pet.displayName),
             h('div.detail-meta',
@@ -622,7 +657,7 @@ export function homeViews(kit) {
         h('div.grid2',
           h('section.panel',
             h('h3', T.recentCommits),
-            p.log?.length ? h('ul.commit-list', p.log.map((c) => h('li',
+            p.log?.length ? h('ul.commit-list', p.log.slice(0, 8).map((c) => h('li',
               h('code.sha', c.sha),
               h('div.commit-main', h('span.commit-subject', c.subject), h('span.small.muted', `${c.author} · ${ago(c.date)}`)),
               p.github ? h('a.commit-link', { href: `https://github.com/${p.fullName}/commit/${c.sha}`, target: '_blank', rel: 'noopener', title: 'GitHub', 'aria-label': 'GitHub' }, icon('arrow-up-right', { size: 14 })) : null)))
@@ -654,6 +689,8 @@ export function homeViews(kit) {
         try {
           await api('config', { options: { [id]: mine } });
           use(await api('refresh', { ids: [id] }));
+          panel.dataset.tab = '';
+          draw();
         } catch (err) { toast(err.message, 'bad'); }
       };
       const name = h('input', { type: 'text', value: opts.name ?? '', placeholder: C.namePlaceholder, maxlength: 40 });
@@ -689,7 +726,7 @@ export function homeViews(kit) {
 
     root.append(head, tabsBar, panel);
     draw();
-    return { redraw: () => { panel.dataset.tab = ''; draw(); } };
+    return { redraw: draw };
   }
 
   // ----- Settings ----------------------------------------------------------------

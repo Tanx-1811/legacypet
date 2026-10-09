@@ -50,6 +50,10 @@ Windows hoặc Linux, mở lên và bấm **Cho phép & tìm dự án**. Vậy l
   rồi push bằng Git của bạn. **Nhận nuôi hàng loạt** làm cho mọi repo cùng lúc.
 - Một chú thú ngồi trên màn hình, thanh menu cho biết thú nào cần chăm, và có thông báo khi thú đói, ốm,
   lên cấp hay có thành tích mới.
+- Bảng tổng quan cho mọi dự án: lịch hoạt động cả năm, các repo sôi nổi nhất tuần, và những chuỗi commit
+  sẽ đứt nếu hôm nay không commit (có nhắc nhở buổi tối).
+- Bấm **⌘K** (**Ctrl+K**) để nhảy tới bất kỳ dự án, trang hay thao tác nào, và mở dự án bằng VS Code, Cursor,
+  Zed hoặc terminal ngay từ trang của nó. Trong bản desktop, **⌘⇧L** (**Ctrl+Shift+L**) gọi app lên từ bất kỳ đâu.
 - Mỗi ngày cho ăn, chơi, xoa đầu từng thú, mặc đồ cho nó, hoặc nuôi thử trong trình giả lập.
 
 **Riêng tư ngay từ đầu.** Không tài khoản, không theo dõi. App chỉ đọc những thư mục bạn cho phép, chỉ ghi khi

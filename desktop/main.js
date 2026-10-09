@@ -1,7 +1,7 @@
 // LegacyPet for the desktop: the same app as `legacypet app`, in its own window, with a
 // menu bar (tray) icon, a pet that sits on the desktop and native notifications.
 // All the work happens in ../src (bundled into ./bundle for the packaged app).
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron';
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -242,7 +242,7 @@ ipcMain.on('legacypet:show-main', (event, hash) => {
 app.on('window-all-closed', () => { /* stay in the menu bar / tray */ });
 app.on('activate', () => showMain());
 app.on('before-quit', () => { quitting = true; });
-app.on('will-quit', () => { server?.close(); });
+app.on('will-quit', () => { globalShortcut.unregisterAll(); server?.close(); });
 
 app.whenReady().then(async () => {
   const { startServer, DEFAULT_PORT } = await import(pathToFileURL(join(root, 'src', 'app', 'server.js')).href);
@@ -270,6 +270,11 @@ app.whenReady().then(async () => {
     if (type === 'change' || type === 'config') updateTray();
   });
   createTray();
+  // ⌘⇧L / Ctrl+Shift+L from anywhere: show LegacyPet, or hide it when it is in front.
+  globalShortcut.register('CommandOrControl+Shift+L', () => {
+    if (mainWin && !mainWin.isDestroyed() && mainWin.isVisible() && mainWin.isFocused()) mainWin.hide();
+    else showMain();
+  });
   if (server.projects.config.float) setFloat(true);
   if (!startHidden) showMain();
   else if (isMac) app.dock?.hide();

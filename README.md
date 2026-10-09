@@ -51,6 +51,10 @@ for macOS, Windows or Linux, open it and press **Allow & find my projects**. Tha
   commits only those and pushes with your own Git. **Adopt them all** does every repo in one go.
 - A pet sits on your desktop, the menu bar shows who needs care, and a notification tells you when a pet
   gets hungry or sick, levels up or earns a trophy.
+- A dashboard for all of them: a year of commits on one activity calendar, the busiest repos this week,
+  and the streaks that end tonight without a commit (with an evening reminder).
+- Press **⌘K** (**Ctrl+K**) to jump to any project, page or action, and open a project in VS Code, Cursor,
+  Zed or a terminal straight from its page. In the desktop app, **⌘⇧L** (**Ctrl+Shift+L**) brings it up from anywhere.
 - Feed, play and pat every pet once a day, dress it up, or raise it in the simulator.
 
 **Private by design.** No account, no tracking. It reads only the folders you allow, writes only when you
