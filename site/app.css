@@ -600,3 +600,30 @@ dialog.palette::backdrop { background: rgba(10, 10, 16, .4); backdrop-filter: bl
 .point-icon { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); }
 .note-panel .mini-list { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); column-gap: 20px; }
 .note-panel .mini-list a { margin: 0; }
+
+/* ---- Customize: coat colors, wardrobe, live preview ---- */
+.stack.tight > h3, .stack.tight > .panel-head { margin-bottom: 0; }
+.input-row { display: flex; gap: 6px; align-items: center; }
+.input-row > input { flex: 1 1 auto; }
+.input-row > .btn { flex: none; }
+.swatches { display: flex; flex-wrap: wrap; gap: 9px; }
+.swatch { --sw: #c8c8d0; position: relative; display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--panel); background: var(--sw); box-shadow: 0 0 0 1px var(--border-strong); cursor: pointer; color: #fff; }
+button.swatch:hover, .swatch:hover { border-color: var(--panel); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, var(--border)); }
+.swatch[aria-pressed="true"], .swatch.on { box-shadow: 0 0 0 2px var(--accent); }
+.swatch[aria-pressed="true"]::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .3); }
+.swatch.own::before { content: ''; position: absolute; inset: 3px; border-radius: 50%; border: 1.5px dashed rgba(0, 0, 0, .35); }
+.swatch.custom { background: conic-gradient(#ff5d5d, #ffd23f, #5fe07e, #4cc9f0, #8a5cf0, #ff5fa2, #ff5d5d); }
+.swatch.custom.on { background: var(--sw); }
+.swatch.custom .icon { pointer-events: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .45)); }
+.swatch.custom input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; opacity: 0; cursor: pointer; }
+.swatch:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.slot + .slot { margin-top: 6px; }
+.slot-head { font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+button.tile:disabled { cursor: not-allowed; }
+@media (min-width: 881px) { .sticky-col { position: sticky; top: 16px; } }
+
+/* ---- Notes, sync, notification options ---- */
+textarea.notes { resize: vertical; min-height: 96px; line-height: 1.5; }
+.sub-settings { padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel-2); }
+.checks { display: grid; gap: 7px; }
+.checks label.check { font-size: 13.5px; }

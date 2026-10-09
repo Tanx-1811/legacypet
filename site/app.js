@@ -15,7 +15,7 @@ const browserLang = (navigator.language || 'en').toLowerCase().startsWith('vi') 
 const defaults = () => ({
   ui: browserLang,
   theme: 'auto',
-  cfg: { species: 'auto', scenery: 'auto', name: '', lang: browserLang, wear: [], alerts: [], vacation: '', style: 'card', repo: '' },
+  cfg: { species: 'auto', scenery: 'auto', name: '', color: 'auto', motto: '', lang: browserLang, wear: [], alerts: [], vacation: '', style: 'card', repo: '' },
   world: null,
   habit: 'diligent',
   simTab: 'quests',
@@ -52,7 +52,7 @@ const darkQuery = matchMedia('(prefers-color-scheme: dark)');
 const cardTheme = () => (store.theme === 'auto' ? (darkQuery.matches ? 'dark' : 'light') : store.theme);
 const svgSrc = (svg) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 const petOptions = (extra = {}) => ({
-  species: store.cfg.species, scenery: store.cfg.scenery, name: store.cfg.name, lang: store.cfg.lang, ...extra,
+  species: store.cfg.species, scenery: store.cfg.scenery, name: store.cfg.name, color: store.cfg.color, motto: store.cfg.motto, lang: store.cfg.lang, ...extra,
 });
 
 // A tiny DOM builder: h('div.panel', { onclick }, child, 'text').
@@ -139,18 +139,25 @@ function seg(options, value, onchange, label) {
   return box;
 }
 
-// Pickers shared by several views: species, home, the pet's language and name.
+// Pickers shared by several views: species, home, coat color, the pet's language, name and catchphrase.
 function lookFields(onchange) {
   const T = t();
   const L = tr();
   const set = (key) => (v) => { store.cfg[key] = v; save(); onchange(); };
   const name = h('input', { type: 'text', value: store.cfg.name, placeholder: T.common.namePlaceholder, maxlength: 40 });
   name.oninput = () => set('name')(name.value);
+  const motto = h('input', { type: 'text', value: store.cfg.motto, placeholder: T.common.mottoPlaceholder, maxlength: LP.MOTTO_MAX });
+  motto.oninput = () => set('motto')(motto.value);
+  const colors = ['auto', ...LP.COLOR_IDS].map((id) => [id, T.common.colors[id]]);
   return h('div.fields',
     h('label.field', T.common.species, select([['auto', `${T.common.auto} 🎲`], ...LP.SPECIES_IDS.map((id) => [id, L.species[id]])], store.cfg.species, set('species'))),
     h('label.field', T.common.scenery, select([['auto', T.common.auto], ...LP.HOMES.map((id) => [id, T.homes[id]])], store.cfg.scenery, set('scenery'))),
+    h('label.field', T.common.color, select(colors, colors.some(([id]) => id === store.cfg.color) ? store.cfg.color : 'auto', set('color'))),
     h('label.field', T.common.petLang, select(Object.entries(LP.LANG_NAMES), store.cfg.lang, set('lang'))),
-    h('label.field', T.common.name, name));
+    h('label.field', T.common.name, h('div.input-row', name, btn('', {
+      icon: 'dices', title: T.common.randomName, onclick: () => { name.value = LP.randomName(); set('name')(name.value); },
+    }))),
+    h('label.field', T.common.motto, motto));
 }
 
 // Turns a `/pet` reply (GitHub markdown) into safe HTML for the console.
@@ -921,7 +928,7 @@ function viewPark(root) {
 // The workflow inputs, from the choices made anywhere in the playground.
 function adoptOptions(cfg = store.cfg) {
   return {
-    lang: cfg.lang, species: cfg.species, scenery: cfg.scenery, name: cfg.name, wear: cfg.wear.join(', '),
+    lang: cfg.lang, species: cfg.species, scenery: cfg.scenery, name: cfg.name, color: cfg.color, motto: cfg.motto.trim(), wear: cfg.wear.join(', '),
     alerts: cfg.alerts.join(', '), vacation: cfg.vacation ? `until ${cfg.vacation}` : '', park: cfg.style === 'park' ? 'auto' : '',
   };
 }
@@ -958,7 +965,7 @@ function viewAdopt(root) {
     const cfg = store.cfg;
     const lang = L();
     const fullName = cfg.repo.includes('/') ? cfg.repo : 'OWNER/REPO';
-    const pet = demoPet({ species: cfg.species === 'auto' ? 'cat' : cfg.species, scenery: cfg.scenery, name: cfg.name || undefined, wear: cfg.wear.join(','), unlockAll: true, fullName });
+    const pet = demoPet({ species: cfg.species === 'auto' ? 'cat' : cfg.species, scenery: cfg.scenery, name: cfg.name || undefined, color: cfg.color, motto: cfg.motto, wear: cfg.wear.join(','), unlockAll: true, fullName });
     preview.replaceChildren(img(LP.renderCard(pet, { theme: cardTheme() }), 'card-img', pet.displayName));
     wearBox.replaceChildren(...LP.ITEMS.map((item) => h(`button.tile${cfg.wear.includes(item.id) ? '.on' : ''}`, {
       type: 'button', title: LP.unlockHint(lang, item),
@@ -976,7 +983,8 @@ function viewAdopt(root) {
     }));
     const flags = [
       cfg.lang !== 'en' && `--lang ${cfg.lang}`, cfg.species !== 'auto' && `--species ${cfg.species}`, cfg.scenery !== 'auto' && `--scenery ${cfg.scenery}`,
-      cfg.name && `--name "${cfg.name.replace(/"/g, '')}"`, cfg.style !== 'card' && `--style ${cfg.style}`, cfg.private && '--private',
+      cfg.name && `--name "${cfg.name.replace(/"/g, '')}"`, cfg.color !== 'auto' && `--color ${cfg.color}`, cfg.motto.trim() && `--motto "${cfg.motto.trim().replace(/"/g, '')}"`,
+      cfg.style !== 'card' && `--style ${cfg.style}`, cfg.private && '--private',
     ].filter(Boolean);
     const options = adoptOptions(cfg);
     const yaml = LP.workflowYaml(options);
@@ -1146,6 +1154,10 @@ const palette = createPalette({
         { group: 'actions', icon: 'search', label: A.rescan, run: () => homeKit.actions.rescan() },
         { group: 'actions', icon: 'folder-plus', label: A.addFolder, run: () => homeKit.actions.addFolder() },
         { group: 'actions', icon: 'cloud-upload', label: A.adoptAll, run: () => homeKit.actions.adoptAll() },
+        { group: 'actions', icon: 'cookie', label: A.feedAll, run: () => homeKit.actions.careAll('feed') },
+        { group: 'actions', icon: 'volleyball', label: A.playAll, run: () => homeKit.actions.careAll('play') },
+        { group: 'actions', icon: 'hand-heart', label: A.patAll, run: () => homeKit.actions.careAll('pat') },
+        { group: 'actions', icon: 'archive', label: A.backup, run: () => homeKit.actions.exportBackup() },
       );
       if (MODE === 'desktop') items.push({ group: 'actions', icon: 'monitor', label: A.float, run: () => homeKit.actions.toggleFloat() });
     }

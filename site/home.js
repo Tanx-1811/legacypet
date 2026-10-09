@@ -735,7 +735,7 @@ export function homeViews(kit) {
         },
       });
       const snippet = (style) => LP.snippetFor(p.fullName, style, 'legacypet', { isPrivate: Boolean(p.isPrivate) });
-      return h('section.panel.stack',
+      return h('section.panel.stack.tight',
         h('h3', icon('image-down', { size: 16 }), S.title),
         h('div.row', svgBtn('card'), svgBtn('mini'), svgBtn('badge'), pngBtn),
         p.github ? h('div.row',
@@ -752,7 +752,7 @@ export function homeViews(kit) {
         await syncGit(p, action);
         b.disabled = false;
       };
-      return h('section.panel.stack',
+      return h('section.panel.stack.tight',
         h('h3', icon('git-branch', { size: 16 }), S.title),
         h('div.row',
           btn(S.fetch, { icon: 'refresh-cw', onclick: run('fetch') }),
@@ -781,7 +781,7 @@ export function homeViews(kit) {
       };
       area.oninput = () => { status.textContent = ''; clearTimeout(timer); timer = setTimeout(save, 800); };
       area.onblur = save;
-      return h('section.panel.stack',
+      return h('section.panel.stack.tight',
         h('div.panel-head', h('h3', icon('sticky-note', { size: 16 }), N.title), status),
         area,
         h('p.small.muted', { style: { margin: 0 } }, N.note));
@@ -828,32 +828,144 @@ export function homeViews(kit) {
     }
 
     // Customizing writes to the app's settings for this repo; adopted pets can push it to GitHub.
+    // The preview changes at once; saving and the fresh look at the repo catch up behind it.
+    let refreshLook = null;
     function customizeTab(p) {
       const L = tr();
-      const opts = { ...p.options };
-      const set = (key) => async (v) => {
-        const mine = { ...(state.config.options?.[id] ?? {}), [key]: v };
-        try {
-          await api('config', { options: { [id]: mine } });
-          use(await api('refresh', { ids: [id] }));
-          panel.dataset.tab = '';
-          draw();
-        } catch (err) { toast(err.message, 'bad'); }
-      };
-      const name = h('input', { type: 'text', value: opts.name ?? '', placeholder: C.namePlaceholder, maxlength: 40 });
-      name.onchange = () => set('name')(name.value.trim());
-      return h('div.grid2',
-        h('section.panel.stack',
-          h('h3', T.customize),
-          h('div.fields',
-            h('label.field', C.species, select([['auto', `${C.auto} 🎲`], ...LP.SPECIES_IDS.map((s) => [s, L.species[s]])], opts.species || 'auto', set('species'))),
-            h('label.field', C.scenery, select([['auto', C.auto], ...LP.HOMES.map((x) => [x, t().homes[x]])], opts.scenery || 'auto', set('scenery'))),
-            h('label.field', C.petLang, select([['', `${C.auto}`], ...Object.entries(LP.LANG_NAMES)], opts.lang || '', set('lang'))),
-            h('label.field', C.name, name)),
-          h('p.small.muted', { style: { margin: 0 } }, T.customizeNote),
-          ['live', 'waiting'].includes(p.status) ? h('div.row', btn(T.updateGithub, { icon: 'refresh-cw', onclick: () => adoptDialog(p, { update: true }) })) : null),
-        h('section.panel', h('img.card-img', { src: pic(p, 'card'), alt: '' })));
+      const K = T.look;
+      const o = { ...p.options };
+      const status = h('span.small.muted', { role: 'status' });
+      const preview = h('img.card-img', { alt: '' });
+      const swatches = h('div.swatches', { role: 'group', 'aria-label': K.coat });
+      const wardrobe = h('div.stack');
+      const count = h('span.small.muted');
+      let saving = Promise.resolve();
+
+      function set(patch) {
+        const cur = project();
+        if (!cur) return;
+        const mine = { ...(state.config.options?.[id] ?? {}), ...patch };
+        cur.options = { ...cur.options, ...patch };
+        state.config.options = { ...state.config.options, [id]: mine };
+        status.textContent = '';
+        drawLook();
+        saving = saving.then(async () => {
+          try {
+            await api('config', { options: { [id]: mine } });
+            use(await api('refresh', { ids: [id] }));
+            status.textContent = `✓ ${K.saved}`;
+          } catch (err) { toast(err.message, 'bad'); }
+        });
+      }
+
+      const name = h('input', { type: 'text', value: o.name ?? '', placeholder: C.namePlaceholder, maxlength: 40 });
+      name.onchange = () => set({ name: name.value.trim() });
+      const dice = btn('', { icon: 'dices', title: C.randomName, onclick: () => { name.value = LP.randomName(); set({ name: name.value }); } });
+      const motto = h('input', { type: 'text', value: o.motto ?? '', placeholder: C.mottoPlaceholder, maxlength: LP.MOTTO_MAX });
+      motto.onchange = () => set({ motto: motto.value.trim() });
+      const picker = h('input', { type: 'color', value: /^#[0-9a-f]{6}$/i.test(o.color ?? '') ? o.color : '#ff8800', 'aria-label': C.colors.custom });
+      picker.onchange = () => set({ color: picker.value });
+
+      function drawLook() {
+        const cur = project();
+        if (!cur?.summary) return;
+        const pet = petOf(cur, { lang: lang() });
+        const theme = ['light', 'dark'].includes(cur.options?.theme) ? cur.options.theme : cardTheme();
+        preview.src = svgSrc(LP.renderCard(pet, { theme }));
+        preview.alt = `${pet.displayName}: ${pet.speech}`;
+
+        // A swatch per color, in the shade it takes; "its own" shows the species' body color.
+        const color = String(cur.options?.color || 'auto').toLowerCase();
+        const custom = color.startsWith('#');
+        const shade = (c) => (c === 'auto' ? pet.species.palette.b : c === 'mono' ? '#a3a8b1' : `hsl(${LP.PET_COLORS[c]} 72% 56%)`);
+        fill(swatches,
+          ['auto', ...LP.COLOR_IDS].map((c) => h(`button.swatch${c === 'auto' ? '.own' : ''}`, {
+            type: 'button', title: C.colors[c], 'aria-label': C.colors[c], 'aria-pressed': String(color === c),
+            style: { '--sw': shade(c) }, onclick: () => set({ color: c }),
+          })),
+          h(`label.swatch.custom${custom ? '.on' : ''}`, { title: C.colors.custom, style: custom ? { '--sw': color } : null }, icon('palette', { size: 14 }), picker));
+
+        // The wardrobe: one item per slot, only what this pet has unlocked.
+        const worn = new Set(pet.wardrobe.worn);
+        const unlocked = new Set(pet.wardrobe.unlocked);
+        count.textContent = K.unlocked(unlocked.size, LP.ITEMS.length);
+        const wear = (slot, item) => {
+          const next = LP.ITEMS.filter((i) => worn.has(i.id) && i.slot !== slot).map((i) => i.id);
+          if (item) next.push(item);
+          set({ wear: next.length ? next.join(', ') : 'none' });
+        };
+        fill(wardrobe, LP.SLOTS.map((slot) => {
+          const items = LP.ITEMS.filter((i) => i.slot === slot);
+          const bare = !items.some((i) => worn.has(i.id));
+          return h('div.slot',
+            h('div.slot-head', L.slots[slot]),
+            h('div.tiles.compact',
+              h(`button.tile${bare ? '.on' : ''}`, { type: 'button', 'aria-pressed': String(bare), onclick: () => wear(slot, null) }, h('span.em', '∅'), h('span.name', K.none)),
+              items.map((item) => {
+                const open = unlocked.has(item.id);
+                return h(`button.tile${worn.has(item.id) ? '.on' : ''}${open ? '' : '.locked'}`, {
+                  type: 'button', disabled: !open, title: LP.unlockHint(L, item), 'aria-pressed': String(worn.has(item.id)),
+                  onclick: () => wear(slot, worn.has(item.id) ? null : item.id),
+                }, h('span.em', item.emoji), h('span.name', L.items[item.id]), open ? null : h('span.hint', `🔒 ${LP.unlockHint(L, item)}`));
+              })));
+        }));
+      }
+
+      const reset = btn(K.reset, {
+        icon: 'rotate-ccw', kind: 'ghost',
+        onclick: async () => {
+          try {
+            await api('config', { options: { [id]: {} } });
+            use(await api('refresh', { ids: [id] }));
+            panel.dataset.tab = ''; // rebuild the fields with the defaults
+            draw();
+            toast(K.resetDone, 'good');
+          } catch (err) { toast(err.message, 'bad'); }
+        },
+      });
+
+      refreshLook = drawLook;
+      drawLook();
+      return h('div.grid2.customize',
+        h('div.stack',
+          h('section.panel.stack.tight',
+            h('h3', icon('user', { size: 16 }), K.identity),
+            h('div.fields',
+              h('label.field', C.name, h('div.input-row', name, dice)),
+              h('label.field', C.species, select([['auto', `${C.auto} 🎲`], ...LP.SPECIES_IDS.map((s) => [s, L.species[s]])], o.species || 'auto', (v) => set({ species: v }))),
+              h('label.field', C.petLang, select([['', C.auto], ...Object.entries(LP.LANG_NAMES)], o.lang || '', (v) => set({ lang: v })))),
+            h('label.field', C.motto, motto),
+            h('p.small.muted', { style: { margin: 0 } }, K.mottoNote)),
+          h('section.panel.stack.tight',
+            h('h3', icon('palette', { size: 16 }), K.coat),
+            swatches,
+            h('p.small.muted', { style: { margin: 0 } }, K.coatNote)),
+          h('section.panel.stack.tight',
+            h('h3', icon('house', { size: 16 }), K.place),
+            h('div.fields',
+              h('label.field', C.scenery, select([['auto', C.auto], ...LP.HOMES.map((x) => [x, t().homes[x]])], o.scenery || 'auto', (v) => set({ scenery: v }))),
+              h('label.field', K.cardTheme, seg(Object.entries(C.themes), o.theme || 'auto', (v) => set({ theme: v }), K.cardTheme)))),
+          h('section.panel.stack.tight',
+            h('div.panel-head', h('h3', icon('shirt', { size: 16 }), K.wardrobe), count),
+            h('p.small.muted', { style: { margin: 0 } }, K.wardrobeNote),
+            wardrobe)),
+        h('div.stack.sticky-col',
+          h('section.panel.stack.tight',
+            h('div.panel-head', h('h3', K.preview), status),
+            preview,
+            h('p.small.muted', { style: { margin: 0 } }, T.customizeNote),
+            h('div.row',
+              ['live', 'waiting'].includes(p.status) ? btn(T.updateGithub, { icon: 'cloud-upload', kind: 'primary', onclick: () => adoptDialog(p, { update: true }) }) : null,
+              reset))));
     }
+
+    // Someone is typing (notes, a name): leave the page as it is and catch up once they're done.
+    let stale = false;
+    const typing = () => panel.contains(document.activeElement) && document.activeElement.matches('input[type=text], textarea');
+    panel.addEventListener('focusout', () => {
+      // Late enough that a click on a button next to the box still lands on that button.
+      if (stale) setTimeout(() => { if (stale && !typing()) { stale = false; draw(); } }, 300);
+    });
 
     function draw() {
       const p = project();
@@ -863,9 +975,10 @@ export function homeViews(kit) {
       }
       const pet = petOf(p, { lang: lang() });
       drawHead(p, pet);
+      if (typing()) { stale = true; return; }
       const make = { overview: overviewTab, activity: activityTab, progress: progressTab, customize: customizeTab }[tab];
-      // The customize tab keeps its inputs while the pet refreshes around it.
-      if (tab === 'customize' && panel.dataset.tab === 'customize' && panel.dataset.id === id) return;
+      // The customize tab keeps its fields while the pet refreshes around it.
+      if (tab === 'customize' && panel.dataset.tab === 'customize' && panel.dataset.id === id) { refreshLook?.(); return; }
       panel.dataset.tab = tab;
       panel.dataset.id = id;
       fill(panel, make(p, pet));
@@ -883,6 +996,11 @@ export function homeViews(kit) {
     const body = h('div.settings');
     let resetArmed = false;
 
+    function check(checked, label, onchange) {
+      const box = h('input', { type: 'checkbox', checked });
+      box.onchange = () => onchange(box.checked);
+      return h('label.check', box, h('span', label));
+    }
     function toggle(checked, label, onchange) {
       const box = h('input', { type: 'checkbox', role: 'switch', checked });
       box.onchange = () => onchange(box.checked);
@@ -907,6 +1025,11 @@ export function homeViews(kit) {
       };
       const notifyNote = h('p.small.muted', { style: { margin: 0 } });
       if (MODE !== 'desktop' && typeof Notification !== 'undefined' && Notification.permission === 'denied') notifyNote.textContent = T.notifyBlocked;
+      const mute = cfg.mute ?? [];
+      // The usual evening hours, plus whatever was picked before (a backup from elsewhere, say).
+      const hours = [...new Set([16, 17, 18, 19, 20, 21, 22, ...(cfg.reminderHour == null ? [] : [cfg.reminderHour])])].sort((a, b) => a - b);
+      const quiet = [[21, 7], [22, 8], [23, 7], [0, 8]];
+      if (cfg.quietHours && !quiet.some(([a, b]) => a === cfg.quietHours.from && b === cfg.quietHours.to)) quiet.push([cfg.quietHours.from, cfg.quietHours.to]);
       const toolSelect = (list, key) => select([['', T.firstFound(list[0]?.name ?? '–')], ...list.map((x) => [x.id, x.name])], cfg[key] ?? '', (v) => save({ [key]: v || null }), T[key]);
 
       fill(body,
@@ -933,11 +1056,27 @@ export function homeViews(kit) {
             save({ notify: v });
           }),
           notifyNote,
+          cfg.notify ? h('div.stack.sub-settings',
+            h('div.small.muted', T.notifyKinds),
+            h('div.checks', Object.entries(T.groups).map(([group, label]) => check(!mute.includes(group), label,
+              (on) => save({ mute: on ? mute.filter((g) => g !== group) : [...mute, group] })))),
+            h('div.fields',
+              h('label.field', T.reminder, select([['', T.reminderOff], ...hours.map((n) => [String(n), T.at(n)])], cfg.reminderHour == null ? '' : String(cfg.reminderHour),
+                (v) => save({ reminderHour: v === '' ? null : Number(v) }), T.reminder)),
+              h('label.field', T.quiet, select([['', T.quietOff], ...quiet.map(([a, b]) => [`${a}-${b}`, T.quietRange(a, b)])], cfg.quietHours ? `${cfg.quietHours.from}-${cfg.quietHours.to}` : '',
+                (v) => save({ quietHours: v ? { from: Number(v.split('-')[0]), to: Number(v.split('-')[1]) } : null }), T.quiet))),
+            h('p.small.muted', { style: { margin: 0 } }, T.quietNote)) : null,
           h('label.field', T.refresh, select([5, 15, 30, 60].map((n) => [String(n), T.every(n)]), String(cfg.refreshMinutes), (v) => save({ refreshMinutes: Number(v) })))),
         MODE === 'desktop' ? section('monitor', T.desktop,
           toggle(cfg.float, T.floatToggle, (v) => save({ float: v })),
-          h('label.field', T.floatWho, select([['', T.neediest], ...state.projects.filter((p) => p.summary).map((p) => [p.id, `${p.summary.emoji} ${p.summary.name} · ${p.folder}`])], cfg.favorite ?? '', (v) => save({ favorite: v || null }))),
+          h('div.fields',
+            h('label.field', T.floatWho, select([['', T.neediest], ...state.projects.filter((p) => p.summary).map((p) => [p.id, `${p.summary.emoji} ${p.summary.name} · ${p.folder}`])], cfg.favorite ?? '', (v) => save({ favorite: v || null }))),
+            h('label.field', T.floatSize, seg(Object.entries(T.sizes), cfg.floatSize ?? 'medium', (v) => save({ floatSize: v }), T.floatSize))),
+          toggle(cfg.floatBubbles !== false, T.floatBubbles, (v) => save({ floatBubbles: v })),
           state.desktop?.loginItem != null ? toggle(state.desktop.loginItem, T.login, async (v) => { use(await api('login-item', { on: v })); draw(); }) : null) : null,
+        section('archive', T.backup,
+          h('p.small.muted', { style: { margin: 0 } }, T.backupNote),
+          h('div.row', btn(T.exportBackup, { icon: 'download', onclick: exportBackup }), btn(T.importBackup, { icon: 'upload', onclick: importBackup }))),
         hidden.length ? section('eye-off', T.hiddenTitle,
           h('ul.folder-list', hidden.map((x) => h('li.row.folder-row',
             h('span.mono', x.name),
@@ -1023,6 +1162,8 @@ export function homeViews(kit) {
       rescan,
       addFolder,
       adoptAll: () => adoptAll(),
+      careAll,
+      exportBackup,
       toggleFloat: async () => { try { use(await api('config', { float: !state.config.float })); } catch (err) { toast(err.message, 'bad'); } },
     },
   };
