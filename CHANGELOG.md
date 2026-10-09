@@ -8,6 +8,13 @@ Releases that need a change to your workflow file say so.
 
 ### New
 
+- 🖥️ **The LegacyPet app**: every project on your computer gets a pet. Download it for macOS, Windows or Linux
+  (or run `npx github:Tanx-1811/legacypet app`), allow it to look in your project folders, and it finds every git repo
+  and raises a pet for each one, offline, from your own commits. Adopt a pet on GitHub with one click (it commits just
+  the workflow and the README pet and pushes), or all of them at once. Feed, play and pat them, see what needs care,
+  and get notified when a pet gets hungry or levels up. The desktop app adds a menu bar icon and a pet that sits on your desktop.
+  No account and no tracking: it reads only the folders you allow and talks to GitHub only when you turn on *GitHub details*.
+- 🎨 **A new look for the playground**: a sidebar on wide screens, scrolling tabs on phones, softer colors and a download page for the app.
 - 📜 **Weekly quests**: three goals a week, picked from what the repo really does (commit days, CI, replies, merged PRs,
   releases, teamwork, happy days, nothing stale). Each finished quest earns a quest star and +5 joy until Monday;
   all three earn two more. Shown on the card, in the diary, the job summary and `/pet quests`.

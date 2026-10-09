@@ -8,7 +8,26 @@ git clone https://github.com/Tanx-1811/legacypet && cd legacypet
 node --test          # run the tests
 npm run gallery      # draw everything into docs/gallery/index.html
 node src/cli.js demo --species cat --mood party   # try one pet
+node src/cli.js app  # the app: every repo on this computer gets a pet
 ```
+
+## Work on the app and the desktop app
+
+The app is the playground (`site/`) plus a small local server (`src/app/server.js`) and the code that reads
+repos on this computer (`src/local/`). `node src/cli.js app` runs it in a Chrome or Edge window; set
+`LEGACYPET_HOME=/tmp/lp` to keep your test data away from `~/.legacypet`.
+
+The desktop app in `desktop/` wraps the same thing in Electron, adding the menu bar icon, the desktop pet and
+native notifications. It is the only part of the project with dependencies, and they stay in `desktop/`:
+
+```sh
+cd desktop
+npm install
+npm start          # run it from the source
+npm run dist:dir   # package it for this computer, without an installer
+```
+
+`LEGACYPET_SMOKE=/tmp/smoke npm start` opens the app, saves pictures of its windows and quits (CI does this too).
 
 ## Add a species
 
@@ -65,6 +84,9 @@ Users pin `Tanx-1811/legacypet@v1`, so a release reaches everyone on their next 
    ```
 
 4. Publish a GitHub Release for `v1.1.0` with the same notes, so people watching releases get an email.
+   Publishing it starts the **Desktop app** workflow, which builds the macOS, Windows and Linux installers and
+   attaches them to the release (the download page links to the newest release). Keep `desktop/package.json`'s
+   version in step with `package.json` (a test checks it).
 
 Breaking changes (renamed inputs, new required permissions) go to a new major tag: `v2`.
 

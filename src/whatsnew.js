@@ -8,6 +8,7 @@ export const CHANGELOG = [
   {
     version: '1.3.0',
     items: [
+      '🖥️ The LegacyPet app: every project on your computer gets a pet, offline, and adopting one on GitHub takes a click. Get it for macOS, Windows or Linux at https://tanx-1811.github.io/legacypet/#/get or run `npx github:Tanx-1811/legacypet app`',
       '📜 Weekly quests: three goals a week picked from what your repo really does. Each one earns a quest star and +5 joy until Monday; all three earn two more stars',
       '🧬 Evolution: after a week as an adult, your pet takes a path that matches how you care for the repo (Swift, Guardian, Social or Sage), with an emblem and a small boost',
       '👗 Wardrobe: 16 hats, face items and pals unlocked by trophies, quest stars and friends. Dress up with the `wear` input or `/pet wear cap`',
