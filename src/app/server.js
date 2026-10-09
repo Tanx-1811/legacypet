@@ -19,7 +19,7 @@ const TYPES = {
   '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json',
 };
 const MAX_BODY = 1024 * 1024;
-const CONFIG_KEYS = ['online', 'token', 'notify', 'refreshMinutes', 'favorite', 'float', 'hidden', 'options', 'ui', 'theme', 'roots'];
+const CONFIG_KEYS = ['online', 'token', 'notify', 'refreshMinutes', 'favorite', 'float', 'hidden', 'options', 'ui', 'theme', 'roots', 'pinned', 'editor', 'terminal'];
 
 // Folder pickers that need no dependencies: the system's own dialog.
 export function systemPickFolder(prompt = 'Choose a folder with your projects') {
@@ -99,6 +99,7 @@ export async function startServer({
       lastScan: projects.lastScan,
       projects: projects.list(),
       hiddenProjects: projects.hiddenList(),
+      tools: projects.tools(),
       events: projects.events().slice(0, 20),
       desktop: desktop?.info?.() ?? null,
     };
@@ -153,6 +154,7 @@ export async function startServer({
     }),
     publish: (id) => projects.publish(id),
     reveal: (id) => { (desktop?.reveal ?? systemReveal)(projects.get(id).path); return { ok: true }; },
+    open: (id, body) => projects.open(id, body.with === 'terminal' ? 'terminal' : 'editor'),
     hide: (id) => { projects.updateConfig({ hidden: [...new Set([...projects.config.hidden, id])] }); return state(); },
   };
 

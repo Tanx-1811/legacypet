@@ -13,6 +13,7 @@ import { collectSnapshot } from '../github/collect.js';
 import { strings } from '../i18n/index.js';
 import { adoptLocal, findReadme, publishAdoption, readWorkflow, workflowOptions } from './adopt.js';
 import { readRepo } from './git.js';
+import { detectTools, launch, publicTools } from './open.js';
 import { findRepos, suggestFolders } from './scan.js';
 import { createStore, projectId } from './store.js';
 
@@ -21,6 +22,10 @@ export const WARN_MOODS = ['hungry', 'sad', 'sleepy'];
 const ONLINE_TTL = 20 * 60_000;
 const POOL = 6;
 const KEEP_EVENTS = 60;
+export const STREAK_REMINDER_HOUR = 18; // local time: an evening nudge, once a day per repo
+
+const pad = (n) => String(n).padStart(2, '0');
+export const localDay = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
 // The few sentences the app says on its own (notifications). The pet's words come from src/i18n.
 const NOTES = {
@@ -36,6 +41,7 @@ const NOTES = {
     trophy: (p, t) => `🏆 ${p} earned a trophy: ${t}`,
     evolved: (p) => `🧬 ${p} evolved!`,
     quest: (p) => `📜 ${p} finished a quest!`,
+    streak: (p, n) => `🔥 ${p} is on a ${n}-day streak. One commit today keeps it going!`,
   },
   vi: {
     hungry: (p) => `${p} đang đói. Một commit là bữa ngon đấy.`,
@@ -49,6 +55,7 @@ const NOTES = {
     trophy: (p, t) => `🏆 ${p} có thành tích mới: ${t}`,
     evolved: (p) => `🧬 ${p} đã tiến hóa!`,
     quest: (p) => `📜 ${p} xong một nhiệm vụ!`,
+    streak: (p, n) => `🔥 ${p} đang có chuỗi ${n} ngày. Một commit hôm nay để giữ chuỗi nhé!`,
   },
 };
 const notes = (lang) => NOTES[lang] ?? NOTES.en;
@@ -92,9 +99,11 @@ export function createProjects({ store = createStore(), now: clock = () => new D
   let refreshing = false;
   let lastScan = cache.lastScan ?? null;
   let tokenInfo = null;
+  let tools = null;
+  const reminded = new Map(Object.entries(cache.reminded ?? {})); // id → the day it was nudged
 
   const emit = (type, payload) => { for (const fn of listeners) fn(type, payload); };
-  const persist = () => store.saveCache({ projects: [...projects.values()], lastScan, seq });
+  const persist = () => store.saveCache({ projects: [...projects.values()], lastScan, seq, reminded: Object.fromEntries(reminded) });
   const ui = () => (config.ui === 'vi' ? 'vi' : 'en');
 
   function token() {
@@ -132,6 +141,14 @@ export function createProjects({ store = createStore(), now: clock = () => new D
     if (prev.lastMood !== pet.mood && say[pet.mood] && attention(pet.mood) !== 'good') {
       record({ ...base, kind: 'mood', urgent: attention(pet.mood) === 'bad', text: `${MOOD_EMOJI[pet.mood]} ${say[pet.mood](who)}` });
     }
+  }
+
+  // An evening nudge when a commit streak would end tonight: once a day, only for streaks worth keeping.
+  function nudgeStreak(project, pet, activity, now) {
+    const today = localDay(now);
+    if (now.getHours() < STREAK_REMINDER_HOUR || pet.facts.streak < 3 || activity[today] || reminded.get(project.id) === today) return;
+    reminded.set(project.id, today);
+    record({ projectId: project.id, fullName: project.fullName, mood: pet.mood, kind: 'streak', text: notes(ui()).streak(`${pet.name} (${project.folder})`, pet.facts.streak) });
   }
 
   // Reads one repo, raises its pet one step and remembers it.
@@ -175,6 +192,7 @@ export function createProjects({ store = createStore(), now: clock = () => new D
     const pet = buildPet({ snapshot, prevState: prev, now, options: { ...options, lang: options.lang || ui(), care: care ? { name: care, user } : undefined } });
     store.saveMemory(id, nextState(pet, prev));
     if (!care) noticeChanges({ id, folder: info.folder, fullName: info.fullName }, pet, memory);
+    if (!care && memory) nudgeStreak({ id, folder: info.folder, fullName: info.fullName }, pet, info.activity, now);
 
     const readme = findReadme(path);
     const readmeText = readme ? safeRead(join(path, readme)) : '';
@@ -207,6 +225,8 @@ export function createProjects({ store = createStore(), now: clock = () => new D
       prev,
       care: care ? { name: care, user } : null,
       now: now.toISOString(),
+      activity: info.activity,
+      log: info.log,
       summary: {
         name: pet.name,
         displayName: pet.displayName,
@@ -220,6 +240,11 @@ export function createProjects({ store = createStore(), now: clock = () => new D
         attention: attention(pet.mood),
         careOutcome: pet.careOutcome,
         daysSinceCommit: Math.floor(pet.facts.daysSinceCommit),
+        streak: pet.facts.streak,
+        commits7: pet.facts.commits7,
+        rank: pet.rank.id,
+        rankEmoji: pet.rank.emoji,
+        committedToday: Boolean(info.activity[localDay(now)]),
       },
     };
   }
@@ -346,6 +371,23 @@ export function createProjects({ store = createStore(), now: clock = () => new D
       return { publish: result, project: fresh };
     },
 
+    // The code editors and terminals on this computer, to open a project in.
+    tools() {
+      tools ??= detectTools();
+      return publicTools(tools);
+    },
+
+    async open(id, kind) {
+      const p = get(id);
+      tools ??= detectTools();
+      const list = kind === 'terminal' ? tools.terminals : tools.editors;
+      const wanted = kind === 'terminal' ? config.terminal : config.editor;
+      const tool = list.find((t) => t.id === wanted) ?? list[0];
+      if (!tool) throw Object.assign(new Error(kind === 'terminal' ? 'No terminal app found' : 'No code editor found'), { status: 404 });
+      await launch(tool, p.path);
+      return { ok: true, tool: tool.name };
+    },
+
     // "Forget everything": settings, memories and the cache. The repos are never touched.
     reset() {
       store.reset();
@@ -355,6 +397,7 @@ export function createProjects({ store = createStore(), now: clock = () => new D
       online.clear();
       tokenInfo = null;
       lastScan = null;
+      reminded.clear();
       emit('change');
     },
   };

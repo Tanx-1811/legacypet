@@ -2,7 +2,9 @@ import * as LP from './src/index.js';
 import { UI, UI_LANGS } from './ui.js';
 import * as Sim from './sim.js';
 import { homeViews } from './home.js';
+import { icon } from './icons.js';
 import { api, desktop, listen, LOCAL, MODE } from './local.js';
+import { createPalette } from './palette.js';
 
 // ---------------------------------------------------------------------------
 // Shared state. Everything the visitor picks lives in one place, survives a reload
@@ -97,12 +99,24 @@ const codeBlock = (text) => {
   return h('div.code', pre, copyButton(() => pre.textContent));
 };
 
+const TOAST_ICONS = { good: 'circle-check', gold: 'sparkles', bad: 'circle-alert' };
 function toast(text, kind = '') {
   const box = $('#toasts');
-  const el = h(`div.toast${kind ? `.${kind}` : ''}`, { role: 'status' }, text);
+  const el = h(`div.toast${kind ? `.${kind}` : ''}`, { role: 'status', title: t().toastClose, onclick: () => el.remove() },
+    icon(TOAST_ICONS[kind] ?? 'info', { size: 16 }), h('span', text));
   box.append(el);
   while (box.children.length > 3) box.firstChild.remove();
-  setTimeout(() => el.remove(), 3000);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// A button with an icon: btn('Refresh', { icon: 'refresh-cw', kind: 'primary', onclick }).
+// Without a label it is an icon button, and `title` becomes its name.
+function btn(label, { icon: name, kind = '', onclick, title, type = 'button', disabled, size = 16, href, ...attrs } = {}) {
+  const cls = `${href ? 'a' : 'button'}.btn${kind ? `.${kind.split(' ').join('.')}` : ''}${label ? '' : '.icon-only'}`;
+  return h(cls, {
+    ...(href ? { href, target: /^https?:/.test(href) ? '_blank' : null, rel: /^https?:/.test(href) ? 'noopener' : null } : { type, disabled }),
+    onclick, title: title ?? null, 'aria-label': label ? null : title, ...attrs,
+  }, name ? icon(name, { size }) : null, label ? h('span', label) : null);
 }
 
 function select(options, value, onchange, label) {
@@ -1005,15 +1019,22 @@ function viewAdopt(root) {
 // it's the playground, with a page to download the app.
 const homeKit = homeViews({
   h, img, svgSrc, toast, t, tr, store, save, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP, Sim, stopAuto, demoPet,
-  render: () => render(),
+  icon, btn, render: () => render(),
 });
 const VIEWS = {
   home: homeKit.views.home, hatch: viewHatch, sim: viewSim, codex: viewCodex, park: viewPark, adopt: viewAdopt,
   settings: homeKit.views.settings, get: homeKit.views.get,
 };
-const NAV = LOCAL ? ['home', 'hatch', 'sim', 'codex', 'park', 'adopt', 'settings'] : ['hatch', 'sim', 'codex', 'park', 'adopt', 'get'];
-const ICONS = { home: '🏠', hatch: '🥚', sim: '🎮', codex: '📖', park: '🏞️', adopt: '🏡', settings: '⚙️', get: '💻' };
+// The sidebar: your own pets first (in the app), then the playground, then settings or the download.
+const SECTIONS = LOCAL
+  ? [['mine', ['home']], ['explore', ['hatch', 'sim', 'codex', 'park', 'adopt']], ['bottom', ['settings']]]
+  : [['explore', ['hatch', 'sim', 'codex', 'park', 'adopt']], ['bottom', ['get']]];
+const NAV = SECTIONS.flatMap(([, ids]) => ids);
+const NAV_ICONS = {
+  home: 'layout-dashboard', hatch: 'egg', sim: 'gamepad-2', codex: 'book-open', park: 'trees', adopt: 'heart-handshake', settings: 'settings', get: 'monitor-down',
+};
 const DEFAULT_VIEW = NAV[0];
+const isMac = /mac/i.test(navigator.userAgentData?.platform ?? navigator.platform ?? '');
 let current = null;
 
 function route() {
@@ -1031,10 +1052,16 @@ function go_(view, arg = '') {
 function drawNav(view) {
   const T = t();
   const care = LOCAL ? homeKit.careCount() : 0;
-  $('#nav').replaceChildren(...NAV.map((id) => h('a', {
+  const item = (id) => h('a.nav-item', {
     href: `#/${id}`, 'data-view': id, title: T.navHint[id], 'aria-current': id === view ? 'page' : null,
-  }, h('span.ico', { 'aria-hidden': 'true' }, ICONS[id]), h('span.label', T.nav[id]), h('small', T.navHint[id]),
-  id === 'home' && care ? h('span.badge', { title: t().home.filters.care }, care) : null)));
+  }, icon(NAV_ICONS[id], { size: 18 }), h('span.label', T.nav[id]),
+  id === 'home' && care ? h('span.badge', { title: T.home.filters.care }, care) : null);
+  $('#nav').replaceChildren(...SECTIONS.map(([section, ids]) => h(`div.nav-group.${section}`,
+    section === 'bottom' ? null : h('div.nav-head', T.side[section]),
+    section === 'bottom' && !LOCAL
+      ? h('a.nav-cta', { href: '#/get', 'aria-current': view === 'get' ? 'page' : null, title: T.side.getAppNote },
+        icon('monitor-down', { size: 18 }), h('span.label', h('b', T.side.getApp), h('small', T.side.getAppNote)))
+      : ids.map(item))));
 }
 
 function render() {
@@ -1044,6 +1071,7 @@ function render() {
   document.documentElement.lang = store.ui;
   document.title = `LegacyPet · ${T.nav[view]}`;
   drawNav(view);
+  drawSide();
   const main = $('#view');
   main.replaceChildren();
   const root = h('div.view');
@@ -1055,36 +1083,86 @@ function render() {
   navHeight();
 }
 
+// The search button and the collapse toggle at the top of the sidebar.
+function drawSide() {
+  const T = t().side;
+  const collapsed = store.side === 'collapsed';
+  document.querySelector('.shell').classList.toggle('collapsed', collapsed);
+  $('#side-toggle').replaceChildren(icon('panel-left', { size: 18 }));
+  $('#side-toggle').title = collapsed ? T.expand : T.collapse;
+  $('#side-toggle').setAttribute('aria-label', $('#side-toggle').title);
+  $('#side-toggle').setAttribute('aria-expanded', String(!collapsed));
+  $('#side-search').replaceChildren(icon('search', { size: 16 }), h('span.label', T.search), h('kbd.kbd', isMac ? '⌘K' : 'Ctrl K'));
+  $('#side-search').title = `${T.search} (${isMac ? '⌘K' : 'Ctrl+K'})`;
+}
+
 function drawToolbar() {
   const T = t();
   const bar = $('#toolbar');
+  const themeIcon = { auto: 'sun-moon', light: 'sun', dark: 'moon' }[store.theme];
   bar.replaceChildren(
-    seg(Object.entries(UI_LANGS).map(([code]) => [code, code.toUpperCase()]), store.ui, (v) => {
-      // The pet follows the interface language until someone picks another one.
-      if (store.cfg.lang === store.ui) store.cfg.lang = v;
-      store.ui = v;
-      save();
-      if (LOCAL) api('config', { ui: v }).catch(() => {});
-      render();
-    }, T.common.uiLang),
-    h('button.icon-btn', {
-      type: 'button', title: `${T.common.theme}: ${T.common.themes[store.theme]}`, 'aria-label': T.common.theme,
-      onclick: () => {
-        store.theme = { auto: 'light', light: 'dark', dark: 'auto' }[store.theme];
-        applyTheme();
-        save();
-        codexCache.clear();
-        current?.redraw?.();
-        drawToolbar();
-      },
-    }, { auto: '🌓', light: '☀️', dark: '🌙' }[store.theme]),
-    h('a.icon-btn', { href: 'https://github.com/Tanx-1811/legacypet', target: '_blank', rel: 'noopener', title: 'GitHub' }, '★'));
+    seg(Object.entries(UI_LANGS).map(([code]) => [code, code.toUpperCase()]), store.ui, (v) => setLang(v), T.common.uiLang),
+    btn('', { icon: themeIcon, kind: 'ghost', title: `${T.common.theme}: ${T.common.themes[store.theme]}`, onclick: cycleTheme }),
+    btn('', { icon: 'external-link', kind: 'ghost', title: 'GitHub', href: 'https://github.com/Tanx-1811/legacypet' }));
+}
+
+function setLang(v) {
+  // The pet follows the interface language until someone picks another one.
+  if (store.cfg.lang === store.ui) store.cfg.lang = v;
+  store.ui = v;
+  save();
+  if (LOCAL) api('config', { ui: v }).catch(() => {});
+  render();
+}
+
+function cycleTheme() {
+  store.theme = { auto: 'light', light: 'dark', dark: 'auto' }[store.theme];
+  applyTheme();
+  save();
+  codexCache.clear();
+  current?.redraw?.();
+  drawToolbar();
 }
 
 function applyTheme() {
   if (store.theme === 'auto') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = store.theme;
 }
+
+// ⌘K: every page, every pet and the useful actions, from the keyboard.
+const palette = createPalette({
+  h, icon, t,
+  items: () => {
+    const T = t();
+    const A = T.palette.actions;
+    const items = NAV.map((id) => ({ group: 'nav', icon: NAV_ICONS[id], label: T.nav[id], hint: T.navHint[id], run: () => go_(id) }));
+    const state = homeKit.state;
+    if (LOCAL && state) {
+      for (const p of state.projects.filter((x) => x.summary)) {
+        items.push({ group: 'projects', icon: 'paw-print', label: `${p.summary.name} · ${p.folder}`, hint: p.github ? p.fullName : p.path, keywords: p.path, run: () => go_('home', p.id) });
+      }
+      items.push(
+        { group: 'actions', icon: 'refresh-cw', label: A.refresh, run: () => homeKit.actions.refresh() },
+        { group: 'actions', icon: 'search', label: A.rescan, run: () => homeKit.actions.rescan() },
+        { group: 'actions', icon: 'folder-plus', label: A.addFolder, run: () => homeKit.actions.addFolder() },
+        { group: 'actions', icon: 'cloud-upload', label: A.adoptAll, run: () => homeKit.actions.adoptAll() },
+      );
+      if (MODE === 'desktop') items.push({ group: 'actions', icon: 'monitor', label: A.float, run: () => homeKit.actions.toggleFloat() });
+    }
+    items.push(
+      { group: 'actions', icon: { auto: 'sun-moon', light: 'sun', dark: 'moon' }[store.theme], label: A.theme, run: cycleTheme },
+      { group: 'actions', icon: 'languages', label: A.lang, run: () => setLang(store.ui === 'vi' ? 'en' : 'vi') },
+    );
+    return items;
+  },
+});
+
+$('#side-search').addEventListener('click', () => palette.open());
+$('#side-toggle').addEventListener('click', () => {
+  store.side = store.side === 'collapsed' ? 'open' : 'collapsed';
+  save();
+  drawSide();
+});
 
 darkQuery.addEventListener('change', () => { if (store.theme === 'auto') { codexCache.clear(); current?.redraw?.(); } });
 window.addEventListener('hashchange', render);
@@ -1093,8 +1171,18 @@ const wide = matchMedia('(min-width: 960px)');
 const navHeight = () => document.documentElement.style.setProperty('--nav-h', `${wide.matches ? 0 : $('#side').offsetHeight}px`);
 window.addEventListener('resize', navHeight);
 document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    palette.open();
+    return;
+  }
   if (e.target.closest('input, select, textarea, [contenteditable], dialog')) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === '/') {
+    e.preventDefault();
+    if (!current?.focusSearch?.()) palette.open();
+    return;
+  }
   current?.keys?.(e);
 });
 

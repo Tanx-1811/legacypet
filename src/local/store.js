@@ -20,6 +20,9 @@ export const DEFAULT_CONFIG = {
   floatBounds: null,
   hidden: [],
   options: {}, // per project: species, name, scenery, lang, wear picked in the app
+  pinned: [], // projects kept at the top
+  editor: null, // the code editor to open projects in (null: the first one found)
+  terminal: null,
   ui: null,
   theme: null,
 };
