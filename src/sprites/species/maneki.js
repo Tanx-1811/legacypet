@@ -16,7 +16,7 @@ export default {
     '..oo......ooolbo',
     '.oOpo....opnobbo',
     '.oOOboooobnnobbo',
-    '.oObbbbbbbbnobso',
+    '.oObbbbbbbbbobso',
     '.obbbbbbbbbbobso',
     '.obbbbbbbbbbobso',
     '.obbbbbbbbbbobso',
