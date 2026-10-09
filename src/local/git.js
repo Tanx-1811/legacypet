@@ -85,6 +85,17 @@ function parseTree(text) {
   return out;
 }
 
+// Commits per day over the last year, by the day the committer saw on their own clock:
+// { '2026-10-08': 3, ... }, for the activity calendar.
+export function dailyCounts(dates) {
+  const out = {};
+  for (const d of dates) {
+    const day = String(d).slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(day)) out[day] = (out[day] ?? 0) + 1;
+  }
+  return out;
+}
+
 // The pet the GitHub Action already raised, if the `legacypet` branch has been fetched:
 // its memory keeps the species, trophies and history in step with the one on GitHub.
 async function petFromBranch(dir) {
@@ -103,7 +114,8 @@ async function petFromBranch(dir) {
 export async function readRepo(dir, { now = new Date() } = {}) {
   const ok = (args) => git(dir, args, { allowFail: true });
   const since = new Date(now.getTime() - RECENT_DAYS * DAY).toISOString();
-  const [remote, branch, originHead, count, roots, log, last, tag, authors, status, aheadBehind, petBranch, tree, user] = await Promise.all([
+  const yearAgo = new Date(now.getTime() - 371 * DAY).toISOString();
+  const [remote, branch, originHead, count, roots, log, last, tag, authors, status, aheadBehind, petBranch, tree, user, year, latest] = await Promise.all([
     ok(['config', '--get', 'remote.origin.url']),
     ok(['rev-parse', '--abbrev-ref', 'HEAD']),
     ok(['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']),
@@ -118,6 +130,8 @@ export async function readRepo(dir, { now = new Date() } = {}) {
     ok(['rev-parse', '--verify', '--quiet', 'refs/remotes/origin/legacypet']),
     ok(['ls-tree', '-r', '-l', 'HEAD']),
     ok(['config', '--get', 'user.name']),
+    ok(['log', `--since=${yearAgo}`, '--format=%cI', 'HEAD']),
+    ok(['log', '-n', '15', `--format=%h${SEP}%cI${SEP}%an${SEP}%s`, 'HEAD']),
   ]);
 
   const github = parseRemote(remote ?? '');
@@ -164,6 +178,11 @@ export async function readRepo(dir, { now = new Date() } = {}) {
 
   const paths = new Set(files.map((f) => f.path));
   return {
+    activity: dailyCounts(lines(year)),
+    log: lines(latest).map((line) => {
+      const [sha, date, author, subject] = line.split(SEP);
+      return { sha, date, author, subject: subject ?? '' };
+    }),
     path: dir,
     folder,
     fullName,

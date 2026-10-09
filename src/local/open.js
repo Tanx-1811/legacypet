@@ -34,15 +34,24 @@ export function detectTools({ platform = process.platform, env = process.env } =
       if (id === 'terminal' || macApp(name, env)) terminals.push({ id, name, cmd: 'open', args: (p) => ['-a', name, p] });
     }
   } else if (platform === 'win32') {
+    // Run the editors' own .exe, never through a shell, so no folder name can turn into a command.
     const local = env.LOCALAPPDATA ?? '';
-    const known = { vscode: join(local, 'Programs', 'Microsoft VS Code', 'Code.exe'), cursor: join(local, 'Programs', 'cursor', 'Cursor.exe') };
-    for (const [id, name, bin] of CLI_EDITORS) {
-      const path = onPath(bin, env, platform) ?? (known[id] && existsSync(known[id]) ? known[id] : null);
-      if (path) editors.push({ id, name, cmd: path, args: (p) => [p], shell: /\.cmd$/i.test(path) });
+    const programs = env.PROGRAMFILES ?? 'C:\\Program Files';
+    const codeCmd = onPath('code', env, platform);
+    const WIN_EDITORS = [
+      ['vscode', 'Visual Studio Code', [join(local, 'Programs', 'Microsoft VS Code', 'Code.exe'), join(programs, 'Microsoft VS Code', 'Code.exe'), codeCmd && join(codeCmd, '..', '..', 'Code.exe')]],
+      ['cursor', 'Cursor', [join(local, 'Programs', 'cursor', 'Cursor.exe')]],
+      ['windsurf', 'Windsurf', [join(local, 'Programs', 'Windsurf', 'Windsurf.exe')]],
+      ['sublime', 'Sublime Text', [join(programs, 'Sublime Text', 'sublime_text.exe')]],
+    ];
+    for (const [id, name, paths] of WIN_EDITORS) {
+      const exe = paths.find((p) => p && existsSync(p));
+      if (exe) editors.push({ id, name, cmd: exe, args: (p) => [p] });
     }
     const wt = onPath('wt', env, platform);
     if (wt) terminals.push({ id: 'wt', name: 'Windows Terminal', cmd: wt, args: (p) => ['-d', p] });
-    terminals.push({ id: 'cmd', name: 'Command Prompt', cmd: 'cmd.exe', args: (p) => ['/c', 'start', '', 'cmd.exe', '/K', `cd /d "${p}"`] });
+    // `start` opens a new window in the working directory it is given.
+    terminals.push({ id: 'cmd', name: 'Command Prompt', cmd: 'cmd.exe', args: () => ['/c', 'start', 'cmd.exe'], cwd: true });
   } else {
     for (const [id, name, bin] of CLI_EDITORS) {
       const path = onPath(bin, env, platform);
@@ -69,7 +78,7 @@ export function launch(tool, path) {
       execFile('open', tool.args(path), { timeout: 15_000 }, (err) => (err ? reject(err) : resolve()));
       return;
     }
-    const child = spawn(tool.cmd, tool.args(path), { detached: true, stdio: 'ignore', windowsHide: false, shell: Boolean(tool.shell) });
+    const child = spawn(tool.cmd, tool.args(path), { detached: true, stdio: 'ignore', windowsHide: false, ...(tool.cwd ? { cwd: path } : {}) });
     child.once('error', reject);
     child.once('spawn', () => { child.unref(); resolve(); });
   });
