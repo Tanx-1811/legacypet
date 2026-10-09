@@ -16,7 +16,7 @@ Một con thú pixel sống trong README, cảm nhận đúng tình trạng dự
 
 <img src="docs/gallery/hero/hero-vi.svg" alt="Bánh Bao Đói Meo, một con mèo đang đói" width="520">
 
-**🆕 Bản 1.3:** [nhiệm vụ tuần](#-nhiệm-vụ-tuần) · [tiến hóa](#-tiến-hóa) · [tủ đồ](#-tủ-đồ) · [cho ăn, chơi với thú](#-ăn-vặt-và-chơi-đùa) · [playground nuôi thử](#️-playground) · [xem tất cả](CHANGELOG.md)
+**🆕 Bản 1.3:** [ứng dụng cho máy tính](#️-ứng-dụng-cho-máy-tính) · [nhiệm vụ tuần](#-nhiệm-vụ-tuần) · [tiến hóa](#-tiến-hóa) · [tủ đồ](#-tủ-đồ) · [cho ăn, chơi với thú](#-ăn-vặt-và-chơi-đùa) · [playground nuôi thử](#️-playground) · [xem tất cả](CHANGELOG.md)
 
 </div>
 
@@ -38,6 +38,36 @@ Nhìn con thú một cái là biết ngay, và bạn cũng có thêm một lý d
 Tất cả chạy trong một GitHub Action: không server, không đăng ký, không theo dõi, không có dependency nào.
 
 ## Cách dùng
+
+### 🖥️ Ứng dụng cho máy tính
+
+**Mọi dự án trên máy đều có thú.** [Tải LegacyPet](https://tanx-1811.github.io/legacypet/#/get) cho macOS,
+Windows hoặc Linux, mở lên và bấm **Cho phép & tìm dự án**. Vậy là xong:
+
+- App tìm các repo git trong những thư mục bạn chọn (thư mục `Documents/GitHub` của GitHub Desktop được chọn sẵn)
+  và cho mỗi repo một chú thú ngay lập tức, chạy offline, dựa vào chính các commit của bạn.
+- **🏡 Nhận nuôi trên GitHub** đưa thú vào README chỉ bằng một cú bấm: app thêm 2 file, commit riêng 2 file đó
+  rồi push bằng Git của bạn. **Nhận nuôi hàng loạt** làm cho mọi repo cùng lúc.
+- Một chú thú ngồi trên màn hình, thanh menu cho biết thú nào cần chăm, và có thông báo khi thú đói, ốm,
+  lên cấp hay có thành tích mới.
+- Mỗi ngày cho ăn, chơi, xoa đầu từng thú, mặc đồ cho nó, hoặc nuôi thử trong trình giả lập.
+
+**Riêng tư ngay từ đầu.** Không tài khoản, không theo dõi. App chỉ đọc những thư mục bạn cho phép, chỉ ghi khi
+bạn bấm nhận nuôi, và chỉ kết nối GitHub khi bạn bật *Dữ liệu GitHub* (CI, issue, sao) bằng đăng nhập GitHub CLI
+hoặc token. Mọi thứ app nhớ nằm trong `~/.legacypet`, và trong *Cài đặt* có nút xoá sạch.
+
+Đã có Node.js? Không cần tải:
+
+```sh
+npx github:Tanx-1811/legacypet app
+```
+
+Lệnh này mở cùng ứng dụng trong cửa sổ riêng (Chrome hoặc Edge) và tự thoát khi bạn đóng cửa sổ.
+
+> [!NOTE]
+> App chưa được Apple hay Microsoft ký. Trên macOS, lần đầu mở có thể báo không mở được: vào
+> **Cài đặt hệ thống → Quyền riêng tư & Bảo mật** và bấm **Vẫn mở**. Trên Windows, bấm
+> **Thông tin thêm → Vẫn chạy** khi SmartScreen hiện lên.
 
 ### Cách 1: một cú click trên web (không cần cài gì, khuyên dùng)
 

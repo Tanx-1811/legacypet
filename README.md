@@ -16,7 +16,7 @@ fed by commits, healed by green CI, cheered up when issues get answered.
 
 <img src="docs/gallery/hero/hero.svg" alt="Mochi the Radiant, an ecstatic rubber duck wearing a crown" width="520">
 
-**🆕 New in 1.3:** [weekly quests](#-weekly-quests) · [evolution](#-evolution) · [wardrobe](#-wardrobe) · [`/pet feed` and `/pet play`](#talk-to-your-pet-pet) · [a playground you can raise a pet in](#️-the-playground) · [full changelog](CHANGELOG.md)
+**🆕 New in 1.3:** [a desktop app](#️-the-desktop-app) · [weekly quests](#-weekly-quests) · [evolution](#-evolution) · [wardrobe](#-wardrobe) · [`/pet feed` and `/pet play`](#talk-to-your-pet-pet) · [a playground you can raise a pet in](#️-the-playground) · [full changelog](CHANGELOG.md)
 
 </div>
 
@@ -39,6 +39,36 @@ and gives you a small, silly reason to come back and care for your code.
 Everything runs inside a GitHub Action: no server, no sign-up, no tracking, zero dependencies.
 
 ## Quick start
+
+### 🖥️ The desktop app
+
+**Every project on your computer gets a pet.** [Download LegacyPet](https://tanx-1811.github.io/legacypet/#/get)
+for macOS, Windows or Linux, open it and press **Allow & find my projects**. That's all:
+
+- It finds the git repos in the folders you pick (GitHub Desktop's `Documents/GitHub` is ticked for you)
+  and gives each one a pet at once, offline, from your own commits.
+- **🏡 Adopt on GitHub** moves a pet into the repo's README with one click: it adds the two files,
+  commits only those and pushes with your own Git. **Adopt them all** does every repo in one go.
+- A pet sits on your desktop, the menu bar shows who needs care, and a notification tells you when a pet
+  gets hungry or sick, levels up or earns a trophy.
+- Feed, play and pat every pet once a day, dress it up, or raise it in the simulator.
+
+**Private by design.** No account, no tracking. It reads only the folders you allow, writes only when you
+press adopt, and talks to GitHub only when you turn on *GitHub details* (CI, issues and stars), with your
+GitHub CLI login or a token. Everything it remembers lives in `~/.legacypet`, and *Settings* erases it in one click.
+
+Have Node.js? Skip the download:
+
+```sh
+npx github:Tanx-1811/legacypet app
+```
+
+It opens the same app in its own window (Chrome or Edge) and quits when you close it.
+
+> [!NOTE]
+> The app isn't signed by Apple or Microsoft yet. On macOS, the first launch may say it can't be opened:
+> go to **System Settings → Privacy & Security** and press **Open Anyway**. On Windows, press
+> **More info → Run anyway** on the SmartScreen prompt.
 
 ### 1. Adopt it in one click (nothing to install)
 
