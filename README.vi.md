@@ -210,7 +210,7 @@ Chọn tâm trạng muốn báo: `alerts: sick, zombie, hungry, sad`.
 | 🤩 Phấn khích | Trung bình các chỉ số từ 80 trở lên |
 | 😊 Vui | Mọi thứ còn lại |
 
-## 13 loài, mỗi loài một đặc tính
+## 43 loài, mỗi loài một đặc tính
 
 Repo tự chọn thú cho mình: repo Rust luôn nở ra cua 🦀, repo Python luôn ra rắn 🐍, còn lại tùy tên repo.
 
@@ -238,6 +238,45 @@ Sáu nhân vật nguyên bản lấy cảm hứng từ anime và phim hoạt hì
 | <img src="docs/gallery/species/hero.svg" width="70"> | Siêu Cún (`hero`) | Thân thép | CI đỏ cũng không kéo sức khỏe xuống dưới 40 |
 
 Mỗi bé còn có câu cửa miệng riêng (*"Bay lên nào, deploy! 🦸"*, *"\*bùm\* Thuật phân thân commit! 🍥"*).
+
+### 🏮 Hội anime
+
+Thêm ba mươi nhân vật nguyên bản, từ yêu quái dân gian Nhật Bản (kappa, tengu, cáo chín đuôi, daruma, ma yurei)
+đến các kiểu nhân vật anime và fantasy quen thuộc (idol, hiệp sĩ isekai, kaiju tí hon, rương mimic). Mỗi bé một luật chơi và câu cửa miệng riêng:
+
+| | Loài | Đặc tính | Tác dụng |
+| :-: | --- | --- | --- |
+| <img src="docs/gallery/species/samurai.svg" width="70"> | Shiba Lãng Khách (`samurai`) | Võ sĩ đạo | Luyện tập mỗi ngày: +12 năng lượng vào ngày có commit |
+| <img src="docs/gallery/species/kitsune.svg" width="70"> | Cáo Chín Đuôi (`kitsune`) | Cửu vĩ | Mỗi trăm năm mọc thêm một đuôi: lên cấp nhanh hơn 30% |
+| <img src="docs/gallery/species/tanuki.svg" width="70"> | Tanuki Lá (`tanuki`) | Tinh thần lễ hội | Càng đông càng vui: +5 niềm vui cho mỗi người đóng góp thêm (tối đa +20) |
+| <img src="docs/gallery/species/oni.svg" width="70"> | Quỷ Oni Nhí (`oni`) | Chùy sắt | Khỏe như quỷ: năng lượng không bao giờ dưới 35 |
+| <img src="docs/gallery/species/kappa.svg" width="70"> | Kappa (`kappa`) | Kho dưa chuột | Giấu đồ ăn trong mai: đói chậm hơn 30% |
+| <img src="docs/gallery/species/tengu.svg" width="70"> | Quạ Tengu (`tengu`) | Cưỡi gió | Cưỡi gió núi: mỗi commit cho thêm 25% năng lượng |
+| <img src="docs/gallery/species/baku.svg" width="70"> | Thú Ăn Mộng (`baku`) | Giấc mơ ngọt | Ăn ác mộng thay bạn: năng lượng không bao giờ dưới 30 |
+| <img src="docs/gallery/species/maneki.svg" width="70"> | Mèo Thần Tài (`maneki`) | Phát tài | Vẫy tay rước lộc: +3 niềm vui cho mỗi 100 sao (tối đa +20) |
+| <img src="docs/gallery/species/daruma.svg" width="70"> | Lật Đật Daruma (`daruma`) | Bất đảo | Ngã bảy lần, đứng dậy tám lần: CI đỏ cũng không kéo sức khỏe dưới 45 |
+| <img src="docs/gallery/species/kodama.svg" width="70"> | Tinh Linh Rừng (`kodama`) | Rừng già | Repo lâu năm là khu rừng thiêng: +2 niềm vui mỗi năm tuổi (tối đa +12) |
+| <img src="docs/gallery/species/ghost.svg" width="70"> | Ma Yurei (`ghost`) | Vô hình | Đi xuyên tường: issue bị bỏ rơi bớt làm nó buồn 40% |
+| <img src="docs/gallery/species/idol.svg" width="70"> | Idol Ngôi Sao (`idol`) | Nụ cười sân khấu | Lúc nào cũng trên sân khấu: niềm vui không bao giờ dưới 35 |
+| <img src="docs/gallery/species/witch.svg" width="70"> | Phù Thủy Nhí (`witch`) | Sách phép | Repo gọn gàng là cuốn sách phép tốt: +12 niềm vui khi hồ sơ cộng đồng từ 80% |
+| <img src="docs/gallery/species/knight.svg" width="70"> | Hiệp Sĩ Isekai (`knight`) | Gác cổng | Canh cổng thành: +12 niềm vui khi không pull request nào bị bỏ xó |
+| <img src="docs/gallery/species/golem.svg" width="70"> | Golem Đá (`golem`) | Trái tim đá | Gần như không cần ăn: đói chậm hơn 60% |
+| <img src="docs/gallery/species/phoenix.svg" width="70"> | Phượng Hoàng Con (`phoenix`) | Tái sinh | Mỗi release thắp lại ngọn lửa: +20 năng lượng trong 2 tuần |
+| <img src="docs/gallery/species/panda.svg" width="70"> | Gấu Trúc Võ Sư (`panda`) | Luyện công | Mỗi ngày trong chuỗi commit +3 niềm vui (tối đa +18) |
+| <img src="docs/gallery/species/kaiju.svg" width="70"> | Kaiju Tí Hon (`kaiju`) | Khổng lồ | Lớn thành quái vật khổng lồ: lên cấp nhanh hơn 40% |
+| <img src="docs/gallery/species/shark.svg" width="70"> | Cá Mập Con (`shark`) | Bơi không ngừng | Không bao giờ dừng: mỗi ngày trong chuỗi commit +3 năng lượng (tối đa +18) |
+| <img src="docs/gallery/species/penguin.svg" width="70"> | Cánh Cụt Băng (`penguin`) | Quây quần | Cánh cụt đứng sát nhau cho ấm: +5 năng lượng cho mỗi người đóng góp thêm |
+| <img src="docs/gallery/species/axolotl.svg" width="70"> | Axolotl (`axolotl`) | Tái tạo | Mất gì mọc lại nấy: CI đỏ ít ảnh hưởng hơn 40% |
+| <img src="docs/gallery/species/frog.svg" width="70"> | Hoàng Tử Ếch (`frog`) | Gọi bình minh | Sáng nào cũng ộp: +10 năng lượng vào ngày có commit |
+| <img src="docs/gallery/species/owl.svg" width="70"> | Cú Thông Thái (`owl`) | Đưa thư | Không bỏ sót lá thư nào: +12 niềm vui khi không issue nào phải chờ phản hồi |
+| <img src="docs/gallery/species/monkey.svg" width="70"> | Hầu Vương (`monkey`) | Đào tiên | Đã ăn đào tiên: CI đỏ cũng không kéo sức khỏe dưới 35 |
+| <img src="docs/gallery/species/alien.svg" width="70"> | Tân Binh Vũ Trụ (`alien`) | Tàu mẹ | Tàu mẹ truyền năng lượng xuống: CI xanh thì năng lượng không dưới 45 |
+| <img src="docs/gallery/species/vampire.svg" width="70"> | Ma Cà Rồng Nhí (`vampire`) | Bất tử | CI đỏ chỉ ảnh hưởng một nửa |
+| <img src="docs/gallery/species/raiju.svg" width="70"> | Cún Sấm Sét (`raiju`) | Tích điện | Mỗi commit là một lần sạc: commit cho thêm 50% năng lượng |
+| <img src="docs/gallery/species/pirate.svg" width="70"> | Thuyền Trưởng Rái Cá (`pirate`) | Thủy thủ đoàn | Thuyền trưởng mê thủy thủ: +4 niềm vui cho mỗi người đóng góp thêm (tối đa +20) |
+| <img src="docs/gallery/species/sakura.svg" width="70"> | Tiên Hoa Anh Đào (`sakura`) | Nở rộ | Mỗi release là một mùa hoa: +12 niềm vui trong 2 tuần |
+| <img src="docs/gallery/species/mimic.svg" width="70"> | Rương Mimic (`mimic`) | Rương báu | Mỗi release đổ đầy vàng vào rương: +20 niềm vui trong 2 tuần |
+
 Thú đã nở thì giữ nguyên loài, kể cả khi có loài mới được thêm vào.
 
 ### 🕺 Động tác đặc trưng
@@ -254,6 +293,25 @@ Khi thú mệt hay ốm thì nó thôi, và người xem bật reduced motion th
 | Bạch tuộc | uốn éo tám xúc tu | | Hiệp sĩ Bóng đêm | lộn ngược ra sau |
 | Rắn | trườn tới trườn lui | | Siêu Cún | cất cánh rồi tiếp đất kiểu siêu anh hùng |
 | Xương rồng | đung đưa chậm rãi trong gió | | | |
+
+| Hội anime | Động tác | | Hội anime | Động tác |
+| --- | --- | --- | --- | --- |
+| Shiba Lãng Khách | ngồi thụp rồi rút kiếm nhanh như chớp | | Gấu Trúc Võ Sư | lấy đà rồi tung cú đá bay |
+| Cáo Chín Đuôi | xoay hai vòng, xòe hết các đuôi | | Kaiju Tí Hon | vươn người to gấp rưỡi rồi gầm vang |
+| Tanuki Lá | *bụp*: thu nhỏ biến mất rồi hiện lại | | Cá Mập Con | lao tới, đớp đớp |
+| Quỷ Oni Nhí | dậm chân hai cái rung cả đất | | Cánh Cụt Băng | nằm sấp trượt bụng |
+| Kappa | cúi chào thật sâu | | Axolotl | dập dềnh lên xuống hai lần |
+| Quạ Tengu | phẩy quạt bay lên trong cơn gió xoáy | | Hoàng Tử Ếch | ngồi thụp rồi nhảy vọt |
+| Thú Ăn Mộng | ngủ gật, chúi xuống rồi giật mình | | Cú Thông Thái | nghiêng đầu bên này rồi bên kia |
+| Mèo Thần Tài | nhún nhún vẫy tay ba lần lấy may | | Hầu Vương | lộn nhào về phía trước |
+| Lật Đật Daruma | ngã nghiêng rồi lắc lư đứng dậy | | Tân Binh Vũ Trụ | bị chùm sáng hút lên rồi trả về |
+| Tinh Linh Rừng | lắc đầu lách cách | | Ma Cà Rồng Nhí | tung áo choàng bay vút qua |
+| Ma Yurei | bay lên rồi lả lướt qua lại | | Cún Sấm Sét | phóng zíc zắc như tia chớp |
+| Idol Ngôi Sao | tạo dáng trái, tạo dáng phải, nhảy kết bài | | Thuyền Trưởng Rái Cá | đu dây qua lại |
+| Phù Thủy Nhí | cưỡi chổi bay một vòng | | Tiên Hoa Anh Đào | xòe nở như một bông hoa |
+| Hiệp Sĩ Isekai | nấp sau khiên rồi húc khiên tới | | Rương Mimic | đớp nắp hai cái rồi nhảy lên |
+| Golem Đá | đập đất gây động đất nhỏ | | Phượng Hoàng Con | bay vút lên và bừng sáng |
+
 Muốn chọn loài khác? Đặt `species: ninja`. Muốn đặt tên? Đặt `name: Bánh Bao`.
 
 ### 🎨 Màu lông và câu cửa miệng
@@ -284,13 +342,13 @@ Mỗi loài có một nơi ở riêng, và nơi nào cũng sống động:
 
 <img src="docs/gallery/homes/meadow.svg" width="100" alt="meadow"> <img src="docs/gallery/homes/garden.svg" width="100" alt="garden"> <img src="docs/gallery/homes/pond.svg" width="100" alt="pond"> <img src="docs/gallery/homes/beach.svg" width="100" alt="beach"> <img src="docs/gallery/homes/reef.svg" width="100" alt="reef"> <img src="docs/gallery/homes/jungle.svg" width="100" alt="jungle"> <img src="docs/gallery/homes/desert.svg" width="100" alt="desert">
 
-- 🌳 **Đồng cỏ** (Slime, Siêu Cún): đồi xa có cối xay gió quay, cây đổi màu theo mùa, bướm bay
-- 🏡 **Khu vườn** (Mèo, Thỏ Phép Thuật): căn nhà nhỏ sáng đèn ban đêm, hàng rào trắng, hoa hướng dương đung đưa
-- 🦆 **Ao** (Vịt): mặt nước lấp lánh, gợn sóng lan tròn, bông lau rung rinh
-- 🏖️ **Bãi biển** (Cua): sóng vỗ, bọt biển tràn lên cát, cây dừa, hải âu, vỏ sò và lâu đài cát
-- 🐠 **Rạn san hô** (Bạch tuộc): dưới nước có tia nắng, rong biển, san hô, bong bóng và cá bơi ngang. Ban đêm sinh vật phát sáng
-- 🌴 **Rừng rậm** (Rắn, Cáo Ninja, Hiệp sĩ Bóng đêm): thác nước, dây leo, sương mù, đom đóm khi trời tối
-- 🏜️ **Sa mạc** (Xương rồng, Rồng Thần, Mecha): núi đá đỉnh bằng, hơi nóng bốc lên, bụi cỏ lăn qua
+- 🌳 **Đồng cỏ** (Slime, Siêu Cún, Shiba Lãng Khách, Thú Ăn Mộng, Daruma, Idol Ngôi Sao, Hiệp Sĩ Isekai, Cú Thông Thái): đồi xa có cối xay gió quay, cây đổi màu theo mùa, bướm bay
+- 🏡 **Khu vườn** (Mèo, Thỏ Phép Thuật, Cáo Chín Đuôi, Mèo Thần Tài, Phù Thủy Nhí, Ma Cà Rồng Nhí, Tiên Hoa Anh Đào): căn nhà nhỏ sáng đèn ban đêm, hàng rào trắng, hoa hướng dương đung đưa
+- 🦆 **Ao** (Vịt, Kappa, Ma Yurei, Axolotl, Hoàng Tử Ếch): mặt nước lấp lánh, gợn sóng lan tròn, bông lau rung rinh
+- 🏖️ **Bãi biển** (Cua, Kaiju Tí Hon, Cánh Cụt Băng, Thuyền Trưởng Rái Cá): sóng vỗ, bọt biển tràn lên cát, cây dừa, hải âu, vỏ sò và lâu đài cát
+- 🐠 **Rạn san hô** (Bạch tuộc, Cá Mập Con, Rương Mimic): dưới nước có tia nắng, rong biển, san hô, bong bóng và cá bơi ngang. Ban đêm sinh vật phát sáng
+- 🌴 **Rừng rậm** (Rắn, Cáo Ninja, Hiệp sĩ Bóng đêm, Tanuki Lá, Quạ Tengu, Tinh Linh Rừng, Gấu Trúc Võ Sư, Hầu Vương): thác nước, dây leo, sương mù, đom đóm khi trời tối
+- 🏜️ **Sa mạc** (Xương rồng, Rồng Thần, Mecha, Quỷ Oni Nhí, Golem Đá, Phượng Hoàng Con, Tân Binh Vũ Trụ, Cún Sấm Sét): núi đá đỉnh bằng, hơi nóng bốc lên, bụi cỏ lăn qua
 
 Ban đêm (dark mode) có sao băng, mùa đông có cả cực quang:
 
@@ -434,7 +492,7 @@ Rồng Thần tính mỗi commit bằng 1,5 nên leo hạng nhanh hơn.
 
 | Input | Mặc định | Ý nghĩa |
 | --- | --- | --- |
-| `species` | `auto` | `auto` hoặc một trong 13 loài ở trên |
+| `species` | `auto` | `auto` hoặc một trong 43 loài ở trên |
 | `scenery` | `auto` | Nơi ở: `auto` (quê nhà của loài), `meadow`, `garden`, `pond`, `beach`, `reef`, `jungle`, `desert` |
 | `name` | | Tên tự đặt. Để trống thì repo tự đặt tên |
 | `color` | `auto` | Màu lông: `red`, `orange`, `gold`, `lime`, `green`, `teal`, `sky`, `blue`, `indigo`, `purple`, `pink`, `mono` hoặc mã hex |

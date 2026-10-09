@@ -47,6 +47,13 @@ Releases that need a change to your workflow file say so.
   with or pats every pet at once (also in ⌘K).
 - 💾 **Backup & restore**: one JSON file with your settings, notes and every pet's memory (never the token). On another
   computer each pet finds its repo again by its GitHub name.
+- 🏮 **The anime crew: 30 new species** (43 in all), original characters from Japanese folklore and anime archetypes:
+  Ronin Shiba, Nine-Tailed Fox, Leaf Tanuki, Little Oni, Kappa, Crow Tengu, Dream Eater, Lucky Cat, Daruma,
+  Forest Spirit, Yurei, Star Idol, Little Witch, Isekai Knight, Stone Golem, Phoenix Chick, Monk Panda, Mini Kaiju,
+  Shark Pup, Ice Penguin, Axolotl, Frog Prince, Owl Sage, Monkey King, Space Cadet, Little Vampire, Thunder Pup,
+  Captain Otter, Sakura Sprite and Mimic. Each has its own trait, signature move and catchphrases in all 7 languages.
+  New trait rules: energy and joy floors, faster charging, daily training, release energy, team and streak joy,
+  a bonus for fresh PRs, a tidy community profile or an old repo. Pets that already hatched keep their species.
 
 ### Changed
 

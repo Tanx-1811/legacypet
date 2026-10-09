@@ -33,7 +33,7 @@ and gives you a small, silly reason to come back and care for your code.
 - 📔 **It keeps a diary** of every day of your project's life.
 - 🩺 **It gives you a checkup**: what's wrong, and exactly what would help.
 - 💬 **It talks back.** Comment `/pet` on an issue or PR and it answers, in 7 languages.
-- 🦸 **13 species to adopt**, from a rubber duck to a ninja fox, each living in its own animated home.
+- 🦸 **43 species to adopt**, from a rubber duck to a ninja fox, a kappa and a mimic, each living in its own animated home.
 - 🏞️ **All your pets meet in a Pet Park** on your profile README.
 
 Everything runs inside a GitHub Action: no server, no sign-up, no tracking, zero dependencies.
@@ -242,6 +242,45 @@ Six original characters inspired by anime and Saturday-morning superhero cartoon
 | <img src="docs/gallery/species/hero.svg" width="80"> | Super Pup (`hero`) | Steel Body | Shrugs off red builds: failing CI can't push its health below 40. |
 
 They have their own catchphrases too ("Up, up and deploy! 🦸", "*poof* Shadow clone commit jutsu! 🍥").
+
+### 🏮 The anime crew
+
+Thirty more original characters, from Japanese folklore (kappa, tengu, kitsune, daruma, yurei) to anime and
+fantasy archetypes (the idol, the isekai knight, the mini kaiju, the mimic). Each bends its own rule and has its own catchphrases:
+
+| | Species | Trait | Effect |
+| :-: | --- | --- | --- |
+| <img src="docs/gallery/species/samurai.svg" width="80"> | Ronin Shiba (`samurai`) | Bushido | Trains every day: +12 energy on any day with a commit. |
+| <img src="docs/gallery/species/kitsune.svg" width="80"> | Nine-Tailed Fox (`kitsune`) | Nine Tails | Grows a tail every century, so it levels up 30% faster. |
+| <img src="docs/gallery/species/tanuki.svg" width="80"> | Leaf Tanuki (`tanuki`) | Festival Spirit | The more the merrier: +5 joy per extra active contributor (up to +20). |
+| <img src="docs/gallery/species/oni.svg" width="80"> | Little Oni (`oni`) | Iron Club | Brute strength: energy never drops below 35. |
+| <img src="docs/gallery/species/kappa.svg" width="80"> | Kappa (`kappa`) | Cucumber Stash | Keeps snacks in its shell, so hunger builds 30% slower. |
+| <img src="docs/gallery/species/tengu.svg" width="80"> | Crow Tengu (`tengu`) | Wind Rider | Rides the mountain wind: every commit gives 25% more energy. |
+| <img src="docs/gallery/species/baku.svg" width="80"> | Dream Eater (`baku`) | Sweet Dreams | Snacks on bad dreams: energy never drops below 30. |
+| <img src="docs/gallery/species/maneki.svg" width="80"> | Lucky Cat (`maneki`) | Good Fortune | Beckons luck: +3 joy per 100 stars (up to +20). |
+| <img src="docs/gallery/species/daruma.svg" width="80"> | Daruma (`daruma`) | Rise Again | Fall seven times, stand up eight: failing CI can't push its health below 45. |
+| <img src="docs/gallery/species/kodama.svg" width="80"> | Forest Spirit (`kodama`) | Old Growth | An old repo is a sacred forest: +2 joy per year of age (up to +12). |
+| <img src="docs/gallery/species/ghost.svg" width="80"> | Yurei (`ghost`) | Ethereal | Floats through walls: ignored issues hurt its joy 40% less. |
+| <img src="docs/gallery/species/idol.svg" width="80"> | Star Idol (`idol`) | Stage Smile | Always on stage: joy never drops below 35. |
+| <img src="docs/gallery/species/witch.svg" width="80"> | Little Witch (`witch`) | Grimoire | A tidy repo is a good spellbook: +12 joy while the community profile is 80% or more. |
+| <img src="docs/gallery/species/knight.svg" width="80"> | Isekai Knight (`knight`) | Gatekeeper | Guards the gate: +12 joy while no pull request has gone stale. |
+| <img src="docs/gallery/species/golem.svg" width="80"> | Stone Golem (`golem`) | Stone Heart | Hardly needs food: hunger builds 60% slower. |
+| <img src="docs/gallery/species/phoenix.svg" width="80"> | Phoenix Chick (`phoenix`) | Rebirth | Every release rekindles its flame: +20 energy for two weeks. |
+| <img src="docs/gallery/species/panda.svg" width="80"> | Monk Panda (`panda`) | Daily Practice | +3 joy per day of your commit streak (up to +18). |
+| <img src="docs/gallery/species/kaiju.svg" width="80"> | Mini Kaiju (`kaiju`) | Titan | Grows into a giant: levels up 40% faster. |
+| <img src="docs/gallery/species/shark.svg" width="80"> | Shark Pup (`shark`) | Always Swimming | Never stops: +3 energy per day of your commit streak (up to +18). |
+| <img src="docs/gallery/species/penguin.svg" width="80"> | Ice Penguin (`penguin`) | Huddle | Penguins huddle: +5 energy per extra active contributor. |
+| <img src="docs/gallery/species/axolotl.svg" width="80"> | Axolotl (`axolotl`) | Regeneration | Regrows what it loses: failing CI hurts it 40% less. |
+| <img src="docs/gallery/species/frog.svg" width="80"> | Frog Prince (`frog`) | Morning Croak | A croak every morning: +10 energy on any day with a commit. |
+| <img src="docs/gallery/species/owl.svg" width="80"> | Owl Sage (`owl`) | Messenger | Delivers every letter: +12 joy while no community issue waits for a reply. |
+| <img src="docs/gallery/species/monkey.svg" width="80"> | Monkey King (`monkey`) | Immortal Peach | Ate a peach of immortality: failing CI can't push its health below 35. |
+| <img src="docs/gallery/species/alien.svg" width="80"> | Space Cadet (`alien`) | Mothership | The mothership beams energy down: energy never drops below 45 while CI passes. |
+| <img src="docs/gallery/species/vampire.svg" width="80"> | Little Vampire (`vampire`) | Undying | Failing CI hurts it only half as much. |
+| <img src="docs/gallery/species/raiju.svg" width="80"> | Thunder Pup (`raiju`) | Static Charge | Every commit charges it up: commits give 50% more energy. |
+| <img src="docs/gallery/species/pirate.svg" width="80"> | Captain Otter (`pirate`) | Crew | A captain loves a crew: +4 joy per extra active contributor (up to +20). |
+| <img src="docs/gallery/species/sakura.svg" width="80"> | Sakura Sprite (`sakura`) | In Bloom | Each release brings blossoms: +12 joy for two weeks. |
+| <img src="docs/gallery/species/mimic.svg" width="80"> | Mimic (`mimic`) | Treasure Chest | Every release fills its chest: +20 joy for two weeks. |
+
 Pets that already hatched keep their species when new ones join the pool.
 
 ### 🕺 Signature moves
@@ -258,6 +297,24 @@ on top of its mood animation. It stops when the pet feels bad, and with reduced 
 | Octopus | an eight-armed wiggle | | Night Guardian | a backflip |
 | Snake | slithers back and forth | | Super Pup | takes off, then a hero landing |
 | Cactus | a slow sway in the desert wind | | | |
+
+| Anime crew | Move | | Anime crew | Move |
+| --- | --- | --- | --- | --- |
+| Ronin Shiba | a crouch, then one lightning-fast sword draw | | Monk Panda | winds up and throws a flying kick |
+| Nine-Tailed Fox | a double spin that fans out every tail | | Mini Kaiju | rears up to full size and roars |
+| Leaf Tanuki | *poof*: shrinks to nothing and pops back | | Shark Pup | lunges forward, chomp chomp |
+| Little Oni | two ground-shaking stomps | | Ice Penguin | flops on its belly and slides |
+| Kappa | a deep, polite bow | | Axolotl | a lazy double bob |
+| Crow Tengu | whirls up in a gust from its fan | | Frog Prince | crouches low and leaps |
+| Dream Eater | nods off, sinks, wakes with a start | | Owl Sage | tilts its head one way, then the other |
+| Lucky Cat | bobs and beckons, three times for luck | | Monkey King | a forward somersault |
+| Daruma | tips right over and rocks back up | | Space Cadet | beamed up into a line of light and back |
+| Forest Spirit | rattles its head, click-clack | | Little Vampire | swoops across in its cape |
+| Yurei | drifts up and wafts side to side | | Thunder Pup | zigzags like a lightning bolt |
+| Star Idol | a pose left, a pose right, a finale jump | | Captain Otter | swings across on a rope |
+| Little Witch | a quick loop on the broom | | Sakura Sprite | opens up like a blossom |
+| Isekai Knight | braces behind the shield, then a shield bash | | Mimic | snaps its lid twice and hops |
+| Stone Golem | a ground pound and a little earthquake | | Phoenix Chick | rises high and flares up |
 
 Prefer a different one? Set `species: cactus`. Want a name? Set `name: Mochi`.
 Otherwise the repo names its pet too. You don't choose, you adopt.
@@ -293,13 +350,13 @@ Every species lives somewhere of its own, and each place is alive:
 
 | Home | Who lives there | What's going on |
 | --- | --- | --- |
-| 🌳 Meadow | Slime, Super Pup | Rolling hills, a windmill turning on the far hill, a tree that changes with the seasons, butterflies |
-| 🏡 Garden | Cat, Magical Bunny | A cottage whose window lights up at night, a picket fence, swaying sunflowers |
-| 🦆 Pond | Rubber Duck | Glints on the water, ripples where a fish just jumped, cattails in the breeze |
-| 🏖️ Beach | Crab | Waves rolling in, foam washing onto the sand, a swaying palm, seagulls, shells and a sandcastle |
-| 🐠 Reef | Octopus | Underwater: sunbeams, swaying kelp, coral, rising bubbles and fish swimming by. Glowing plankton at night |
-| 🌴 Jungle | Snake, Ninja Fox, Night Guardian | A waterfall, hanging vines, big fronds, mist, fireflies after dark |
-| 🏜️ Desert | Cactus, Spirit Dragon, Mecha | Mesas, a heat haze over the dunes and a tumbleweed bouncing past |
+| 🌳 Meadow | Slime, Super Pup, Ronin Shiba, Dream Eater, Daruma, Star Idol, Isekai Knight, Owl Sage | Rolling hills, a windmill turning on the far hill, a tree that changes with the seasons, butterflies |
+| 🏡 Garden | Cat, Magical Bunny, Nine-Tailed Fox, Lucky Cat, Little Witch, Little Vampire, Sakura Sprite | A cottage whose window lights up at night, a picket fence, swaying sunflowers |
+| 🦆 Pond | Rubber Duck, Kappa, Yurei, Axolotl, Frog Prince | Glints on the water, ripples where a fish just jumped, cattails in the breeze |
+| 🏖️ Beach | Crab, Mini Kaiju, Ice Penguin, Captain Otter | Waves rolling in, foam washing onto the sand, a swaying palm, seagulls, shells and a sandcastle |
+| 🐠 Reef | Octopus, Shark Pup, Mimic | Underwater: sunbeams, swaying kelp, coral, rising bubbles and fish swimming by. Glowing plankton at night |
+| 🌴 Jungle | Snake, Ninja Fox, Night Guardian, Leaf Tanuki, Crow Tengu, Forest Spirit, Monk Panda, Monkey King | A waterfall, hanging vines, big fronds, mist, fireflies after dark |
+| 🏜️ Desert | Cactus, Spirit Dragon, Mecha, Little Oni, Stone Golem, Phoenix Chick, Space Cadet, Thunder Pup | Mesas, a heat haze over the dunes and a tumbleweed bouncing past |
 
 At night (dark mode) the props dim, shooting stars streak across the sky and, in winter, the northern lights shimmer:
 
@@ -567,7 +624,7 @@ The default token can read your public repos. To include private ones, pass a pe
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `species` | `auto` | `auto`, `blob`, `cat`, `duck`, `crab`, `octopus`, `snake`, `cactus`, `ninja`, `mecha`, `dragon`, `bunny`, `bat`, `hero` |
+| `species` | `auto` | `auto`, `blob`, `cat`, `duck`, `crab`, `octopus`, `snake`, `cactus`, `ninja`, `mecha`, `dragon`, `bunny`, `bat`, `hero`, or any of the [anime crew](#-the-anime-crew) (`samurai`, `kitsune`, `kappa`…) |
 | `scenery` | `auto` | Where the pet lives. `auto` is its species' home, or `meadow`, `garden`, `pond`, `beach`, `reef`, `jungle`, `desert` |
 | `name` | | Custom name. Empty means the repo names it. |
 | `color` | `auto` | Repaint the pet: `red`, `orange`, `gold`, `lime`, `green`, `teal`, `sky`, `blue`, `indigo`, `purple`, `pink`, `mono` or a hex color. See [colors](#-colors-and-catchphrases) |

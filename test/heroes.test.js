@@ -15,7 +15,7 @@ import { textWidth, wrapText } from '../src/util/text.js';
 import { VERSION, whatsNew } from '../src/whatsnew.js';
 
 const NOW = new Date('2026-10-08T09:00:00Z');
-const facts = (extra = {}) => ({ commits14: 3, streak: 0, activeAuthors30: 1, daysSinceCommit: 0, stars: 0, ...extra });
+const facts = (extra = {}) => ({ commits1: 0, commits14: 3, streak: 0, activeAuthors30: 1, daysSinceCommit: 0, stars: 0, ageDays: 0, ...extra });
 const vitals = (id, snapshot = {}, f = {}) => computeVitals({ issues: null, ci: null, ...snapshot }, facts(f), SPECIES[id].modifiers, NOW);
 const issues = (unanswered) => ({ open: 10, stale: 4, openPRs: 0, stalePRs: 0, unanswered });
 const failing = { state: 'failing', total: 2, failing: 2, failingNames: ['test'] };
@@ -32,6 +32,38 @@ test('hero squad traits each bend one rule', () => {
   assert.equal(vitals('bunny', { issues: issues([]) }, { stars: 500 }).joy - vitals('blob', { issues: issues([]) }, { stars: 500 }).joy, 10);
   assert.equal(computeGrowth({ totalCommits: 100, ageDays: 400 }, SPECIES.dragon.modifiers).level, 13);
   assert.equal(computeGrowth({ totalCommits: 100, ageDays: 400 }, SPECIES.blob.modifiers).level, 11);
+});
+
+test('anime crew traits each bend one rule', () => {
+  const diff = (id, stat, snapshot = {}, f = {}) => vitals(id, snapshot, f)[stat] - vitals('blob', snapshot, f)[stat];
+  const calm = { issues: issues([]) };
+  // Energy: daily training, a faster charge, a fresh release, a floor.
+  assert.equal(diff('samurai', 'energy', {}, { commits1: 1 }), 12);
+  assert.equal(diff('samurai', 'energy', {}, { commits1: 0 }), 0);
+  assert.equal(diff('frog', 'energy', {}, { commits1: 2 }), 10);
+  assert.ok(diff('raiju', 'energy') > diff('tengu', 'energy') && diff('tengu', 'energy') > 0);
+  assert.equal(diff('phoenix', 'energy', { release: { publishedAt: '2026-10-01T00:00:00Z' } }), 20);
+  assert.equal(diff('phoenix', 'energy', { release: { publishedAt: '2026-08-01T00:00:00Z' } }), 0);
+  assert.equal(vitals('oni', {}, { commits14: 0 }).energy, 35);
+  assert.equal(vitals('baku', {}, { commits14: 0 }).energy, 30);
+  // Joy: teammates (capped), streaks, age, a tidy profile, fresh PRs, a floor.
+  assert.equal(diff('tanuki', 'joy', calm, { activeAuthors30: 3 }), 10);
+  assert.equal(diff('pirate', 'joy', { issues: { ...issues([]), stale: 10 } }, { activeAuthors30: 12 }), 20);
+  assert.equal(diff('panda', 'joy', calm, { streak: 4 }), 12);
+  assert.equal(diff('panda', 'joy', calm, { streak: 30 }), 18);
+  assert.equal(diff('kodama', 'joy', calm, { ageDays: 3 * 365 + 5 }), 6);
+  assert.equal(diff('kodama', 'joy', calm, { ageDays: 20 * 365 }), 12);
+  assert.equal(diff('witch', 'joy', { ...calm, community: { health: 85 } }), 12);
+  assert.equal(diff('witch', 'joy', { ...calm, community: { health: 70 } }), 0);
+  assert.equal(diff('knight', 'joy', calm), 12);
+  assert.equal(diff('knight', 'joy', { issues: { ...issues([]), openPRs: 2, stalePRs: 1 } }), 0);
+  const ignored = { issues: { open: 10, stale: 10, openPRs: 0, stalePRs: 0, unanswered: Array.from({ length: 5 }, (_, i) => ({ number: i, days: 9 })) } };
+  assert.equal(vitals('idol', ignored).joy, 35);
+  assert.ok(vitals('blob', ignored).joy < 35);
+  // Old rules, new faces.
+  assert.equal(vitals('daruma', { ci: failing }).health, 45);
+  assert.equal(vitals('alien', { ci: { state: 'passing' } }, { commits14: 0 }).energy, 45);
+  assert.equal(computeGrowth({ totalCommits: 100, ageDays: 400 }, SPECIES.kaiju.modifiers).level, 12);
 });
 
 test('a hatched pet keeps its species when the pool grows', () => {

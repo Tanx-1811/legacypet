@@ -567,3 +567,45 @@ test('server: care for all, git, backup and restore', async () => {
     await app.close();
   }
 });
+
+test('one broken repo never stops the other pets from updating', async () => {
+  const root = dir('broken');
+  const typo = makeRepo('typo', { commits: [6, 5, 4, 3, 2, 1], parent: root });
+  mkdirSync(join(typo.path, '.github', 'workflows'), { recursive: true });
+  writeFileSync(join(typo.path, '.github', 'workflows', 'legacypet.yml'), workflowYaml({ species: 'unicorn', vacation: 'soon', color: 'blurple', name: 'Mo' }));
+  const fine = makeRepo('fine', { commits: [6, 5, 4, 3, 2, 1], parent: root });
+  const store = createStore(dir('broken-data'));
+  let clock = NOW;
+  const projects = createProjects({ store, now: () => clock, fetch: fakeGitHub });
+  const list = await projects.allow([root]);
+  assert.equal(list.length, 2);
+  const t = list.find((p) => p.path === typo.path);
+  assert.ok(t.summary, 'typos in the workflow are skipped, not fatal');
+  assert.deepEqual(t.options, { name: 'Mo' });
+
+  // A memory file that went bad: that pet shows the problem, the other one still updates.
+  writeFileSync(join(store.dir, 'pets', `${t.id}.json`), JSON.stringify({ history: 7, achievements: 'x', quests: 5 }));
+  clock = new Date(NOW.getTime() + DAY);
+  const after = await projects.refresh();
+  const f = after.find((p) => p.path === fine.path);
+  assert.equal(f.now, clock.toISOString(), 'the healthy pet was raised');
+  const broken = after.find((p) => p.path === typo.path);
+  assert.equal(broken.summary, undefined);
+  assert.match(broken.error, /history/, 'a broken pet says what went wrong');
+});
+
+test('a refresh of one pet does not let two full refreshes run at once', async () => {
+  const root = dir('overlap');
+  for (const name of ['a', 'b', 'c']) makeRepo(name, { commits: [6, 5, 4, 3, 2, 1], parent: root });
+  const base = createStore(dir('overlap-data'));
+  let saves = 0;
+  const store = { ...base, saveMemory: (id, state) => { saves += 1; base.saveMemory(id, state); } };
+  const projects = createProjects({ store, now: () => NOW, fetch: fakeGitHub });
+  const [one] = await projects.allow([root]);
+  saves = 0;
+  const full = projects.refresh();
+  const partial = projects.refresh([one.id]);
+  const again = projects.refresh();
+  await Promise.all([full, partial, again]);
+  assert.equal(saves, 4, `3 pets once, plus the one asked for (got ${saves})`);
+});

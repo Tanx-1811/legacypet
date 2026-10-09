@@ -16,7 +16,7 @@ inputs:
     description: 'Branch the pet lives on. It is rewritten on every run, so pick a dedicated one.'
     default: 'legacypet'
   species:
-    description: 'auto, blob, cat, duck, crab, octopus, snake, cactus, ninja, mecha, dragon, bunny, bat or hero. "auto" lets the repo choose.'
+    description: 'auto, blob, cat, duck, crab, octopus, snake, cactus, ninja, mecha, dragon, bunny, bat, hero, samurai, kitsune, tanuki, oni, kappa, tengu, baku, maneki, daruma, kodama, ghost, idol, witch, knight, golem, phoenix, panda, kaiju, shark, penguin, axolotl, frog, owl, monkey, alien, vampire, raiju, pirate, sakura or mimic. "auto" lets the repo choose.'
     default: 'auto'
   scenery:
     description: 'Where the pet lives: auto (its species home), meadow, garden, pond, beach, reef, jungle or desert.'

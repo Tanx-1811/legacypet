@@ -68,7 +68,8 @@ or SignPath needs its own step in the workflow instead.
      so a new species usually brings a new move: a keyframe that idles until about 75% and plays its trick after that.
 4. Give it a `trait`: one rule it bends. The options in `modifiers` are
    `hungerRate`, `ciPenalty`, `issuePenalty`, `releaseJoy`, `teamEnergy`, `streakEnergy`, `ciEnergyFloor`,
-   `inboxJoy`, `healthFloor`, `xpRate` and `starJoy` (see `src/engine/vitals.js`).
+   `inboxJoy`, `healthFloor`, `xpRate`, `starJoy`, `joyFloor`, `energyFloor`, `energyRate`, `dailyEnergy`,
+   `releaseEnergy`, `teamJoy`, `streakJoy`, `prJoy`, `tidyJoy` and `ageJoy` (see `src/engine/vitals.js`).
    Optional: catchphrases in `lines.species.<id>` of each language file, mixed in on good days.
    A brand-new kind of trait is welcome too, as long as you explain it in the PR.
 5. Register it in `src/sprites/index.js`, and add its name and trait to every file in `src/i18n/`.

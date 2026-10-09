@@ -225,8 +225,9 @@ export function homeViews(kit) {
     input.click();
   }
 
-  // The last fetch or pull per project, so its result survives the redraw that follows it.
+  // The last fetch, pull or push per project, so its result survives the redraw that follows it.
   const syncNotes = new Map();
+  const pushNotes = new Map();
   async function syncGit(p, action) {
     const S = t().home.sync;
     try {
@@ -621,6 +622,7 @@ export function homeViews(kit) {
     }
 
     function drawHead(p, pet) {
+      if (head.querySelector('.menu:not([hidden])')) return;
       const L = tr();
       const tools = state.tools ?? { editors: [], terminals: [] };
       const editor = tools.editors.find((e) => e.id === state.config.editor) ?? tools.editors[0];
@@ -678,6 +680,9 @@ export function homeViews(kit) {
           btn(T.openDiary, { icon: 'notebook-pen', href: `https://github.com/${p.fullName}/blob/legacypet/DIARY.md` })));
       } else if (p.status === 'waiting') {
         const out = h('div.stack');
+        const last = pushNotes.get(p.id);
+        if (last?.error) fill(out, h('div.callout.bad', last.error));
+        else if (last) publishResult(out, last, p);
         const push = btn(T.pushNow, {
           icon: 'cloud-upload', kind: 'primary',
           onclick: async () => {
@@ -685,10 +690,14 @@ export function homeViews(kit) {
             fill(out, h('p.muted', icon('loader-circle', { size: 16, cls: 'spin' }), T.working));
             try {
               const res = await api(`projects/${p.id}/publish`, {});
+              pushNotes.set(p.id, res.publish);
               fill(out);
               publishResult(out, res.publish, p);
               await load();
-            } catch (err) { fill(out, h('div.callout.bad', err.message)); }
+            } catch (err) {
+              pushNotes.set(p.id, { error: err.message });
+              fill(out, h('div.callout.bad', err.message));
+            }
             push.disabled = false;
           },
         });
@@ -970,9 +979,10 @@ export function homeViews(kit) {
     function draw() {
       const p = project();
       if (!p?.summary) {
-        fill(root, h('a.back', { href: '#/home' }, icon('chevron-left', { size: 16 }), T.back), h('div.empty', T.notFound));
+        fill(root, h('a.back', { href: '#/home' }, icon('chevron-left', { size: 16 }), T.back), h('div.empty', p?.error ?? T.notFound));
         return;
       }
+      if (!root.contains(panel)) fill(root, head, tabsBar, panel);
       const pet = petOf(p, { lang: lang() });
       drawHead(p, pet);
       if (typing()) { stale = true; return; }
@@ -1018,7 +1028,15 @@ export function homeViews(kit) {
     };
     const section = (iconName, title, ...kids) => h('section.panel.setting', h('h3', icon(iconName, { size: 17 }), title), h('div.stack', ...kids));
 
+    // Someone is typing (a token, a path): keep the page and catch up once they're done.
+    let stale = false;
+    const typing = () => body.contains(document.activeElement) && document.activeElement.matches('input[type=text], input[type=password]');
+    body.addEventListener('focusout', () => {
+      if (stale) setTimeout(() => { if (stale && !typing()) { stale = false; draw(); } }, 300);
+    });
+
     function draw() {
+      if (typing()) { stale = true; return; }
       const cfg = state.config;
       const token = h('input', { type: 'password', placeholder: T.tokenPlaceholder, autocomplete: 'off' });
       const hidden = state.hiddenProjects ?? [];
@@ -1053,7 +1071,7 @@ export function homeViews(kit) {
           toggle(cfg.online, T.onlineToggle, (v) => save({ online: v })),
           h('p.small.muted', { style: { margin: 0 } }, T.onlineNote),
           cfg.online ? h('p.small', { style: { margin: 0 } }, state.tokenSource ? T.tokenFrom[state.tokenSource] : T.noToken) : null,
-          cfg.online ? h('form.row', { onsubmit: (e) => { e.preventDefault(); if (token.value.trim()) save({ token: token.value.trim() }); } },
+          cfg.online ? h('form.row', { onsubmit: (e) => { e.preventDefault(); const v = token.value.trim(); if (v) { token.blur(); save({ token: v }); } } },
             h('div', { style: { flex: '1 1 220px' } }, token), btn(T.saveToken, { type: 'submit' }),
             cfg.hasToken ? btn(T.clearToken, { kind: 'ghost', onclick: () => save({ token: '' }) }) : null) : null),
         section('bell', T.notify,

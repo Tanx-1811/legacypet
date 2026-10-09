@@ -7,6 +7,7 @@ import { userInfo } from 'node:os';
 import { join } from 'node:path';
 import { parseColor } from '../engine/look.js';
 import { buildPet } from '../engine/pet.js';
+import { parseVacation } from '../engine/vacation.js';
 import { MOOD_EMOJI } from '../engine/mood.js';
 import { nextState } from '../engine/memory.js';
 import { createClient } from '../github/client.js';
@@ -131,6 +132,9 @@ export function cleanOptions(options) {
   if (out.color) {
     try { parseColor(out.color); } catch { delete out.color; }
   }
+  if (out.vacation) {
+    try { parseVacation(out.vacation); } catch { delete out.vacation; }
+  }
   return out;
 }
 
@@ -228,8 +232,18 @@ export function createProjects({ store = createStore(), now: clock = () => new D
     record({ projectId: project.id, fullName: project.fullName, mood: pet.mood, kind: 'streak', text: notes(ui()).streak(`${pet.name} (${project.folder})`, pet.facts.streak) });
   }
 
+  // One repo that can't be raised (a broken memory file, say) shows up as broken on its own:
+  // it never stops the other pets from updating.
+  async function visit(path, opts) {
+    try {
+      return await visitRepo(path, opts);
+    } catch (err) {
+      return { id: projectId(path), path, folder: path.split(/[\\/]/).pop(), error: err.message, fullName: null };
+    }
+  }
+
   // Reads one repo, raises its pet one step and remembers it.
-  async function visit(path, { care = null } = {}) {
+  async function visitRepo(path, { care = null } = {}) {
     const id = projectId(path);
     const now = clock();
     let info;
@@ -328,7 +342,8 @@ export function createProjects({ store = createStore(), now: clock = () => new D
 
   async function refresh(ids = null) {
     if (refreshing && !ids) return list();
-    refreshing = !ids;
+    // A refresh of a few pets must not clear the flag of a full one still running.
+    if (!ids) refreshing = true;
     try {
       const targets = [...projects.values()].filter((p) => !ids || ids.includes(p.id));
       const fresh = await pool(targets, POOL, (p) => visit(p.path));
