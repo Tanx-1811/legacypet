@@ -881,9 +881,9 @@ export function homeViews(kit) {
         fill(swatches,
           ['auto', ...LP.COLOR_IDS].map((c) => h(`button.swatch${c === 'auto' ? '.own' : ''}`, {
             type: 'button', title: C.colors[c], 'aria-label': C.colors[c], 'aria-pressed': String(color === c),
-            style: { '--sw': shade(c) }, onclick: () => set({ color: c }),
+            style: `--sw:${shade(c)}`, onclick: () => set({ color: c }),
           })),
-          h(`label.swatch.custom${custom ? '.on' : ''}`, { title: C.colors.custom, style: custom ? { '--sw': color } : null }, icon('palette', { size: 14 }), picker));
+          h(`label.swatch.custom${custom ? '.on' : ''}`, { title: C.colors.custom, style: custom ? `--sw:${color}` : null }, icon('palette', { size: 14 }), picker));
 
         // The wardrobe: one item per slot, only what this pet has unlocked.
         const worn = new Set(pet.wardrobe.worn);
@@ -991,6 +991,12 @@ export function homeViews(kit) {
 
   // ----- Settings ----------------------------------------------------------------
   function settings(root) {
+    // Opened (or reloaded) straight on this page: wait for the app's state first.
+    if (!state) {
+      root.append(h('div.scanning', icon('loader-circle', { size: 24, cls: 'spin' })));
+      load().then(() => kit.render()).catch((err) => fill(root, h('div.empty', err.message)));
+      return {};
+    }
     const T = t().settings;
     const H = t().home;
     const body = h('div.settings');

@@ -623,7 +623,7 @@ button.tile:disabled { cursor: not-allowed; }
 @media (min-width: 881px) { .sticky-col { position: sticky; top: 16px; } }
 
 /* ---- Notes, sync, notification options ---- */
-textarea.notes { resize: vertical; min-height: 96px; line-height: 1.5; }
+textarea.notes { display: block; margin: 0; resize: vertical; min-height: 96px; line-height: 1.5; }
 .sub-settings { padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel-2); }
 .checks { display: grid; gap: 7px; }
 .checks label.check { font-size: 13.5px; }
