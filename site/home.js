@@ -1,9 +1,10 @@
 // "My pets", Settings and the download page. Home and Settings only exist when the
 // playground runs as the LegacyPet app on someone's computer (see local.js).
+import { barList, heatmap, localDayKey, statTile } from './charts.js';
 import { api, byNeed, desktop, LOCAL, MODE, petOf } from './local.js';
 
 export function homeViews(kit) {
-  const { h, svgSrc, toast, t, tr, store, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP } = kit;
+  const { h, svgSrc, toast, t, tr, store, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP, icon, btn } = kit;
   // replaceChildren() would print "null" for a missing piece: drop those first.
   const fill = (el, ...kids) => el.replaceChildren(...kids.flat().filter((k) => k != null && k !== false && k !== ''));
 
@@ -32,6 +33,7 @@ export function homeViews(kit) {
     if (days < 60) return fmt.format(-days, 'day');
     return days < 730 ? fmt.format(-Math.round(days / 30), 'month') : fmt.format(-Math.round(days / 365), 'year');
   };
+  const num = (n) => Number(n ?? 0).toLocaleString(store.ui);
 
   // Pictures are the slow part: draw each pet once per (run, language, theme).
   const pics = new Map();
@@ -54,15 +56,108 @@ export function homeViews(kit) {
     live: list.filter((p) => p.status === 'live').length,
   });
   const careCount = () => (state ? counts(state.projects).care : 0);
+  const isPinned = (id) => (state?.config.pinned ?? []).includes(id);
 
+  async function togglePin(id) {
+    const pinned = state.config.pinned ?? [];
+    try {
+      use(await api('config', { pinned: pinned.includes(id) ? pinned.filter((x) => x !== id) : [...pinned, id] }));
+    } catch (err) { toast(err.message, 'bad'); }
+  }
+
+  // Commits per day, summed over the given projects: { 'YYYY-MM-DD': n }.
+  function combined(projects) {
+    const out = {};
+    for (const p of projects) for (const [day, n] of Object.entries(p.activity ?? {})) out[day] = (out[day] ?? 0) + n;
+    return out;
+  }
+  function lastDays(activity, from, to) {
+    let total = 0;
+    const d = new Date();
+    d.setHours(12);
+    d.setDate(d.getDate() - from);
+    for (let i = from; i < to; i++) {
+      total += activity[localDayKey(d)] ?? 0;
+      d.setDate(d.getDate() - 1);
+    }
+    return total;
+  }
+
+  const VITAL_ICONS = { fullness: 'drumstick', health: 'heart', joy: 'smile', energy: 'zap' };
   function vitalBars(vitals) {
     const L = tr();
     return h('div.bars', ['fullness', 'health', 'joy', 'energy'].map((k) => {
       const v = vitals?.[k] ?? 0;
-      return h('div.bar', { title: `${L.stats[k]} ${v}` },
-        h('span', { 'aria-hidden': 'true' }, { fullness: '🍖', health: '❤️', joy: '😊', energy: '⚡' }[k]),
+      return h('div.bar', { title: `${L.stats[k]}: ${v}` },
+        icon(VITAL_ICONS[k], { size: 13 }),
         h(`div.meter.${v < 35 ? 'low' : v < 60 ? 'mid' : 'ok'}`, h('i', { style: { width: `${v}%` } })));
     }));
+  }
+
+  function statusPill(p) {
+    return h(`span.pill.${p.status}`, h('i.dot'), t().home.status[p.status]);
+  }
+  function workPills(p) {
+    const T = t().home;
+    return [
+      p.dirty ? h('span.pill', { title: T.dirty(p.dirty) }, icon('git-commit-horizontal', { size: 12 }), p.dirty) : null,
+      p.ahead ? h('span.pill.warn', { title: T.ahead(p.ahead) }, icon('cloud-upload', { size: 12 }), p.ahead) : null,
+      p.summary?.streak >= 2 ? h('span.pill.flame', { title: t().home.facts.streak }, icon('flame', { size: 12 }), p.summary.streak) : null,
+    ];
+  }
+
+  // A small dropdown menu: [{ icon, label, run, href }].
+  function menu(trigger, items) {
+    const box = h('div.menu', { role: 'menu', hidden: true });
+    const wrap = h('div.menu-wrap', trigger, box);
+    const close = () => { box.hidden = true; document.removeEventListener('pointerdown', outside); };
+    const outside = (e) => { if (!wrap.contains(e.target)) close(); };
+    trigger.setAttribute('aria-haspopup', 'menu');
+    trigger.addEventListener('click', () => {
+      if (!box.hidden) return close();
+      fill(box, ...items.filter(Boolean).map((item) => (item === '-' ? h('div.menu-sep') : h(item.href ? 'a.menu-item' : 'button.menu-item', {
+        role: 'menuitem', type: item.href ? null : 'button', href: item.href ?? null,
+        target: item.href && /^https?:/.test(item.href) ? '_blank' : null, rel: item.href ? 'noopener' : null,
+        onclick: () => { close(); item.run?.(); },
+      }, icon(item.icon, { size: 15 }), h('span', item.label)))));
+      box.hidden = false;
+      document.addEventListener('pointerdown', outside);
+    });
+    wrap.addEventListener('keydown', (e) => { if (e.key === 'Escape') { close(); trigger.focus(); } });
+    return wrap;
+  }
+
+  // ----- Actions shared by pages and the ⌘K palette ---------------------------------
+  async function refreshAll(button) {
+    const T = t().home;
+    if (button) button.disabled = true;
+    try { use(await api('refresh', {})); toast(T.updated(ago(new Date().toISOString())), 'good'); } catch (err) { toast(err.message, 'bad'); }
+    if (button) button.disabled = false;
+  }
+  async function rescan() {
+    toast(t().home.refreshing);
+    try { use(await api('scan', {})); } catch (err) { toast(err.message, 'bad'); }
+  }
+  async function addFolder() {
+    try {
+      const path = desktop?.pickFolder ? await desktop.pickFolder() : (await api('pick-folder', {})).path;
+      if (!path) return;
+      toast(t().home.refreshing);
+      use(await api('config', { roots: [...new Set([...state.config.roots, path])] }));
+    } catch (err) {
+      toast(err.message, 'bad');
+    }
+  }
+  async function openWith(p, kind) {
+    try {
+      const res = await api(`projects/${p.id}/open`, { with: kind });
+      toast(t().home.opened(res.tool), 'good');
+    } catch (err) {
+      toast(err.message, 'bad');
+    }
+  }
+  async function copyPath(p) {
+    try { await navigator.clipboard.writeText(p.path); toast(t().home.pathCopied, 'good'); } catch { toast(p.path); }
   }
 
   // ----- Onboarding: ask before looking anywhere --------------------------------
@@ -71,7 +166,7 @@ export function homeViews(kit) {
     const chosen = new Map(state.suggestions.map((s) => [s.path, s]));
     const list = h('ul.folder-list');
     const status = h('p.status', { role: 'status' });
-    const allowBtn = h('button.primary.big', { type: 'button' }, T.allow);
+    const allowBtn = btn(T.allow, { icon: 'search', kind: 'primary big' });
     const pathInput = h('input', { type: 'text', placeholder: T.typePath, class: 'mono', spellcheck: 'false', autocomplete: 'off' });
 
     function drawList() {
@@ -79,7 +174,7 @@ export function homeViews(kit) {
         const box = h('input', { type: 'checkbox', checked: s.checked });
         box.onchange = () => { s.checked = box.checked; };
         const tag = s.label === '~' ? T.wholeHome : s.exists === null ? T.maybe : s.current ? T.current : T.found;
-        return h('li', h('label.check', box, h('span.mono', s.label), h('span.pick-tag', tag)));
+        return h('li', h('label.check', box, icon(s.label === '~' ? 'house' : 'folder-git-2', { size: 16 }), h('span.mono', s.label), h('span.pick-tag', tag)));
       }));
     }
     const addPath = (path) => {
@@ -88,15 +183,15 @@ export function homeViews(kit) {
       drawList();
     };
     pathInput.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); addPath(pathInput.value.trim()); pathInput.value = ''; } };
-    const pickBtn = h('button', {
-      type: 'button',
+    const pickBtn = btn(T.addFolder, {
+      icon: 'folder-plus',
       onclick: async () => {
         try {
           const { path } = desktop?.pickFolder ? { path: await desktop.pickFolder() } : await api('pick-folder', {});
           addPath(path);
         } catch { pathInput.focus(); }
       },
-    }, T.addFolder);
+    });
 
     allowBtn.onclick = async () => {
       const roots = [...chosen.values()].filter((s) => s.checked).map((s) => s.path);
@@ -107,7 +202,7 @@ export function homeViews(kit) {
         use(await api('allow', { roots }));
         kit.render();
       } catch (err) {
-        toast(err.message);
+        toast(err.message, 'bad');
         kit.render();
       }
     };
@@ -118,9 +213,9 @@ export function homeViews(kit) {
     drawList();
     root.append(h('section.onboard',
       h('div.onboard-pets', eggs),
-      h('h2', T.welcome),
+      h('h1', T.welcome),
       h('p.lead', T.welcomeLead),
-      h('ul.privacy', T.privacy.map((line) => h('li', line))),
+      h('ul.privacy', T.privacy.map((line, i) => h('li', icon(['shield-check', 'folder-open', 'eye-off'][i], { size: 16 }), h('span', line)))),
       h('div.panel.stack',
         h('h3', T.where),
         list,
@@ -138,108 +233,140 @@ export function homeViews(kit) {
       h('p', T.scanning));
   }
 
-  // ----- Dashboard: every pet at a glance ---------------------------------------
+  // ----- Dashboard: the overview, then every pet ------------------------------------
+  const SORTS = {
+    need: byNeed,
+    recent: (a, b) => Date.parse(b.snapshot?.commits?.lastDate ?? 0) - Date.parse(a.snapshot?.commits?.lastDate ?? 0),
+    name: (a, b) => (a.summary?.name ?? a.folder).localeCompare(b.summary?.name ?? b.folder, store.ui),
+    level: (a, b) => (b.summary?.level ?? 0) - (a.summary?.level ?? 0),
+  };
+
   function dashboard(root) {
     const T = t().home;
-    const filterKey = 'homeFilter';
-    let filter = store[filterKey] ?? 'all';
+    const K = T.kpi;
+    let filter = store.homeFilter ?? 'all';
     const search = h('input', { type: 'search', placeholder: T.search, 'aria-label': T.search, autocomplete: 'off', spellcheck: 'false' });
-    const grid = h('div.pet-grid');
-    const summary = h('p.lead', { style: { margin: '2px 0 0' } });
-    const updated = h('span.small.muted');
-    const filters = h('div.seg.filters', { role: 'group' });
-    const banner = h('div');
-    const feed = h('div');
-    const refreshBtn = h('button', { type: 'button' }, T.refresh);
-    refreshBtn.onclick = async () => {
-      refreshBtn.disabled = true;
-      refreshBtn.textContent = T.refreshing;
-      try { use(await api('refresh', {})); } catch (err) { toast(err.message); }
-      refreshBtn.disabled = false;
-      refreshBtn.textContent = T.refresh;
+    const box = {
+      summary: h('p.page-sub'), updated: h('span.small.muted'), kpis: h('div.kpis'), heat: h('div'), top: h('div'), side: h('div.stack'),
+      filters: h('div.seg.filters', { role: 'group' }), banner: h('div'), pets: h('div'),
     };
-    search.oninput = () => draw();
+    const refreshBtn = btn(T.refresh, { icon: 'refresh-cw', onclick: (e) => refreshAll(e.currentTarget) });
+    const sortSel = select(Object.entries(T.sorts), store.homeSort ?? 'need', (v) => { store.homeSort = v; kit.save(); drawPets(); }, T.sortLabel);
+    const viewSeg = h('div.seg.view-seg', { role: 'group', 'aria-label': T.views.grid },
+      ...['grid', 'list'].map((v) => h('button', {
+        type: 'button', title: T.views[v], 'aria-label': T.views[v], 'aria-pressed': String((store.homeView ?? 'grid') === v),
+        onclick: (e) => { store.homeView = v; kit.save(); for (const b of viewSeg.children) b.setAttribute('aria-pressed', String(b === e.currentTarget)); drawPets(); },
+      }, icon(v === 'grid' ? 'layout-grid' : 'list', { size: 16 }))));
+    search.oninput = () => drawPets();
 
-    function tile(p) {
+    function card(p) {
       const L = tr();
       const s = p.summary;
-      if (!s) {
-        return h('div.pet-tile.broken', h('div.pet-info', h('b', p.folder), h('span.small.muted', p.error ?? '?')));
-      }
-      const chips = [
-        h(`span.pill.${p.status}`, T.status[p.status]),
-        p.dirty ? h('span.pill', T.dirty(p.dirty)) : null,
-        p.ahead ? h('span.pill.warn', T.ahead(p.ahead)) : null,
-      ];
+      if (!s) return h('div.pet-card.broken', h('div.pet-info', h('b', p.folder), h('span.small.muted', p.error ?? '?')));
       const last = p.snapshot?.commits?.lastDate;
-      return h(`a.pet-tile.${s.attention}`, { href: `#/home/${p.id}`, title: s.speech },
+      const pin = btn('', { icon: isPinned(p.id) ? 'pin-off' : 'pin', kind: `ghost pin${isPinned(p.id) ? ' on' : ''}`, title: isPinned(p.id) ? T.unpin : T.pin, onclick: (e) => { e.preventDefault(); togglePin(p.id); } });
+      return h(`a.pet-card.${s.attention}`, { href: `#/home/${p.id}`, title: s.speech },
         h('div.pet-stage', h('img', { src: pic(p, 'mini'), alt: s.displayName, loading: 'lazy', width: 120, height: 144 })),
         h('div.pet-info',
-          h('div.pet-name', h('b', s.name), h('span.lv', `Lv.${s.level}`)),
+          h('div.pet-name', h('b', s.name), h('span.lv', `Lv.${s.level}`), pin),
           h('div.pet-repo.mono', p.github ? p.fullName : p.folder),
-          h('div.pet-mood', `${s.emoji} ${L.moods[s.mood]}`),
-          h('div.pet-when', last ? T.lastCommit(ago(last)) : T.noCommits),
+          h('div.pet-mood', h('span', s.emoji), ` ${L.moods[s.mood]}`),
+          h('div.pet-when', icon('history', { size: 12 }), last ? ago(last) : T.noCommits),
           vitalBars(s.vitals),
-          h('div.pills', chips)));
+          h('div.pills', statusPill(p), workPills(p))));
     }
 
-    function draw() {
-      if (!state) return;
-      const all = state.projects.slice().sort(byNeed);
+    function row(p) {
+      const L = tr();
+      const s = p.summary;
+      if (!s) return h('div.pet-row.broken', h('span'), h('b', p.folder), h('span.small.muted', p.error ?? '?'));
+      const last = p.snapshot?.commits?.lastDate;
+      return h(`a.pet-row.${s.attention}`, { href: `#/home/${p.id}`, title: s.speech },
+        h('img.row-pet', { src: pic(p, 'mini'), alt: '', loading: 'lazy' }),
+        h('div.row-main', h('div.pet-name', h('b', s.name), h('span.lv', `Lv.${s.level}`), isPinned(p.id) ? icon('pin', { size: 13, cls: 'pinned-mark' }) : null), h('div.pet-repo.mono', p.github ? p.fullName : p.folder)),
+        h('div.row-mood', `${s.emoji} ${L.moods[s.mood]}`),
+        h('div.row-vitals', vitalBars(s.vitals)),
+        h('div.row-last.small.muted', last ? ago(last) : T.noCommits),
+        h('div.pills', statusPill(p), workPills(p)),
+        icon('chevron-right', { size: 16, cls: 'row-go' }));
+    }
+
+    function drawOverview() {
+      const all = state.projects.filter((p) => p.summary);
+      const c = counts(state.projects);
+      const activity = combined(all);
+      const week = lastDays(activity, 0, 7);
+      const before = lastDays(activity, 7, 14);
+      const best = all.slice().sort((a, b) => b.summary.streak - a.summary.streak)[0];
+      box.summary.textContent = T.summary(c.all, c.care, c.live);
+      box.updated.textContent = state.scanning ? T.refreshing : all.length ? T.updated(ago(all.map((p) => p.now).sort().pop())) : '';
+      fill(box.kpis,
+        statTile({ icon: icon('paw-print', { size: 15 }), label: K.pets, value: num(c.all), sub: K.live(c.live) }),
+        statTile({ icon: icon('git-commit-horizontal', { size: 15 }), label: K.commits, value: num(week), sub: K.vsLast(week - before), trend: week > before ? 'up' : week < before ? 'down' : '' }),
+        statTile({ icon: icon('flame', { size: 15 }), label: K.streak, value: best?.summary.streak ? K.days(best.summary.streak) : '–', sub: best?.summary.streak ? `${best.summary.name} · ${best.folder}` : K.noStreak }),
+        statTile({ icon: icon('heart', { size: 15 }), label: K.care, value: num(c.care), sub: c.care ? K.careOf(c.all) : K.allGood, trend: c.care ? 'down' : 'up' }));
+      const total = Object.values(activity).reduce((a, b) => a + b, 0);
+      fill(box.heat,
+        h('div.panel-head', h('h3', T.activityTitle), h('span.small.muted', T.activityTotal(total))),
+        heatmap(activity, { locale: store.ui, title: T.activityTitle, value: (n) => T.cell(n, '').replace(/ · $/, ''), less: T.less, more: T.more }));
+      const top = all.filter((p) => p.summary.commits7 > 0).sort((a, b) => b.summary.commits7 - a.summary.commits7).slice(0, 5);
+      fill(box.top, h('h3', T.topTitle), top.length
+        ? barList(top.map((p) => ({ label: p.summary.name, sub: p.folder, value: p.summary.commits7, href: `#/home/${p.id}` })), { format: num })
+        : h('p.muted.small', T.topEmpty));
+      const risky = all.filter((p) => p.summary.streak >= 2 && !p.summary.committedToday).sort((a, b) => b.summary.streak - a.summary.streak).slice(0, 4);
+      const recent = (state.events ?? []).filter((e) => Date.now() - Date.parse(e.at) < 3 * 86_400_000).slice(0, 4);
+      fill(box.side,
+        h('section.panel', box.top),
+        risky.length ? h('section.panel', h('h3', icon('flame', { size: 16 }), T.atRisk), h('ul.mini-list', risky.map((p) => h('li', h('a', { href: `#/home/${p.id}` }, h('b', p.summary.name), h('span.muted', T.atRiskItem(p.summary.streak))))))) : null,
+        recent.length ? h('section.panel', h('h3', icon('bell', { size: 16 }), T.events), h('ul.mini-list', recent.map((e) => h('li', h('a', { href: `#/home/${e.projectId}` }, h('span', e.text), h('span.muted.small', ago(e.at))))))) : null);
+    }
+
+    function drawPets() {
+      const all = state.projects.slice().sort(SORTS[store.homeSort ?? 'need'] ?? byNeed).sort((a, b) => Number(isPinned(b.id)) - Number(isPinned(a.id)));
       const c = counts(all);
-      summary.textContent = T.summary(c.all, c.care, c.live);
-      updated.textContent = state.scanning ? T.refreshing : state.projects[0]?.now ? T.updated(ago(state.projects.map((p) => p.now).sort().pop())) : '';
-      fill(filters, ...Object.entries(T.filters).map(([id, label]) => h('button', {
+      fill(box.filters, ...Object.entries(T.filters).map(([id, label]) => h('button', {
         type: 'button', 'aria-pressed': String(filter === id),
-        onclick: () => { filter = id; store[filterKey] = id; kit.save(); draw(); },
-      }, `${label} `, h('span.count', c[id]))));
+        onclick: () => { filter = id; store.homeFilter = id; kit.save(); drawPets(); },
+      }, label, h('span.count', c[id]))));
       const q = search.value.trim().toLowerCase();
       const shown = all.filter((p) => (filter === 'all' || (filter === 'care' ? p.summary?.attention !== 'good' : p.status === filter))
         && (!q || `${p.folder} ${p.fullName} ${p.summary?.name ?? ''}`.toLowerCase().includes(q)));
-      if (!all.length) fill(grid, emptyState());
-      else if (!shown.length) fill(grid, h('div.empty', T.noMatch));
-      else fill(grid, ...shown.map(tile));
+      const asList = (store.homeView ?? 'grid') === 'list';
+      if (!all.length) fill(box.pets, emptyState());
+      else if (!shown.length) fill(box.pets, h('div.empty', T.noMatch));
+      else if (asList) {
+        const C = T.cols;
+        fill(box.pets, h('div.pet-table',
+          h('div.pet-row.head', h('span'), h('span', C.pet), h('span', C.mood), h('span', C.vitals), h('span', C.last), h('span', C.status), h('span')),
+          shown.map(row)));
+      } else fill(box.pets, h('div.pet-grid', shown.map(card)));
 
       const adoptable = all.filter((p) => p.status === 'none' && p.github && !p.empty);
-      fill(banner, ...(adoptable.length && filter !== 'live'
-        ? [h('div.banner',
-          h('span', `🥚 ${T.filters.none}: ${adoptable.length}`),
-          h('button.primary', { type: 'button', onclick: () => adoptAll(adoptable) }, T.adoptAll(adoptable.length)))]
-        : []));
-      const recent = (state.events ?? []).filter((e) => Date.now() - Date.parse(e.at) < 3 * 86_400_000).slice(0, 4);
-      fill(feed, ...(recent.length
-        ? [h('div.feed', h('b.small', T.events), ...recent.map((e) => h('a.feed-item', { href: `#/home/${e.projectId}` }, e.text, h('span.muted.small', ` · ${ago(e.at)}`))))]
-        : []));
+      fill(box.banner, adoptable.length && filter !== 'live'
+        ? h('div.banner', icon('cloud-upload', { size: 18 }), h('span', `${T.filters.none}: ${adoptable.length}`),
+          btn(T.adoptAll(adoptable.length), { kind: 'primary', onclick: () => adoptAll(adoptable) }))
+        : null);
     }
 
     function emptyState() {
-      const box = h('div.empty.stack');
-      box.append(h('p', { style: { margin: 0 } }, T.empty), h('p.small', { style: { margin: 0 } }, T.emptyHint),
-        h('div.row', { style: { justifyContent: 'center' } }, h('button.primary', { type: 'button', onclick: addFolder }, T.addFolder)));
-      return box;
+      return h('div.empty.stack',
+        icon('folder-git-2', { size: 28 }),
+        h('p', { style: { margin: 0 } }, T.empty), h('p.small', { style: { margin: 0 } }, T.emptyHint),
+        h('div.row', { style: { justifyContent: 'center' } }, btn(T.addFolder, { icon: 'folder-plus', kind: 'primary', onclick: addFolder })));
     }
 
+    const draw = () => { if (state) { drawOverview(); drawPets(); } };
     root.append(
-      h('div.page-head',
-        h('div', h('h2', T.title), summary),
-        h('div.row', updated, refreshBtn)),
-      feed,
-      h('div.home-tools', h('div.search-box', search), filters),
-      banner,
-      grid);
+      h('header.page-head',
+        h('div', h('h1', T.title), box.summary),
+        h('div.page-actions', box.updated, refreshBtn, btn('', { icon: 'folder-plus', title: T.addFolder, onclick: addFolder }))),
+      box.kpis,
+      h('div.grid2.overview', h('section.panel', box.heat), box.side),
+      h('div.toolbar-row', h('div.search-box', icon('search', { size: 16 }), search), box.filters, h('div.toolbar-end', sortSel, viewSeg)),
+      box.banner,
+      box.pets);
     draw();
-    return { redraw: draw };
-  }
-
-  async function addFolder() {
-    try {
-      const path = desktop?.pickFolder ? await desktop.pickFolder() : (await api('pick-folder', {})).path;
-      if (!path) return;
-      use(await api('config', { roots: [...new Set([...state.config.roots, path])] }));
-      toast('🔍');
-    } catch (err) {
-      toast(err.message);
-    }
+    return { redraw: draw, focusSearch: () => { search.focus(); return true; } };
   }
 
   // ----- Adopting: a dialog that says exactly what will change -------------------
@@ -251,11 +378,12 @@ export function homeViews(kit) {
     el.showModal();
     return el;
   }
+  const closeX = () => h('form', { method: 'dialog' }, btn('', { icon: 'x', kind: 'ghost close', title: t().common.close, type: 'submit' }));
 
   function publishResult(box, result, project) {
     const T = t().home;
     if (!result) return;
-    if (result.pushed) box.append(h('p.ok', T.pushed));
+    if (result.pushed) box.append(h('p.ok', icon('circle-check', { size: 16 }), T.pushed));
     else if (result.error) {
       box.append(h('div.callout.bad',
         h('b', T.pushFailed), h('pre.small', result.error),
@@ -268,21 +396,21 @@ export function homeViews(kit) {
     const T = t().home;
     let style = 'card';
     const files = h('ul.files',
-      h('li', h('code', '.github/workflows/legacypet.yml'), ' ', h('span.muted', T.fileWorkflow), project.hasWorkflow ? null : h('span.pill.live', T.fileNew)),
-      project.readmeHasPet ? null : h('li', h('code', 'README'), ' ', h('span.muted', T.fileReadme)));
+      h('li', icon('file-plus', { size: 15 }), h('code', '.github/workflows/legacypet.yml'), h('span.muted', T.fileWorkflow), project.hasWorkflow ? null : h('span.pill.live', T.fileNew)),
+      project.readmeHasPet ? null : h('li', icon('notebook-pen', { size: 15 }), h('code', 'README'), h('span.muted', T.fileReadme)));
     const out = h('div.stack');
-    const pushBtn = h('button.primary', { type: 'button' }, T.adoptPush);
-    const onlyBtn = h('button', { type: 'button' }, T.adoptOnly);
+    const pushBtn = btn(update ? T.updateGithub : T.adoptPush, { icon: 'cloud-upload', kind: 'primary' });
+    const onlyBtn = btn(T.adoptOnly, { icon: 'file-plus' });
     const branch = project.branch && project.branch !== 'HEAD' ? project.branch : project.defaultBranch;
     async function go(publish) {
       pushBtn.disabled = true;
       onlyBtn.disabled = true;
-      fill(out, h('p.muted', T.working));
+      fill(out, h('p.muted', icon('loader-circle', { size: 16, cls: 'spin' }), T.working));
       try {
         const res = await api(`projects/${project.id}/adopt`, { style, publish, force: update, readme: !update });
         await load();
-        if (!publish) fill(out, h('p.ok', T.written));
-        else if (res.publish?.pushed) fill(out, h('p.ok', T.adopted));
+        if (!publish) fill(out, h('p.ok', icon('circle-check', { size: 16 }), T.written));
+        else if (res.publish?.pushed) fill(out, h('p.ok', icon('circle-check', { size: 16 }), T.adopted));
         else { fill(out); publishResult(out, res.publish, project); }
         if (res.publish?.pushed || !publish) toast(publish ? T.adopted : T.written, 'good');
       } catch (err) {
@@ -294,47 +422,47 @@ export function homeViews(kit) {
     }
     pushBtn.onclick = () => go(true);
     onlyBtn.onclick = () => go(false);
-    const el = dialog(
-      h('form', { method: 'dialog' }, h('button.ghost.close', { 'aria-label': t().common.close }, '✕')),
+    return dialog(
+      closeX(),
       h('h2', update ? T.updateGithub : T.adoptTitle),
       h('p.muted', T.adoptFiles), files,
       update ? null : h('label.field', T.style, seg(Object.entries(t().adopt.styles).filter(([k]) => k !== 'park'), style, (v) => { style = v; }, T.style)),
       h('p.small.muted', T.pushNote(branch)),
-      branch !== project.defaultBranch ? h('p.small.warn-text', T.notDefault(branch, project.defaultBranch)) : null,
-      h('div.row', pushBtn, onlyBtn),
+      branch !== project.defaultBranch ? h('p.small.warn-text', icon('triangle-alert', { size: 14 }), T.notDefault(branch, project.defaultBranch)) : null,
+      h('div.row', pushBtn, update ? null : onlyBtn),
       out);
-    return el;
   }
 
-  function adoptAll(projects) {
+  function adoptAll(projects = state?.projects.filter((p) => p.status === 'none' && p.github && !p.empty) ?? []) {
     const T = t().home;
+    if (!projects.length) return toast(T.noMatch);
     const boxes = projects.map((p) => [p, h('input', { type: 'checkbox', checked: true })]);
     const out = h('div.stack');
-    const go = h('button.primary', { type: 'button' }, T.adoptAllGo(projects.length));
+    const go = btn(T.adoptAllGo(projects.length), { icon: 'cloud-upload', kind: 'primary' });
     const count = () => boxes.filter(([, b]) => b.checked).length;
-    for (const [, b] of boxes) b.onchange = () => { go.textContent = T.adoptAllGo(count()); go.disabled = !count(); };
+    for (const [, b] of boxes) b.onchange = () => { go.querySelector('span').textContent = T.adoptAllGo(count()); go.disabled = !count(); };
     go.onclick = async () => {
       go.disabled = true;
       const picked = boxes.filter(([, b]) => b.checked).map(([p]) => p);
       let ok = 0;
       fill(out);
       for (const p of picked) {
-        const line = h('div.small', `⏳ ${p.fullName}`);
+        const line = h('div.small.progress-line', icon('loader-circle', { size: 14, cls: 'spin' }), h('span', p.fullName));
         out.append(line);
         try {
           const res = await api(`projects/${p.id}/adopt`, { style: 'card', publish: true, options: {} });
-          if (res.publish?.pushed) { ok += 1; line.textContent = `✔ ${p.fullName}`; } else {
-            line.textContent = `✖ ${p.fullName}: ${res.publish?.hint ? T.hints[res.publish.hint] : res.publish?.error ?? '?'}`;
+          if (res.publish?.pushed) { ok += 1; fill(line, icon('circle-check', { size: 14, cls: 'ok-icon' }), h('span', p.fullName)); } else {
+            fill(line, icon('circle-x', { size: 14, cls: 'bad-icon' }), h('span', `${p.fullName}: ${res.publish?.hint ? T.hints[res.publish.hint] : res.publish?.error ?? '?'}`));
           }
         } catch (err) {
-          line.textContent = `✖ ${p.fullName}: ${err.message}`;
+          fill(line, icon('circle-x', { size: 14, cls: 'bad-icon' }), h('span', `${p.fullName}: ${err.message}`));
         }
       }
       out.append(h('p.ok', T.adoptAllDone(ok, picked.length)));
       await load();
     };
     dialog(
-      h('form', { method: 'dialog' }, h('button.ghost.close', { 'aria-label': t().common.close }, '✕')),
+      closeX(),
       h('h2', T.adoptAllTitle), h('p.muted', T.adoptAllLead),
       h('ul.files.scroll', boxes.map(([p, b]) => h('li', h('label.check', b, h('span.mono', p.fullName))))),
       h('div.row', go), out);
@@ -344,30 +472,30 @@ export function homeViews(kit) {
   function detail(root, id) {
     const T = t().home;
     const C = t().common;
-    const box = { card: h('div.card-wrap'), vitals: h('div.vitals'), github: h('div.stack'), todo: h('div'), quests: h('div'), look: h('div'), chart: h('div'), title: h('div'), actions: h('div.row.actions-row') };
+    const TABS = ['overview', 'activity', 'progress', 'customize'];
+    let tab = TABS.includes(store.detailTab) ? store.detailTab : 'overview';
+    const head = h('header.detail-head');
+    const tabsBar = h('div.tabs-bar', { role: 'tablist' });
+    const panel = h('div.tab-panel', { role: 'tabpanel' });
+    const project = () => state.projects.find((x) => x.id === id);
 
     async function care(name) {
       try {
-        const { project } = await api(`projects/${id}/care`, { name });
+        const { project: fresh } = await api(`projects/${id}/care`, { name });
         const i = state.projects.findIndex((p) => p.id === id);
-        if (i !== -1) state.projects[i] = project;
+        if (i !== -1) state.projects[i] = fresh;
         publish();
         const L = tr();
-        const pet = petOf(project, { lang: lang() });
-        const outcome = project.summary.careOutcome;
+        const pet = petOf(fresh, { lang: lang() });
+        const outcome = fresh.summary.careOutcome;
         const msg = outcome === 'again' ? L.command.again[name]
           : outcome === 'cant' ? (L.command.cant[pet.mood] ?? L.command.cant.egg)
-            : LP.commandReply(pet, project.snapshot, { command: name, user: project.user }).split('\n').find((l) => l.startsWith('> '))?.slice(2);
+            : LP.commandReply(pet, fresh.snapshot, { command: name, user: fresh.user }).split('\n').find((l) => l.startsWith('> '))?.slice(2);
         if (msg) toast(msg, outcome === 'ok' ? 'good' : '');
       } catch (err) {
-        toast(err.message);
+        toast(err.message, 'bad');
       }
     }
-
-    const careRow = h('div.big-actions',
-      h('button', { type: 'button', onclick: () => care('feed') }, t().sim.feed),
-      h('button', { type: 'button', onclick: () => care('play') }, t().sim.play),
-      h('button', { type: 'button', onclick: () => care('pat') }, t().sim.pat));
 
     function popOut() {
       const url = `float.html?id=${id}`;
@@ -379,131 +507,196 @@ export function homeViews(kit) {
       } else window.open(url, 'legacypet-float', 'width=230,height=280');
     }
 
-    function draw() {
-      const p = state.projects.find((x) => x.id === id);
-      if (!p) {
-        fill(root, h('a.back', { href: '#/home' }, T.back), h('div.empty', T.notFound));
-        return;
-      }
+    function drawHead(p, pet) {
       const L = tr();
-      const pet = petOf(p, { lang: lang() });
-      const s = p.summary;
-      fill(box.title,
-        h('h2', `${s.emoji} ${pet.displayName}`),
-        h('p.lead', { style: { margin: '2px 0 0' } }, h('span.mono', p.github ? p.fullName : p.folder), ` · ${L.moods[s.mood]} · ${pet.rank.emoji} ${L.level(pet.level)}`));
-      fill(box.card, h('img.card-img', { src: pic(p, 'card'), alt: `${pet.displayName}: ${pet.speech}` }));
-      fill(box.vitals, ...['fullness', 'health', 'joy', 'energy'].map((k) => h('div.vital', L.stats[k], h('b', pet.vitals[k]))));
+      const tools = state.tools ?? { editors: [], terminals: [] };
+      const editor = tools.editors.find((e) => e.id === state.config.editor) ?? tools.editors[0];
+      const gh = p.github ? `https://github.com/${p.fullName}` : null;
+      const more = menu(btn('', { icon: 'ellipsis', title: T.more }), [
+        { icon: 'copy', label: T.copyPath, run: () => copyPath(p) },
+        { icon: 'folder-open', label: T.openFolder, run: () => api(`projects/${p.id}/reveal`, {}).catch((e) => toast(e.message, 'bad')) },
+        tools.terminals.length ? { icon: 'square-terminal', label: T.openTerminal, run: () => openWith(p, 'terminal') } : null,
+        gh ? '-' : null,
+        gh ? { icon: 'external-link', label: T.links.repo, href: gh } : null,
+        gh ? { icon: 'circle-dot', label: T.links.issues, href: `${gh}/issues` } : null,
+        gh ? { icon: 'git-pull-request', label: T.links.pulls, href: `${gh}/pulls` } : null,
+        gh ? { icon: 'activity', label: T.links.actions, href: `${gh}/actions` } : null,
+        '-',
+        { icon: isPinned(p.id) ? 'pin-off' : 'pin', label: isPinned(p.id) ? T.unpin : T.pin, run: () => togglePin(p.id) },
+        MODE === 'desktop'
+          ? { icon: 'monitor', label: state.config.float && state.config.favorite === p.id ? T.floating : T.float, run: async () => use(await api('config', { float: true, favorite: p.id })) }
+          : { icon: 'arrow-up-right', label: T.popOut, run: popOut },
+        { icon: 'eye-off', label: T.hide, run: async () => { use(await api(`projects/${p.id}/hide`, {})); toast(T.hidden); go_('home'); } },
+      ]);
+      fill(head,
+        h('nav.crumbs', { 'aria-label': 'breadcrumb' }, h('a', { href: '#/home' }, T.title), icon('chevron-right', { size: 14 }), h('span', pet.name)),
+        h('div.detail-title',
+          h('img.detail-avatar', { src: pic(p, 'mini'), alt: '' }),
+          h('div',
+            h('h1', pet.displayName),
+            h('div.detail-meta',
+              h('span.mono', p.github ? p.fullName : p.folder),
+              h('span', `${p.summary.emoji} ${L.moods[p.summary.mood]}`),
+              h('span', `${pet.rank.emoji} ${L.level(pet.level)}`),
+              p.branch ? h('span', icon('git-branch', { size: 13 }), p.branch) : null,
+              statusPill(p))),
+          h('div.page-actions',
+            editor ? btn(T.openEditor(editor.name), { icon: 'code-xml', kind: 'primary', onclick: () => openWith(p, 'editor') })
+              : btn(T.openFolder, { icon: 'folder-open', onclick: () => api(`projects/${p.id}/reveal`, {}).catch((e) => toast(e.message, 'bad')) }),
+            btn('', { icon: 'gamepad-2', title: T.raise, onclick: () => { kit.stopAuto(); store.world = kit.Sim.worldFromSnapshot(p.snapshot); kit.save(); go_('sim'); } }),
+            more)));
+      fill(tabsBar, ...TABS.map((id_) => h('button.tab', {
+        type: 'button', role: 'tab', 'aria-selected': String(tab === id_),
+        onclick: () => { tab = id_; store.detailTab = id_; kit.save(); draw(); },
+      }, icon({ overview: 'gauge', activity: 'activity', progress: 'trophy', customize: 'sliders-horizontal' }[id_], { size: 15 }), T.tabs[id_])));
+    }
 
+    function overviewTab(p, pet) {
+      const L = tr();
       // GitHub: where the pet lives, and the one button that moves it there.
-      const gh = [h('h3', `${T.status[p.status]}`)];
+      const gh = [h('div.panel-head', h('h3', T.onGithub), statusPill(p))];
       if (p.status === 'local') gh.push(h('p.muted', T.localNote));
       else if (p.status === 'live') {
         gh.push(h('p.muted', T.liveNote), h('div.row',
-          h('a.button', { href: `https://github.com/${p.fullName}`, target: '_blank', rel: 'noopener' }, T.openGithub),
-          h('a.button', { href: `https://github.com/${p.fullName}/blob/legacypet/DIARY.md`, target: '_blank', rel: 'noopener' }, T.openDiary)));
+          btn(T.links.repo, { icon: 'external-link', href: `https://github.com/${p.fullName}` }),
+          btn(T.openDiary, { icon: 'notebook-pen', href: `https://github.com/${p.fullName}/blob/legacypet/DIARY.md` })));
       } else if (p.status === 'waiting') {
         const out = h('div.stack');
-        const btn = h('button.primary', {
-          type: 'button',
+        const push = btn(T.pushNow, {
+          icon: 'cloud-upload', kind: 'primary',
           onclick: async () => {
-            btn.disabled = true;
-            fill(out, h('p.muted', T.working));
+            push.disabled = true;
+            fill(out, h('p.muted', icon('loader-circle', { size: 16, cls: 'spin' }), T.working));
             try {
               const res = await api(`projects/${p.id}/publish`, {});
               fill(out);
               publishResult(out, res.publish, p);
               await load();
             } catch (err) { fill(out, h('div.callout.bad', err.message)); }
-            btn.disabled = false;
+            push.disabled = false;
           },
-        }, T.pushNow);
-        gh.push(h('p.muted', T.waitingNote), p.ahead ? h('p.small', T.ahead(p.ahead)) : null, h('div.row', btn), out);
+        });
+        gh.push(h('p.muted', T.waitingNote), p.ahead ? h('p.small', T.ahead(p.ahead)) : null, h('div.row', push), out);
       } else {
-        gh.push(h('p.muted', T.noneNote), h('div.row', h('button.primary.big', { type: 'button', onclick: () => adoptDialog(p) }, T.adopt)));
+        gh.push(h('p.muted', T.noneNote), h('div.row', btn(T.adopt, { icon: 'cloud-upload', kind: 'primary big', onclick: () => adoptDialog(p) })));
       }
-      fill(box.github, ...gh.filter(Boolean));
-
-      // To do: what only a local copy knows, then the regular checkup.
       const local = [
         p.dirty ? { level: 'tip', text: T.dirty(p.dirty) } : null,
         p.ahead ? { level: 'warn', text: T.ahead(p.ahead) } : null,
         p.behind ? { level: 'tip', text: T.behind(p.behind) } : null,
       ].filter(Boolean);
-      fill(box.todo,
-        local.length ? h('ul.checkup', { style: { marginBottom: '10px' } }, local.map((x) => h(`li.${x.level}`, h('span.dot'), h('span', x.text)))) : null,
-        checkupList(pet, p.snapshot),
-        h('p.small.muted', { style: { margin: '10px 0 0' } }, p.snapshot.source === 'github' ? T.sourceGithub : T.sourceLocal));
-      fill(box.quests, questList(pet, L));
-      const history = p.prev?.history ?? [];
-      fill(box.chart, history.length >= 2
-        ? h('img.card-img', { src: svgSrc(LP.renderStats(pet, [{ date: pet.date, mood: pet.mood, vitals: ['fullness', 'health', 'joy', 'energy'].map((k) => pet.vitals[k]) }, ...history.filter((x) => x.date !== pet.date)], { theme: cardTheme() })), alt: 'stats' })
-        : h('p.muted', T.noStats));
+      return h('div.grid2.detail',
+        h('div.stack',
+          h('section.panel.stage',
+            h('img.card-img', { src: pic(p, 'card'), alt: `${pet.displayName}: ${pet.speech}` }),
+            h('div.vitals', ['fullness', 'health', 'joy', 'energy'].map((k) => h('div.vital', h('span.vital-name', icon(VITAL_ICONS[k], { size: 13 }), L.stats[k]), h('b', pet.vitals[k]),
+              h(`div.meter.${pet.vitals[k] < 35 ? 'low' : pet.vitals[k] < 60 ? 'mid' : 'ok'}`, h('i', { style: { width: `${pet.vitals[k]}%` } }))))),
+            h('div.care-row',
+              btn(t().sim.feed.replace(/^\S+\s/, ''), { icon: 'cookie', onclick: () => care('feed') }),
+              btn(t().sim.play.replace(/^\S+\s/, ''), { icon: 'volleyball', onclick: () => care('play') }),
+              btn(t().sim.pat.replace(/^\S+\s/, ''), { icon: 'hand-heart', onclick: () => care('pat') })),
+            h('p.small.muted', { style: { margin: 0 } }, T.careNote))),
+        h('div.stack',
+          h('section.panel.github-panel', gh),
+          h('section.panel',
+            h('h3', T.todo),
+            local.length ? h('ul.checkup', { style: { marginBottom: '10px' } }, local.map((x) => h(`li.${x.level}`, h('span.dot'), h('span', x.text)))) : null,
+            checkupList(pet, p.snapshot),
+            h('p.small.muted', { style: { margin: '10px 0 0' } }, p.snapshot.source === 'github' ? T.sourceGithub : T.sourceLocal))));
+    }
 
-      const isFloat = state.config.float && state.config.favorite === p.id;
-      fill(box.actions,
-        h('button', { type: 'button', onclick: () => api(`projects/${p.id}/reveal`, {}).catch((e) => toast(e.message)) }, T.openFolder),
-        p.github && p.status !== 'live' ? h('a.button', { href: `https://github.com/${p.fullName}`, target: '_blank', rel: 'noopener' }, T.openGithub) : null,
-        h('button', {
-          type: 'button',
-          onclick: () => { kit.stopAuto(); store.world = kit.Sim.worldFromSnapshot(p.snapshot); kit.save(); go_('sim'); },
-        }, T.raise),
-        MODE === 'desktop'
-          ? h('button', { type: 'button', 'aria-pressed': String(isFloat), onclick: async () => use(await api('config', { float: true, favorite: p.id })) }, isFloat ? T.floating : T.float)
-          : h('button', { type: 'button', onclick: popOut }, T.popOut),
-        h('button.ghost', {
-          type: 'button',
-          onclick: async () => { use(await api(`projects/${p.id}/hide`, {})); toast(T.hidden); go_('home'); },
-        }, T.hide));
+    function activityTab(p, pet) {
+      const F = T.facts;
+      const first = p.snapshot.repo.createdAt;
+      const history = p.prev?.history ?? [];
+      const total = Object.values(p.activity ?? {}).reduce((a, b) => a + b, 0);
+      return h('div.stack',
+        h('div.kpis',
+          statTile({ icon: icon('git-commit-horizontal', { size: 15 }), label: F.total, value: num(p.snapshot.commits.total) }),
+          statTile({ icon: icon('users', { size: 15 }), label: F.contributors, value: num(p.snapshot.contributors?.total ?? 1) }),
+          statTile({ icon: icon('flame', { size: 15 }), label: F.streak, value: t().home.kpi.days(pet.facts.streak) }),
+          statTile({ icon: icon('calendar-days', { size: 15 }), label: F.since, value: first ? new Intl.DateTimeFormat(store.ui, { dateStyle: 'medium' }).format(new Date(first)) : '–', sub: first ? ago(first) : '' })),
+        h('section.panel',
+          h('div.panel-head', h('h3', T.activityTitle), h('span.small.muted', T.activityOne(total))),
+          heatmap(p.activity ?? {}, { locale: store.ui, title: T.activityTitle, value: (n) => T.cell(n, '').replace(/ · $/, ''), less: T.less, more: T.more })),
+        h('div.grid2',
+          h('section.panel',
+            h('h3', T.recentCommits),
+            p.log?.length ? h('ul.commit-list', p.log.map((c) => h('li',
+              h('code.sha', c.sha),
+              h('div.commit-main', h('span.commit-subject', c.subject), h('span.small.muted', `${c.author} · ${ago(c.date)}`)),
+              p.github ? h('a.commit-link', { href: `https://github.com/${p.fullName}/commit/${c.sha}`, target: '_blank', rel: 'noopener', title: 'GitHub', 'aria-label': 'GitHub' }, icon('arrow-up-right', { size: 14 })) : null)))
+              : h('p.muted', T.noCommits)),
+          h('section.panel',
+            h('h3', T.stats),
+            history.length >= 2
+              ? h('img.card-img', { src: svgSrc(LP.renderStats(pet, [{ date: pet.date, mood: pet.mood, vitals: ['fullness', 'health', 'joy', 'energy'].map((k) => pet.vitals[k]) }, ...history.filter((x) => x.date !== pet.date)], { theme: cardTheme() })), alt: T.stats })
+              : h('p.muted', T.noStats))));
+    }
+
+    function progressTab(p, pet) {
+      const L = tr();
+      const got = new Map(pet.achievements.map((a) => [a.id, a]));
+      return h('div.grid2',
+        h('section.panel', h('h3', t().hatch.quests), questList(pet, L), h('p.small.muted', { style: { margin: '10px 0 0' } }, L.questBoard.reward)),
+        h('section.panel',
+          h('div.panel-head', h('h3', T.trophies), h('span.small.muted', `${got.size}/${LP.ACHIEVEMENTS.length}`)),
+          h('div.tiles.compact', LP.ACHIEVEMENTS.map((a) => h(`div.tile${got.has(a.id) ? '' : '.locked'}`, { title: t().trophyHow[a.id] },
+            h('span.em', a.emoji), h('span.name', L.achievements[a.id]), h('span.hint', got.has(a.id) ? got.get(a.id).unlockedAt : t().trophyHow[a.id]))))));
     }
 
     // Customizing writes to the app's settings for this repo; adopted pets can push it to GitHub.
-    function drawLook() {
-      const p = state.projects.find((x) => x.id === id);
-      if (!p) return;
+    function customizeTab(p) {
       const L = tr();
       const opts = { ...p.options };
       const set = (key) => async (v) => {
-        opts[key] = v;
         const mine = { ...(state.config.options?.[id] ?? {}), [key]: v };
         try {
           await api('config', { options: { [id]: mine } });
           use(await api('refresh', { ids: [id] }));
-        } catch (err) { toast(err.message); }
+        } catch (err) { toast(err.message, 'bad'); }
       };
       const name = h('input', { type: 'text', value: opts.name ?? '', placeholder: C.namePlaceholder, maxlength: 40 });
       name.onchange = () => set('name')(name.value.trim());
-      fill(box.look,
-        h('div.fields',
-          h('label.field', C.species, select([['auto', `${C.auto} 🎲`], ...LP.SPECIES_IDS.map((s) => [s, L.species[s]])], opts.species || 'auto', set('species'))),
-          h('label.field', C.scenery, select([['auto', C.auto], ...LP.HOMES.map((x) => [x, t().homes[x]])], opts.scenery || 'auto', set('scenery'))),
-          h('label.field', C.petLang, select([['', `${C.auto}`], ...Object.entries(LP.LANG_NAMES)], opts.lang || '', set('lang'))),
-          h('label.field', C.name, name)),
-        h('p.small.muted', { style: { margin: '10px 0 0' } }, T.customizeNote),
-        ['live', 'waiting'].includes(p.status) ? h('div.row', { style: { marginTop: '10px' } }, h('button', { type: 'button', onclick: () => adoptDialog(p, { update: true }) }, T.updateGithub)) : null);
+      return h('div.grid2',
+        h('section.panel.stack',
+          h('h3', T.customize),
+          h('div.fields',
+            h('label.field', C.species, select([['auto', `${C.auto} 🎲`], ...LP.SPECIES_IDS.map((s) => [s, L.species[s]])], opts.species || 'auto', set('species'))),
+            h('label.field', C.scenery, select([['auto', C.auto], ...LP.HOMES.map((x) => [x, t().homes[x]])], opts.scenery || 'auto', set('scenery'))),
+            h('label.field', C.petLang, select([['', `${C.auto}`], ...Object.entries(LP.LANG_NAMES)], opts.lang || '', set('lang'))),
+            h('label.field', C.name, name)),
+          h('p.small.muted', { style: { margin: 0 } }, T.customizeNote),
+          ['live', 'waiting'].includes(p.status) ? h('div.row', btn(T.updateGithub, { icon: 'refresh-cw', onclick: () => adoptDialog(p, { update: true }) })) : null),
+        h('section.panel', h('img.card-img', { src: pic(p, 'card'), alt: '' })));
     }
 
-    root.append(
-      h('a.back', { href: '#/home' }, T.back),
-      box.title,
-      h('div.grid2.detail',
-        h('div.stack',
-          h('section.panel.stage', box.card, box.vitals, careRow, h('p.small.muted', { style: { margin: 0 } }, T.careNote), box.actions),
-          h('section.panel', h('h3', T.stats), box.chart)),
-        h('div.stack',
-          h('section.panel.github-panel', box.github),
-          h('section.panel', h('h3', `🩺 ${T.todo}`), box.todo),
-          h('section.panel', h('h3', `📜 ${t().hatch.quests}`), box.quests),
-          h('section.panel', h('h3', `🎨 ${T.customize}`), box.look))));
+    function draw() {
+      const p = project();
+      if (!p?.summary) {
+        fill(root, h('a.back', { href: '#/home' }, icon('chevron-left', { size: 16 }), T.back), h('div.empty', T.notFound));
+        return;
+      }
+      const pet = petOf(p, { lang: lang() });
+      drawHead(p, pet);
+      const make = { overview: overviewTab, activity: activityTab, progress: progressTab, customize: customizeTab }[tab];
+      // The customize tab keeps its inputs while the pet refreshes around it.
+      if (tab === 'customize' && panel.dataset.tab === 'customize' && panel.dataset.id === id) return;
+      panel.dataset.tab = tab;
+      panel.dataset.id = id;
+      fill(panel, make(p, pet));
+    }
+
+    root.append(head, tabsBar, panel);
     draw();
-    drawLook();
-    return { redraw: draw };
+    return { redraw: () => { panel.dataset.tab = ''; draw(); } };
   }
 
   // ----- Settings ----------------------------------------------------------------
   function settings(root) {
     const T = t().settings;
     const H = t().home;
-    const body = h('div.stack');
+    const body = h('div.settings');
     let resetArmed = false;
 
     function toggle(checked, label, onchange) {
@@ -512,68 +705,67 @@ export function homeViews(kit) {
       return h('label.switch', box, h('span.track', { 'aria-hidden': 'true' }), h('span', label));
     }
     const save = async (patch) => {
-      try { use(await api('config', patch)); } catch (err) { toast(err.message); }
+      try { use(await api('config', patch)); } catch (err) { toast(err.message, 'bad'); }
       draw();
     };
+    const section = (iconName, title, ...kids) => h('section.panel.setting', h('h3', icon(iconName, { size: 17 }), title), h('div.stack', ...kids));
 
     function draw() {
       const cfg = state.config;
       const token = h('input', { type: 'password', placeholder: T.tokenPlaceholder, autocomplete: 'off' });
       const hidden = state.hiddenProjects ?? [];
-      const resetBtn = h('button.danger', { type: 'button' }, T.reset);
+      const tools = state.tools ?? { editors: [], terminals: [] };
+      const resetBtn = btn(T.reset, { icon: 'trash-2', kind: 'danger' });
       resetBtn.onclick = async () => {
-        if (!resetArmed) { resetArmed = true; resetBtn.textContent = T.resetConfirm; setTimeout(() => { resetArmed = false; resetBtn.textContent = T.reset; }, 3500); return; }
+        if (!resetArmed) { resetArmed = true; resetBtn.querySelector('span').textContent = T.resetConfirm; setTimeout(() => { resetArmed = false; resetBtn.querySelector('span').textContent = T.reset; }, 3500); return; }
         use(await api('reset', {}));
         go_('home');
       };
       const notifyNote = h('p.small.muted', { style: { margin: 0 } });
       if (MODE !== 'desktop' && typeof Notification !== 'undefined' && Notification.permission === 'denied') notifyNote.textContent = T.notifyBlocked;
+      const toolSelect = (list, key) => select([['', T.firstFound(list[0]?.name ?? '–')], ...list.map((x) => [x.id, x.name])], cfg[key] ?? '', (v) => save({ [key]: v || null }), T[key]);
 
       fill(body,
-        h('section.panel.stack',
-          h('h3', T.folders),
+        section('folder-open', T.folders,
           h('p.small.muted', { style: { margin: 0 } }, T.foldersNote),
-          h('ul.folder-list', cfg.roots.map((r) => h('li.row', { style: { justifyContent: 'space-between' } },
-            h('span.mono', r),
-            h('button.ghost', { type: 'button', onclick: () => save({ roots: cfg.roots.filter((x) => x !== r) }) }, T.remove)))),
-          h('div.row',
-            h('button', { type: 'button', onclick: addFolder }, H.addFolder),
-            h('button', { type: 'button', onclick: async () => { toast(H.refreshing); use(await api('scan', {})); draw(); } }, T.rescan))),
-        h('section.panel.stack',
-          h('h3', T.online),
+          h('ul.folder-list', cfg.roots.map((r) => h('li.row.folder-row',
+            icon('folder-git-2', { size: 16 }), h('span.mono', r),
+            btn('', { icon: 'x', kind: 'ghost', title: T.remove, onclick: () => save({ roots: cfg.roots.filter((x) => x !== r) }) })))),
+          h('div.row', btn(H.addFolder, { icon: 'folder-plus', onclick: addFolder }), btn(T.rescan, { icon: 'search', onclick: async () => { await rescan(); draw(); } }))),
+        section('code-xml', T.tools,
+          tools.editors.length
+            ? h('div.fields', h('label.field', T.editor, toolSelect(tools.editors, 'editor')), tools.terminals.length ? h('label.field', T.terminal, toolSelect(tools.terminals, 'terminal')) : null)
+            : h('p.small.muted', { style: { margin: 0 } }, T.noTools)),
+        section('globe', T.online,
           toggle(cfg.online, T.onlineToggle, (v) => save({ online: v })),
           h('p.small.muted', { style: { margin: 0 } }, T.onlineNote),
           cfg.online ? h('p.small', { style: { margin: 0 } }, state.tokenSource ? T.tokenFrom[state.tokenSource] : T.noToken) : null,
           cfg.online ? h('form.row', { onsubmit: (e) => { e.preventDefault(); if (token.value.trim()) save({ token: token.value.trim() }); } },
-            h('div', { style: { flex: '1 1 220px' } }, token), h('button', { type: 'submit' }, T.saveToken),
-            cfg.hasToken ? h('button.ghost', { type: 'button', onclick: () => save({ token: '' }) }, T.clearToken) : null) : null),
-        h('section.panel.stack',
-          h('h3', T.notify),
+            h('div', { style: { flex: '1 1 220px' } }, token), btn(T.saveToken, { type: 'submit' }),
+            cfg.hasToken ? btn(T.clearToken, { kind: 'ghost', onclick: () => save({ token: '' }) }) : null) : null),
+        section('bell', T.notify,
           toggle(cfg.notify, T.notifyToggle, async (v) => {
             if (v && MODE !== 'desktop' && typeof Notification !== 'undefined' && Notification.permission === 'default') await Notification.requestPermission();
             save({ notify: v });
           }),
           notifyNote,
           h('label.field', T.refresh, select([5, 15, 30, 60].map((n) => [String(n), T.every(n)]), String(cfg.refreshMinutes), (v) => save({ refreshMinutes: Number(v) })))),
-        MODE === 'desktop' ? h('section.panel.stack',
-          h('h3', T.desktop),
+        MODE === 'desktop' ? section('monitor', T.desktop,
           toggle(cfg.float, T.floatToggle, (v) => save({ float: v })),
           h('label.field', T.floatWho, select([['', T.neediest], ...state.projects.filter((p) => p.summary).map((p) => [p.id, `${p.summary.emoji} ${p.summary.name} · ${p.folder}`])], cfg.favorite ?? '', (v) => save({ favorite: v || null }))),
           state.desktop?.loginItem != null ? toggle(state.desktop.loginItem, T.login, async (v) => { use(await api('login-item', { on: v })); draw(); }) : null) : null,
-        hidden.length ? h('section.panel.stack',
-          h('h3', T.hiddenTitle),
-          h('ul.folder-list', hidden.map((x) => h('li.row', { style: { justifyContent: 'space-between' } },
+        hidden.length ? section('eye-off', T.hiddenTitle,
+          h('ul.folder-list', hidden.map((x) => h('li.row.folder-row',
             h('span.mono', x.name),
-            h('button.ghost', { type: 'button', onclick: () => save({ hidden: cfg.hidden.filter((id) => id !== x.id) }) }, T.unhide))))) : null,
-        h('section.panel.stack',
-          h('h3', T.privacy),
-          h('ul.privacy.compact', T.privacyItems.map((x) => h('li', x))),
+            btn(T.unhide, { icon: 'eye', kind: 'ghost', onclick: () => save({ hidden: cfg.hidden.filter((id) => id !== x.id) }) }))))) : null,
+        section('shield-check', T.privacy,
+          h('ul.privacy.compact', T.privacyItems.map((x) => h('li', icon('check', { size: 15 }), h('span', x)))),
           h('div.small.muted', T.dataDir, ' ', h('code', state.dataDir ?? '~/.legacypet')),
           h('div.row', resetBtn)),
-        h('p.small.muted', { style: { textAlign: 'center' } }, T.version(state.version, state.mode)));
+        h('p.small.muted.version', T.version(state.version, state.mode)));
     }
 
-    root.append(h('h2', T.title), h('p.lead', T.lead), body);
+    root.append(h('header.page-head', h('div', h('h1', T.title), h('p.page-sub', T.lead))), body);
     draw();
     return { redraw: draw };
   }
@@ -596,32 +788,32 @@ export function homeViews(kit) {
       win: [[T.winNote, asset('LegacyPet-win-x64.exe')]],
       linux: [[T.appImage, asset('LegacyPet-linux-x86_64.AppImage')], [T.deb, asset('LegacyPet-linux-amd64.deb')]],
     };
-    const names = { mac: `🍎 ${T.mac}`, win: `🪟 ${T.win}`, linux: `🐧 ${T.linux}` };
-    const block = (id, primary) => h('div.dl', h('b', names[id]),
-      h('div.row', builds[id].map(([label, href], i) => h(`a.button${primary && i === 0 ? '.primary' : ''}`, { href }, `⬇ ${label}`))));
+    const names = { mac: T.mac, win: T.win, linux: T.linux };
+    const block = (id, primary) => h('div.dl', h('b', icon('monitor', { size: 16 }), names[id]),
+      h('div.row', builds[id].map(([label, href], i) => btn(label, { icon: 'download', kind: primary && i === 0 ? 'primary' : '', href }))));
     const order = os ? [os, ...Object.keys(builds).filter((x) => x !== os)] : Object.keys(builds);
     root.append(
       h('section.get-hero',
         h('div.onboard-pets', ['happy', 'party', 'sleepy'].map((mood, i) => h('img.mini-img', { src: svgSrc(LP.renderMini(kit.demoPet({ mood, species: ['cat', 'duck', 'octopus'][i], fullName: `you/${['api', 'app', 'blog'][i]}` }), { theme: cardTheme() })), alt: '' }))),
-        h('h2', T.title),
+        h('h1', T.title),
         h('p.lead', T.lead)),
       h('div.grid2',
         h('section.panel.stack',
-          h('h3', `⬇ ${T.download}`),
+          h('h3', icon('download', { size: 17 }), T.download),
           os ? h('p.small.muted', { style: { margin: 0 } }, T.forYou) : null,
           ...order.map((id, i) => block(id, i === 0 && Boolean(os))),
           h('p.small.muted', { style: { margin: 0 } }, T.macWarn),
           h('p.small.muted', { style: { margin: 0 } }, T.winWarn),
           h('a.small', { href: RELEASES }, T.allReleases)),
         h('div.stack',
-          h('section.panel.points', T.points.map(([icon, title, text]) => h('div.point', h('span.em', icon), h('div', h('b', title), h('p.small.muted', { style: { margin: 0 } }, text))))),
-          h('section.panel.stack', h('h3', T.node), codeBlock('npx github:Tanx-1811/legacypet app'), h('p.small.muted', { style: { margin: 0 } }, T.nodeNote)))));
+          h('section.panel.points', T.points.map(([name, title, text]) => h('div.point', h('span.point-icon', icon(name, { size: 18 })), h('div', h('b', title), h('p.small.muted', { style: { margin: 0 } }, text))))),
+          h('section.panel.stack', h('h3', icon('square-terminal', { size: 17 }), T.node), codeBlock('npx github:Tanx-1811/legacypet app'), h('p.small.muted', { style: { margin: 0 } }, T.nodeNote)))));
     return {};
   }
 
   function home(root, arg) {
     if (!state) {
-      root.append(h('div.scanning', h('p.muted', '…')));
+      root.append(h('div.scanning', icon('loader-circle', { size: 24, cls: 'spin' })));
       load().then(() => kit.render()).catch((err) => fill(root, h('div.empty', err.message)));
       return {};
     }
@@ -642,5 +834,12 @@ export function homeViews(kit) {
     subscribe(fn) { subscribers.add(fn); return () => subscribers.delete(fn); },
     careCount,
     views: { home, settings, get: getApp },
+    actions: {
+      refresh: () => refreshAll(),
+      rescan,
+      addFolder,
+      adoptAll: () => adoptAll(),
+      toggleFloat: async () => { try { use(await api('config', { float: !state.config.float })); } catch (err) { toast(err.message, 'bad'); } },
+    },
   };
 }
