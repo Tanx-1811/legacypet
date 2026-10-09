@@ -7,7 +7,7 @@ export default {
   food: 'kibble',
   move: 'rise',
   palette: {
-    o: '#4a1406', b: '#ff6b2c', l: '#ffa25e', s: '#d8401f', f: '#ffe9a6',
+    o: '#4a1406', b: '#ff6b2c', l: '#ffa25e', s: '#d8401f', f: '#fff2c8',
     y: '#ffd23f', r: '#ff3d2e', a: '#f5a524', A: '#c46a00',
   },
   shinyKeep: ['f', 'a', 'A'],

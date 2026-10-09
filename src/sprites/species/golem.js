@@ -14,7 +14,7 @@ export default {
   grid: [
     '................',
     '..oooooooooooo..',
-    '.oggGggbblgGggo.',
+    '.oggGggbklgGggo.',
     '.obgGblkbbbgGso.',
     '.olbffffffffbso.',
     '.obffffffffffso.',

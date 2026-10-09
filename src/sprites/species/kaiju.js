@@ -13,8 +13,8 @@ export default {
   shinyKeep: ['w', 'W', 'c', 'C'],
   grid: [
     '......oo........',
-    '.....ocCo.......',
     '..oo.ocCo.oo....',
+    '.ocCoocCoocCo...',
     '.ocCoocCoocCo...',
     '.obbbbbbbbbbo...',
     'oblbbbbbbbbbbo..',
@@ -31,6 +31,6 @@ export default {
   ],
   eyes: [[3, 7], [9, 7]],
   mouth: [5, 9],
-  cheeks: [[1, 9], [10, 9]],
+  cheeks: [[1, 9], [11, 9]],
   hat: [7, 4],
 };

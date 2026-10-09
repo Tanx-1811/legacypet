@@ -1,4 +1,4 @@
-// Immortal Peach: a monkey that ate a peach of immortality, failing CI can't push its health below 35.
+// Immortal Peach: it ate a peach of immortality, so failing CI can't push its health below 35.
 export default {
   id: 'monkey',
   trait: 'immortalPeach',
@@ -12,9 +12,25 @@ export default {
   },
   shinyKeep: ['p', 'y', 'Y', 'r', 'R'],
   grid: [
+    '..............yy',
+    '.............yYy',
+    '....oooooooorRY.',
+    '..oollbbbbbboo..',
+    '.oYyyyyrryyyyYo.',
+    'obbppppbbppppbbo',
+    'opbppppppppppbpo',
+    'opbppppppppppbpo',
+    'obbbppppppppbbbo',
+    '.obbbppppppbbbo.',
+    '..osbbppppbbso..',
+    '..rosbbbbbbso...',
+    '.rRobbppppbbo...',
+    'yRYobbppppbbo...',
+    'yy.oooooooooo...',
+    '................',
   ],
   eyes: [[4, 6], [10, 6]],
   mouth: [6, 8],
   cheeks: [[3, 8], [11, 8]],
-  hat: [8, 1],
+  hat: [8, 2],
 };
