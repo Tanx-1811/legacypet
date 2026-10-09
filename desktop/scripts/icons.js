@@ -59,7 +59,7 @@ function canvas(w, h) {
       for (let y = y0; y < y0 + rh; y++) for (let x = x0; x < x0 + rw; x++) blend(x, y, color, a);
     },
     // A rounded rectangle with soft edges (4×4 samples per pixel), filled by fn(y) → color.
-    rounded(x0, y0, rw, rh, r, fill) {
+    rounded(x0, y0, rw, rh, r, fill, alpha = 1) {
       for (let y = y0; y < y0 + rh; y++) {
         for (let x = x0; x < x0 + rw; x++) {
           let hit = 0;
@@ -72,7 +72,7 @@ function canvas(w, h) {
               if ((px_ - cx) ** 2 + (py - cy) ** 2 <= r * r) hit++;
             }
           }
-          if (hit) blend(x, y, fill((y - y0) / rh), hit / 16);
+          if (hit) blend(x, y, fill((y - y0) / rh), (hit / 16) * alpha);
         }
       }
     },
@@ -102,7 +102,7 @@ function appIcon(size = 1024) {
   const box = size - inset * 2;
   const top = hex('#9b7cff');
   const bottom = hex('#5d33e6');
-  c.rounded(inset, inset + Math.round(size * 0.012), box, box, box * 0.225, () => [20, 10, 50]); // soft drop shadow
+  c.rounded(inset, inset + Math.round(size * 0.014), box, box, box * 0.225, () => [20, 10, 50], 0.28); // a soft drop shadow
   c.rounded(inset, inset, box, box, box * 0.225, (t) => mixRgb(top, bottom, t));
   c.ellipse(size / 2, size * 0.47, box * 0.36, box * 0.36, [255, 255, 255], 0.16);
   const pixels = petPixels();
