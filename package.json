@@ -12,6 +12,7 @@
   },
   "files": [
     "src",
+    "site",
     "action.yml",
     "README.md",
     "README.vi.md",
@@ -22,7 +23,8 @@
     "test": "node --test",
     "gallery": "node src/cli.js gallery --out docs/gallery",
     "demo": "node src/cli.js demo",
-    "playground": "node scripts/serve.js"
+    "playground": "node scripts/serve.js",
+    "app": "node src/cli.js app"
   },
   "engines": {
     "node": ">=20"

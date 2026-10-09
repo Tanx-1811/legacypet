@@ -371,7 +371,8 @@ ${sections.map((s) => `<h2>${s.title}</h2><div class="grid">${s.items.map((i) =>
 
 // The app: a local server plus a window. Quits when the last window closes.
 async function app() {
-  const { DEFAULT_PORT, startServer } = await import('./app/server.js');
+  const { DEFAULT_PORT, hasSite, startServer } = await import('./app/server.js');
+  if (!hasSite()) throw new Error('The app\'s pages (site/) are missing from this install. Run it from the repo, or with npx github:Tanx-1811/legacypet app');
   const { openAppWindow } = await import('./app/launch.js');
   const { dataDir } = await import('./local/store.js');
   const port = Number(opts.port) || DEFAULT_PORT;
