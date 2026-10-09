@@ -1,6 +1,8 @@
 import * as LP from './src/index.js';
 import { UI, UI_LANGS } from './ui.js';
 import * as Sim from './sim.js';
+import { homeViews } from './home.js';
+import { api, desktop, listen, LOCAL, MODE } from './local.js';
 
 // ---------------------------------------------------------------------------
 // Shared state. Everything the visitor picks lives in one place, survives a reload
@@ -992,22 +994,42 @@ function viewAdopt(root) {
 }
 
 // ---------------------------------------------------------------------------
-// Shell: header, navigation, routing, language and theme
+// Shell: sidebar, navigation, routing, language and theme
 // ---------------------------------------------------------------------------
-const VIEWS = { hatch: viewHatch, sim: viewSim, codex: viewCodex, park: viewPark, adopt: viewAdopt };
-const ICONS = { hatch: '🥚', sim: '🎮', codex: '📖', park: '🏞️', adopt: '🏡' };
+// On someone's computer (the LegacyPet app) the first view is their own pets; on the web
+// it's the playground, with a page to download the app.
+const homeKit = homeViews({
+  h, img, svgSrc, toast, t, tr, store, save, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP, Sim, stopAuto, demoPet,
+  render: () => render(),
+});
+const VIEWS = {
+  home: homeKit.views.home, hatch: viewHatch, sim: viewSim, codex: viewCodex, park: viewPark, adopt: viewAdopt,
+  settings: homeKit.views.settings, get: homeKit.views.get,
+};
+const NAV = LOCAL ? ['home', 'hatch', 'sim', 'codex', 'park', 'adopt', 'settings'] : ['hatch', 'sim', 'codex', 'park', 'adopt', 'get'];
+const ICONS = { home: '🏠', hatch: '🥚', sim: '🎮', codex: '📖', park: '🏞️', adopt: '🏡', settings: '⚙️', get: '💻' };
+const DEFAULT_VIEW = NAV[0];
 let current = null;
 
 function route() {
   const raw = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
-  // Old share links were #owner/repo.
-  if (raw && !raw.split('/')[0].match(/^(hatch|sim|codex|park|adopt)$/) && raw.includes('/')) return { view: 'hatch', arg: raw };
   const [view, ...rest] = raw.split('/');
-  return { view: VIEWS[view] ? view : 'hatch', arg: rest.join('/') };
+  // Old share links were #owner/repo.
+  if (raw && !VIEWS[view] && raw.includes('/')) return { view: 'hatch', arg: raw };
+  return { view: NAV.includes(view) ? view : DEFAULT_VIEW, arg: rest.join('/') };
 }
 
 function go_(view, arg = '') {
   location.hash = `#/${view}${arg ? `/${arg}` : ''}`;
+}
+
+function drawNav(view) {
+  const T = t();
+  const care = LOCAL ? homeKit.careCount() : 0;
+  $('#nav').replaceChildren(...NAV.map((id) => h('a', {
+    href: `#/${id}`, 'data-view': id, title: T.navHint[id], 'aria-current': id === view ? 'page' : null,
+  }, h('span.ico', { 'aria-hidden': 'true' }, ICONS[id]), h('span.label', T.nav[id]), h('small', T.navHint[id]),
+  id === 'home' && care ? h('span.badge', { title: t().home.filters.care }, care) : null)));
 }
 
 function render() {
@@ -1016,35 +1038,32 @@ function render() {
   const T = t();
   document.documentElement.lang = store.ui;
   document.title = `LegacyPet · ${T.nav[view]}`;
-  for (const a of document.querySelectorAll('nav.tabs a')) {
-    const id = a.dataset.view;
-    a.replaceChildren(h('span.ico', ICONS[id]), h('span', T.nav[id]));
-    a.title = T.navHint[id];
-    if (id === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
-  }
+  drawNav(view);
   const main = $('#view');
   main.replaceChildren();
   const root = h('div.view');
   main.append(root);
   current = VIEWS[view](root, arg) ?? {};
-  $('#footer-text').textContent = T.footer;
+  $('#footer-text').textContent = LOCAL ? T.footerLocal : T.footer;
   $('#tagline').textContent = T.tagline;
   drawToolbar();
+  navHeight();
 }
 
 function drawToolbar() {
   const T = t();
   const bar = $('#toolbar');
   bar.replaceChildren(
-    seg(Object.entries(UI_LANGS).map(([code, name]) => [code, code.toUpperCase()]), store.ui, (v) => {
+    seg(Object.entries(UI_LANGS).map(([code]) => [code, code.toUpperCase()]), store.ui, (v) => {
       // The pet follows the interface language until someone picks another one.
       if (store.cfg.lang === store.ui) store.cfg.lang = v;
       store.ui = v;
       save();
+      if (LOCAL) api('config', { ui: v }).catch(() => {});
       render();
     }, T.common.uiLang),
     h('button.icon-btn', {
-      type: 'button', title: `${T.common.theme}: ${T.common.themes[store.theme]}`,
+      type: 'button', title: `${T.common.theme}: ${T.common.themes[store.theme]}`, 'aria-label': T.common.theme,
       onclick: () => {
         store.theme = { auto: 'light', light: 'dark', dark: 'auto' }[store.theme];
         applyTheme();
@@ -1054,7 +1073,7 @@ function drawToolbar() {
         drawToolbar();
       },
     }, { auto: '🌓', light: '☀️', dark: '🌙' }[store.theme]),
-    h('a.icon-btn', { href: 'https://github.com/Tanx-1811/legacypet', title: 'GitHub' }, '★ GitHub'));
+    h('a.icon-btn', { href: 'https://github.com/Tanx-1811/legacypet', target: '_blank', rel: 'noopener', title: 'GitHub' }, '★'));
 }
 
 function applyTheme() {
@@ -1064,15 +1083,40 @@ function applyTheme() {
 
 darkQuery.addEventListener('change', () => { if (store.theme === 'auto') { codexCache.clear(); current?.redraw?.(); } });
 window.addEventListener('hashchange', render);
-// Sticky bars below the tabs (the codex index) sit exactly under them at any width.
-const navHeight = () => document.documentElement.style.setProperty('--nav-h', `${$('nav.tabs').offsetHeight}px`);
+// Sticky bars inside a view (the codex index) sit right under the top bar on small screens.
+const wide = matchMedia('(min-width: 960px)');
+const navHeight = () => document.documentElement.style.setProperty('--nav-h', `${wide.matches ? 0 : $('#side').offsetHeight}px`);
 window.addEventListener('resize', navHeight);
 document.addEventListener('keydown', (e) => {
-  if (e.target.closest('input, select, textarea, [contenteditable]')) return;
+  if (e.target.closest('input, select, textarea, [contenteditable], dialog')) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   current?.keys?.(e);
 });
 
+// The app on this computer: live updates from the server, notifications, and the GitHub
+// token for the repo picker when "GitHub details" is on.
+async function bootLocal() {
+  document.documentElement.classList.add('is-app', `mode-${MODE}`);
+  if (desktop?.platform) document.documentElement.classList.add(`os-${desktop.platform}`);
+  const state = await homeKit.load().catch(() => null);
+  if (!state) return;
+  if (!state.config.ui) api('config', { ui: store.ui }).catch(() => {});
+  if (state.config.online) api('token').then((r) => { if (r.token) ghToken = r.token; }).catch(() => {});
+  homeKit.subscribe(() => drawNav(route().view));
+  listen({
+    onChange: () => homeKit.load().then(() => current?.redraw?.()).catch(() => {}),
+    onEvent: (e) => {
+      toast(e.text, e.urgent ? '' : 'gold');
+      // The desktop app shows native notifications itself.
+      if (MODE !== 'desktop' && homeKit.state?.config.notify && document.hidden && globalThis.Notification?.permission === 'granted') {
+        new Notification('LegacyPet', { body: e.text, tag: `lp-${e.id}` });
+      }
+    },
+  });
+  render();
+}
+
 applyTheme();
 render();
 navHeight();
+if (LOCAL) bootLocal();

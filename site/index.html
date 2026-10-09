@@ -3,30 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LegacyPet Playground</title>
-<meta name="description" content="Hatch your GitHub repo's pixel pet, raise it day by day, dress it up, and adopt it in one minute.">
+<title>LegacyPet</title>
+<meta name="description" content="Every repo gets a pixel pet. Hatch one, raise it day by day, dress it up, and adopt it in one minute, or get the desktop app and give every project on your computer a pet.">
 <meta name="color-scheme" content="light dark">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
-<header class="top">
-  <a class="brand" href="#/hatch"><b>🐾 LegacyPet</b><span id="tagline"></span></a>
-  <div class="toolbar" id="toolbar"></div>
-</header>
-<nav class="tabs" aria-label="Playground">
-  <div class="inner">
-    <a href="#/hatch" data-view="hatch">Hatch</a>
-    <a href="#/sim" data-view="sim">Raise</a>
-    <a href="#/codex" data-view="codex">Codex</a>
-    <a href="#/park" data-view="park">Park</a>
-    <a href="#/adopt" data-view="adopt">Adopt</a>
+<div class="shell">
+  <aside class="side" id="side">
+    <a class="brand" href="#/">
+      <svg class="logo" viewBox="0 0 12 12" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M0 5h2v3H0zM3 2h2v3H3zM7 2h2v3H7zM10 5h2v3h-2zM4 6h4v1h1v1h1v3H2V8h1V7h1z"/></svg>
+      <span class="brand-text"><b>LegacyPet</b><span id="tagline"></span></span>
+    </a>
+    <nav class="tabs" aria-label="LegacyPet"><div class="inner" id="nav"></div></nav>
+    <div class="side-foot toolbar" id="toolbar"></div>
+  </aside>
+  <div class="content">
+    <main id="view"></main>
+    <footer><span id="footer-text"></span> · <a href="https://github.com/Tanx-1811/legacypet" target="_blank" rel="noopener">GitHub</a> · <a href="https://tanx-1811.github.io/legacypet/gallery/" target="_blank" rel="noopener">Gallery</a></footer>
   </div>
-</nav>
-<main id="view"></main>
-<footer><span id="footer-text"></span> · <a href="https://github.com/Tanx-1811/legacypet">GitHub</a> · <a href="gallery/">Gallery</a></footer>
+</div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
-<noscript><p style="text-align:center">The playground needs JavaScript.</p></noscript>
+<noscript><p style="text-align:center">LegacyPet needs JavaScript.</p></noscript>
 <script type="module" src="app.js"></script>
 </body>
 </html>
