@@ -9,7 +9,9 @@ import { startServer } from '../src/app/server.js';
 import { adoptLocal, gitHint, publishAdoption, workflowOptions } from '../src/local/adopt.js';
 import { communityHealth, dailyCounts, guessLanguage, readRepo } from '../src/local/git.js';
 import { detectTools, publicTools } from '../src/local/open.js';
-import { createProjects, localDay, STREAK_REMINDER_HOUR } from '../src/local/projects.js';
+import {
+  cleanConfigPatch, cleanOptions, createProjects, inQuietHours, localDay, notifyRules, STREAK_REMINDER_HOUR,
+} from '../src/local/projects.js';
 import { findRepos, suggestFolders } from '../src/local/scan.js';
 import { createStore, projectId } from '../src/local/store.js';
 import { workflowYaml } from '../src/setup.js';
@@ -195,6 +197,9 @@ test('gitHint explains the usual push failures', () => {
   assert.equal(gitHint('fatal: could not read Username for \'https://github.com\': terminal prompts disabled'), 'auth');
   assert.equal(gitHint(' ! [rejected]        main -> main (fetch first)'), 'behind');
   assert.equal(gitHint('Please tell me who you are.'), 'identity');
+  assert.equal(gitHint('error: Your local changes to the following files would be overwritten by merge'), 'dirty');
+  assert.equal(gitHint('fatal: Not possible to fast-forward, aborting.'), 'diverged');
+  assert.equal(gitHint('There is no tracking information for the current branch.'), 'no-upstream');
   assert.equal(gitHint('something else'), null);
 });
 
@@ -388,6 +393,176 @@ test('server: pins and tools in the state, and opening needs a real project', as
     assert.deepEqual(pinned.config.pinned, ['abcdefabcdef']);
     assert.equal(pinned.config.editor, 'vscode');
     assert.equal((await call(port, '/api/projects/abcdefabcdef/open', { method: 'POST', token: secret, body: { with: 'editor' } })).status, 404);
+  } finally {
+    await app.close();
+  }
+});
+
+// ----- Settings, care for all, sync, backup ------------------------------------------
+test('notification rules: muted groups, quiet hours across midnight', () => {
+  assert.equal(inQuietHours(null, new Date(2026, 9, 8, 23)), false);
+  assert.equal(inQuietHours({ from: 22, to: 8 }, new Date(2026, 9, 8, 23)), true);
+  assert.equal(inQuietHours({ from: 22, to: 8 }, new Date(2026, 9, 8, 7)), true);
+  assert.equal(inQuietHours({ from: 22, to: 8 }, new Date(2026, 9, 8, 8)), false);
+  assert.equal(inQuietHours({ from: 0, to: 8 }, new Date(2026, 9, 8, 12)), false);
+  assert.equal(inQuietHours({ from: 5, to: 5 }, new Date(2026, 9, 8, 5)), false, 'an empty range is off');
+  const noon = new Date(2026, 9, 8, 12);
+  assert.deepEqual(notifyRules({ notify: true, mute: [] }, 'levelUp', noon), { muted: false, notify: true });
+  assert.deepEqual(notifyRules({ notify: true, mute: ['growth'] }, 'levelUp', noon), { muted: true, notify: false });
+  assert.deepEqual(notifyRules({ notify: true, mute: [], quietHours: { from: 10, to: 14 } }, 'trophy', noon), { muted: false, notify: false });
+  assert.deepEqual(notifyRules({ notify: false, mute: [] }, 'trophy', noon), { muted: false, notify: false });
+});
+
+test('cleanConfigPatch keeps settings in shape and cleanOptions drops typos', () => {
+  const clean = cleanConfigPatch({
+    mute: ['streak', 'nope', 'streak'], reminderHour: 25, quietHours: { from: 22, to: 'x' }, floatSize: 'huge', floatBubbles: 0,
+    refreshMinutes: 0, notes: { abcdefabcdef: 'x'.repeat(5000), '../etc': 'no' }, options: { abcdefabcdef: { color: 'teal', evil: { a: 1 } } },
+    hidden: ['abcdefabcdef', 'nope'], favorite: 'nope', editor: 'vscode',
+  });
+  assert.deepEqual(clean.mute, ['streak']);
+  assert.equal('reminderHour' in clean, false);
+  assert.equal('quietHours' in clean, false);
+  assert.equal('floatSize' in clean, false);
+  assert.equal(clean.floatBubbles, false);
+  assert.equal('refreshMinutes' in clean, false);
+  assert.deepEqual(Object.keys(clean.notes), ['abcdefabcdef']);
+  assert.equal(clean.notes.abcdefabcdef.length, 4000);
+  assert.deepEqual(clean.options, { abcdefabcdef: { color: 'teal' } });
+  assert.deepEqual(clean.hidden, ['abcdefabcdef']);
+  assert.equal(clean.favorite, null);
+  assert.equal(clean.editor, 'vscode', 'other keys pass through');
+  assert.deepEqual(cleanConfigPatch({ reminderHour: null, quietHours: null }), { reminderHour: null, quietHours: null });
+  assert.deepEqual(cleanOptions({ species: 'unicorn', scenery: 'moon', color: 'blurple', theme: 'neon', name: 'Mo' }), { name: 'Mo' });
+  assert.deepEqual(cleanOptions({ species: 'cat', color: '#ff8800', theme: 'dark' }), { species: 'cat', color: '#ff8800', theme: 'dark' });
+});
+
+test('projects: care for all, notes, a muted streak, fetch and pull', async () => {
+  const root = dir('tools');
+  const a = makeRepo('alpha', { commits: [6, 5, 4, 3, 2, 1], remote: 'me/alpha', parent: root });
+  makeRepo('beta', { commits: [6, 5, 4, 3, 2, 1], parent: root });
+  const store = createStore(dir('tools-data'));
+  const projects = createProjects({ store, now: () => NOW, fetch: fakeGitHub });
+  const list = await projects.allow([root]);
+  assert.equal(list.length, 2);
+
+  assert.deepEqual(await projects.careAll('feed'), { ok: 2, again: 0, cant: 0 });
+  assert.deepEqual(await projects.careAll('feed'), { ok: 0, again: 2, cant: 0 }, 'once a day');
+
+  const alpha = list.find((p) => p.fullName === 'me/alpha');
+  projects.updateConfig({ notes: { [alpha.id]: 'ship v2' } });
+  projects.updateConfig({ notes: { other123456: 'kept' } });
+  assert.equal(projects.config.notes[alpha.id], 'ship v2', 'notes merge per project');
+  projects.updateConfig({ notes: { [alpha.id]: '' } });
+  assert.equal(alpha.id in projects.config.notes, false, 'an empty note is forgotten');
+
+  // Someone else pushes to GitHub: fetch sees it, pull brings it in.
+  const other = dir('alpha-clone');
+  sh(other, ['clone', '-q', a.bare, '.']);
+  sh(other, ['config', 'user.name', 'Bo']);
+  sh(other, ['config', 'user.email', 'bo@example.com']);
+  writeFileSync(join(other, 'new.txt'), 'hi\n');
+  sh(other, ['add', '.']);
+  sh(other, ['commit', '-q', '-m', 'from elsewhere']);
+  sh(other, ['push', '-q', 'origin', 'main']);
+  const fetched = await projects.sync(alpha.id, 'fetch');
+  assert.equal(fetched.ok, true, fetched.error);
+  assert.equal(fetched.project.behind, 1);
+  const pulled = await projects.sync(alpha.id, 'pull');
+  assert.equal(pulled.ok, true, pulled.error);
+  assert.equal(pulled.project.behind, 0);
+  assert.ok(existsSync(join(a.path, 'new.txt')));
+  const beta = list.find((p) => !p.github);
+  await assert.rejects(projects.sync(beta.id, 'fetch'), /no remote/);
+});
+
+test('projects: a backup moves settings and memories to another computer', async () => {
+  const mine = dir('backup-a');
+  const original = makeRepo('gamma', { commits: [4, 3, 2, 1], remote: 'me/gamma', parent: mine });
+  const before = createProjects({ store: createStore(dir('backup-a-data')), now: () => NOW, fetch: fakeGitHub });
+  const [g] = await before.allow([mine]);
+  await before.care(g.id, 'pat');
+  before.updateConfig({
+    token: 'secret', notes: { [g.id]: 'remember me' }, options: { [g.id]: { color: 'pink', name: 'Mochi' } }, pinned: [g.id],
+    mute: ['streak'], quietHours: { from: 22, to: 8 }, floatSize: 'large',
+  });
+  const data = JSON.parse(JSON.stringify(before.backup()));
+  assert.equal(data.app, 'legacypet');
+  assert.equal(data.settings.token, undefined, 'never the token');
+  assert.ok(data.pets[g.id].care, 'the pet remembers its pats');
+
+  // The same repo cloned somewhere else: another path, another id.
+  const theirs = dir('backup-b');
+  sh(theirs, ['clone', '-q', original.bare, 'gamma']);
+  sh(join(theirs, 'gamma'), ['remote', 'set-url', 'origin', 'https://github.com/me/gamma.git']);
+  const after = createProjects({ store: createStore(dir('backup-b-data')), now: () => NOW, fetch: fakeGitHub });
+  const [h] = await after.allow([theirs]);
+  assert.notEqual(h.id, g.id);
+  await assert.rejects(after.restore({ hello: 'world' }), /not a LegacyPet backup/);
+  const res = await after.restore(data);
+  assert.equal(res.pets, 1);
+  assert.equal(after.config.notes[h.id], 'remember me');
+  assert.deepEqual(after.config.pinned, [h.id]);
+  assert.deepEqual(after.config.mute, ['streak']);
+  assert.deepEqual(after.config.quietHours, { from: 22, to: 8 });
+  assert.equal(after.config.floatSize, 'large');
+  assert.equal(after.config.token, '');
+  const restored = after.get(h.id);
+  assert.equal(restored.summary.name, 'Mochi');
+  assert.equal(restored.options.color, 'pink');
+  assert.ok(after.store.loadMemory(h.id).care, 'the memory found its repo');
+});
+
+test('a muted streak and a later reminder hour hold the evening nudge', async () => {
+  const root = dir('quiet-streaks');
+  const daysAgo = (n) => (NOW.getTime() - new Date(2026, 9, 8 - n, 12).getTime()) / DAY;
+  makeRepo('streaky', { commits: [daysAgo(4), daysAgo(3), daysAgo(2), daysAgo(1)], parent: root });
+  let clock = new Date(2026, 9, 8, 19);
+  const projects = createProjects({ store: createStore(dir('quiet-data')), now: () => clock, fetch: fakeGitHub });
+  const events = [];
+  projects.on((type, e) => { if (type === 'event') events.push(e); });
+  await projects.allow([root]);
+  projects.updateConfig({ reminderHour: 21 });
+  await projects.refresh();
+  assert.equal(events.filter((e) => e.kind === 'streak').length, 0, 'not before 21:00');
+  projects.updateConfig({ mute: ['streak'] });
+  clock = new Date(2026, 9, 8, 22);
+  await projects.refresh();
+  assert.equal(events.filter((e) => e.kind === 'streak').length, 0, 'muted');
+  projects.updateConfig({ mute: [], quietHours: { from: 22, to: 8 } });
+  await projects.refresh();
+  const [nudge] = events.filter((e) => e.kind === 'streak');
+  assert.ok(nudge, 'the nudge comes');
+  assert.equal(nudge.muted, false);
+  assert.equal(nudge.notify, false, 'but quietly, during quiet hours');
+});
+
+test('server: care for all, git, backup and restore', async () => {
+  const root = dir('server-routes');
+  makeRepo('delta', { commits: [6, 5, 4, 3, 2, 1], parent: root });
+  const projects = createProjects({ store: createStore(dir('server-routes-data')), now: () => NOW, fetch: fakeGitHub });
+  await projects.allow([root]);
+  const app = await startServer({ port: 0, projects, autoRefresh: false });
+  try {
+    const { port, secret } = app;
+    const post = (path, body) => call(port, path, { method: 'POST', token: secret, body });
+    assert.equal((await post('/api/care-all', { name: 'dance' })).status, 400);
+    const cared = (await post('/api/care-all', { name: 'play' })).json();
+    assert.equal(cared.ok, 1);
+    assert.ok(cared.state.projects.length);
+    const [p] = cared.state.projects;
+    assert.equal((await post(`/api/projects/${p.id}/git`, { action: 'push' })).status, 400);
+    assert.equal((await post(`/api/projects/${p.id}/git`, { action: 'fetch' })).status, 400, 'no remote');
+    const config = (await post('/api/config', { floatSize: 'small', quietHours: { from: 23, to: 7 }, notes: { [p.id]: 'hello' } })).json().config;
+    assert.equal(config.floatSize, 'small');
+    assert.deepEqual(config.quietHours, { from: 23, to: 7 });
+    assert.equal(config.notes[p.id], 'hello');
+    assert.equal((await call(port, '/api/backup')).status, 403, 'a backup needs the secret');
+    const backup = (await call(port, '/api/backup', { token: secret })).json();
+    assert.equal(backup.kind, 'backup');
+    assert.equal((await post('/api/restore', { app: 'other' })).status, 400);
+    const restored = (await post('/api/restore', backup)).json();
+    assert.equal(restored.pets, 1);
+    assert.equal(restored.state.config.notes[p.id], 'hello');
   } finally {
     await app.close();
   }
