@@ -1,0 +1,19 @@
+// Morning Croak: a frog greets every sunrise, +10 energy on any day with a commit.
+export default {
+  id: 'frog',
+  trait: 'morningCroak',
+  home: 'pond',
+  modifiers: { dailyEnergy: 10 },
+  food: 'kibble',
+  move: 'leap',
+  palette: {
+    o: '#173418', b: '#6cc25a', l: '#a8e58f', s: '#4a9a3f', c: '#e4f5a8', y: '#ffd23f', Y: '#d99a0a', r: '#ff4d6d',
+  },
+  shinyKeep: ['y', 'Y', 'r'],
+  grid: [
+  ],
+  eyes: [[4, 4], [10, 4]],
+  mouth: [6, 7],
+  cheeks: [[2, 7], [12, 7]],
+  hat: [8, 2],
+};
