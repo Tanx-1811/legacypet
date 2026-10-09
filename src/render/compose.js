@@ -1,7 +1,7 @@
 import { HATS, GEAR_COLORS } from '../sprites/accessories.js';
 import { EGG, EGG_CRACK } from '../sprites/egg.js';
 import { BEAKS, EYES, FACE_COLORS, MOOD_FACES, MOUTHS } from '../sprites/faces.js';
-import { desaturate, hueOf, mix, shiftHue } from '../util/color.js';
+import { desaturate, fromHue, hslOf, hueOf, mix, shiftHue } from '../util/color.js';
 import { bboxOf, gridToPixels } from './pixels.js';
 
 const SHINY_HUE = 150;
@@ -13,10 +13,16 @@ export function resolvePalette(species, { shiny, mood, tint = null }) {
   const keep = new Set(species.shinyKeep ?? []);
   const palette = {};
   const turn = tint?.hue != null ? tint.hue - hueOf(species.palette.b) : 0;
+  // A white or grey coat (a bunny, a panda, a golem) has almost no color to turn, so its lighter
+  // parts take on a soft wash of the chosen color; dark outlines stay as they are.
+  const body = hslOf(species.palette.b);
+  const wash = tint?.hue != null && (body.l > 0.85 || body.s < 0.15) ? fromHue(tint.hue, 0.7, 0.62) : null;
   for (const [key, color] of Object.entries(species.palette)) {
     let c = color;
-    if (tint && !keep.has(key)) c = tint.mono ? desaturate(c, 1) : shiftHue(c, turn);
-    else if (shiny && !keep.has(key)) c = shiftHue(c, SHINY_HUE);
+    if (tint && !keep.has(key)) {
+      c = tint.mono ? desaturate(c, 1) : shiftHue(c, turn);
+      if (wash && hslOf(c).l > 0.4) c = mix(c, wash, 0.42);
+    } else if (shiny && !keep.has(key)) c = shiftHue(c, SHINY_HUE);
     if (mood === 'zombie') c = desaturate(mix(c, '#8fae7a', 0.45), 0.35);
     else if (mood === 'sick' && key !== 'o') c = mix(c, '#c5e17a', 0.22);
     palette[key] = c;

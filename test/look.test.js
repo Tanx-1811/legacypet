@@ -6,7 +6,7 @@ import {
 import { cleanMotto, fillMotto, MOTTO_MAX } from '../src/engine/look.js';
 import { workflowOptions } from '../src/local/adopt.js';
 import { resolvePalette } from '../src/render/compose.js';
-import { hueOf } from '../src/util/color.js';
+import { hslOf, hueOf } from '../src/util/color.js';
 
 const NOW = new Date('2026-10-08T12:00:00Z');
 const pet = (options = {}, mood = 'happy', fullName = 'me/app') => buildPet({
@@ -29,7 +29,9 @@ test('a color repaints the body and keeps the species\' details', () => {
     const species = SPECIES[id];
     const plain = resolvePalette(species, { mood: 'happy' });
     const blue = resolvePalette(species, { mood: 'happy', tint: parseColor('blue') });
-    assert.ok(Math.abs(hueOf(blue.b) - 222) <= 2, `${id}: body turns blue (${blue.b})`);
+    assert.ok(Math.abs(hueOf(blue.b) - 222) <= 3, `${id}: body turns blue (${blue.b})`);
+    const { s, l } = hslOf(blue.b);
+    assert.ok(s * (1 - Math.abs(2 * l - 1)) >= 0.1, `${id}: the blue shows, even on a white or grey coat (${blue.b})`);
     for (const key of species.shinyKeep ?? []) assert.equal(blue[key], plain[key], `${id}: ${key} keeps its color`);
   }
   const silver = resolvePalette(SPECIES.duck, { mood: 'happy', tint: parseColor('mono') });

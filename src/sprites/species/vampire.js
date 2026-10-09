@@ -17,7 +17,7 @@ export default {
     '...ooHHhhhhoo...',
     '..ohHhhhhhhhho..',
     'o.ohhhhhhhhhho.o',
-    'orohhbbhhbbhhoro',
+    'orohhlbhhbbhhoro',
     'crohbbbhhbbbhorc',
     'crohbbbbbbbbhorc',
     'crobbbbbbbbbborc',

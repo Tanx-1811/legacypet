@@ -7,14 +7,14 @@ export default {
   food: 'kibble',
   move: 'swing',
   palette: {
-    o: '#2a1609', b: '#a86a3d', l: '#cf9463', s: '#7f4a26', c: '#f6e3c3', h: '#2b2733', H: '#4a4458',
+    o: '#2a1609', b: '#c4864f', l: '#e3ac74', s: '#8f552b', c: '#f6e3c3', h: '#2b2733', H: '#4a4458',
     y: '#ffcc33', w: '#ffffff',
   },
   shinyKeep: ['c', 'h', 'H', 'y', 'w'],
   grid: [
     '.....oooooo.....',
-    'oo..ohhwwhho..oo',
-    'oyo.ohwwwwho.oyo',
+    'oo..oHhwwhho..oo',
+    'oyo.oHwwwwho.oyo',
     'ohyoohhwwhhooyho',
     'oohyyhwhhwhyyhoo',
     'olooohyyyyhooolo',
