@@ -14,7 +14,12 @@ let state = null;
 let project = null;
 let hideTimer = null;
 
-function say(text, ms = 4500) {
+const SIZES = { small: '100px', medium: '132px', large: '176px' };
+
+// `asked`: someone clicked the pet. Otherwise it's the pet speaking up on its own, which
+// Settings can turn off.
+function say(text, ms = 4500, { asked = false } = {}) {
+  if (!asked && state?.config?.floatBubbles === false) return;
   const bubble = $('bubble');
   bubble.textContent = text;
   bubble.classList.add('show');
@@ -33,11 +38,12 @@ function choose() {
 
 function draw() {
   project = choose();
+  document.documentElement.style.setProperty('--pet-w', SIZES[state?.config?.floatSize] ?? SIZES.medium);
   const bar = $('bar');
   if (!project) {
     $('pet').removeAttribute('src');
     bar.replaceChildren();
-    say('🥚', 60_000);
+    say('🥚', 60_000, { asked: true });
     return;
   }
   const lang = uiLang() ?? state.config.ui ?? 'en';
@@ -55,10 +61,10 @@ function draw() {
       const outcome = fresh.summary.careOutcome;
       say(outcome === 'again' ? L.command.again[name]
         : outcome === 'cant' ? (L.command.cant[after.mood] ?? L.command.cant.egg)
-          : commandReply(after, fresh.snapshot, { command: name, user: fresh.user }).split('\n').find((l) => l.startsWith('> '))?.slice(2) ?? '❤️');
+          : commandReply(after, fresh.snapshot, { command: name, user: fresh.user }).split('\n').find((l) => l.startsWith('> '))?.slice(2) ?? '❤️', 4500, { asked: true });
       draw();
     } catch (err) {
-      say(err.message);
+      say(err.message, 4500, { asked: true });
     }
   };
   const button = (emoji, title, onclick) => Object.assign(document.createElement('button'), { type: 'button', textContent: emoji, title, onclick });
@@ -74,12 +80,12 @@ async function load() {
     state = await api('state');
     draw();
   } catch (err) {
-    say(err.message, 60_000);
+    say(err.message, 60_000, { asked: true });
   }
 }
 
-$('pet').addEventListener('click', () => { if (project) say(petOf(project, { lang: uiLang() ?? 'en' }).speech); });
+$('pet').addEventListener('click', () => { if (project) say(petOf(project, { lang: uiLang() ?? 'en' }).speech, 4500, { asked: true }); });
 dark.addEventListener('change', draw);
-listen({ onChange: load, onEvent: (e) => { if (!project || e.projectId === project.id) say(e.text, 8000); } });
+listen({ onChange: load, onEvent: (e) => { if (!e.muted && (!project || e.projectId === project.id)) say(e.text, 8000); } });
 await load();
 if (project) say(petOf(project, { lang: uiLang() ?? 'en' }).speech);

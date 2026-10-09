@@ -1205,9 +1205,11 @@ async function bootLocal() {
   listen({
     onChange: () => homeKit.load().then(() => current?.redraw?.()).catch(() => {}),
     onEvent: (e) => {
+      // Muted kinds only land under "Just happened"; quiet hours only silence system notifications.
+      if (e.muted) return;
       toast(e.text, e.urgent ? '' : 'gold');
       // The desktop app shows native notifications itself.
-      if (MODE !== 'desktop' && homeKit.state?.config.notify && document.hidden && globalThis.Notification?.permission === 'granted') {
+      if (MODE !== 'desktop' && (e.notify ?? homeKit.state?.config.notify) && document.hidden && globalThis.Notification?.permission === 'granted') {
         new Notification('LegacyPet', { body: e.text, tag: `lp-${e.id}` });
       }
     },

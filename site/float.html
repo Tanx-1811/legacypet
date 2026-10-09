@@ -14,9 +14,9 @@
   /* The desktop app's window is see-through: only the pet shows. */
   .transparent body, html.transparent { background: transparent; }
   .wrap { height: 100%; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; align-items: end; padding: 6px; box-sizing: border-box; -webkit-app-region: drag; cursor: grab; }
-  .bubble { max-width: 200px; background: var(--bubble); border: 1px solid var(--border); border-radius: 12px; padding: 5px 9px; box-shadow: 0 4px 14px rgba(0,0,0,.15); opacity: 0; transform: translateY(4px); transition: opacity .2s, transform .2s; text-align: center; }
+  .bubble { max-width: min(200px, 94vw); background: var(--bubble); border: 1px solid var(--border); border-radius: 12px; padding: 5px 9px; box-shadow: 0 4px 14px rgba(0,0,0,.15); opacity: 0; transform: translateY(4px); transition: opacity .2s, transform .2s; text-align: center; }
   .bubble.show { opacity: 1; transform: none; }
-  .pet { width: 132px; height: auto; display: block; image-rendering: pixelated; filter: drop-shadow(0 4px 6px rgba(0,0,0,.18)); }
+  .pet { width: var(--pet-w, 132px); height: auto; display: block; image-rendering: pixelated; filter: drop-shadow(0 4px 6px rgba(0,0,0,.18)); }
   .bar { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; -webkit-app-region: no-drag; }
   body:hover .bar, .bar:focus-within { opacity: 1; }
   .bar button { border: 1px solid var(--border); background: var(--bubble); color: var(--text); border-radius: 99px; width: 30px; height: 30px; font-size: 15px; cursor: pointer; padding: 0; }

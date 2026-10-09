@@ -122,7 +122,10 @@ function resizeFloat() {
   if (!floatWin || floatWin.isDestroyed()) return;
   const [width, height] = floatSize();
   const b = floatWin.getBounds();
+  // Some systems ignore new bounds on a window people can't resize: allow it for a moment.
+  floatWin.setResizable(true);
   floatWin.setBounds({ x: b.x + b.width - width, y: b.y + b.height - height, width, height });
+  floatWin.setResizable(false);
 }
 function setFloat(on) {
   if (!on) {
