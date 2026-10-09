@@ -387,7 +387,7 @@ dialog.sheet { border: 1px solid var(--border); border-radius: 18px; padding: 22
 dialog.sheet::backdrop { background: rgba(15, 12, 30, .45); backdrop-filter: blur(2px); }
 dialog.sheet > * + * { margin-top: 12px; }
 dialog.sheet h2 { margin: 0 28px 0 0; font-size: 21px; }
-dialog.sheet p { margin: 0; }
+dialog.sheet p { margin-bottom: 0; }
 dialog .close { position: absolute; top: 12px; right: 12px; border: 0; font-size: 16px; padding: 4px 9px; }
 ul.files { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
 ul.files li { padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }

@@ -1,0 +1,55 @@
+{
+  "name": "legacypet-desktop",
+  "productName": "LegacyPet",
+  "version": "1.3.0",
+  "description": "LegacyPet for your computer: every project gets a pixel pet.",
+  "private": true,
+  "type": "module",
+  "main": "main.js",
+  "author": "Tanx-1811",
+  "license": "MIT",
+  "homepage": "https://github.com/Tanx-1811/legacypet",
+  "scripts": {
+    "icons": "node scripts/icons.js",
+    "bundle": "node scripts/bundle.js",
+    "start": "electron .",
+    "dist": "npm run icons && npm run bundle && electron-builder",
+    "dist:dir": "npm run icons && npm run bundle && electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "io.github.tanx1811.legacypet",
+    "productName": "LegacyPet",
+    "copyright": "MIT License",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.cjs", "package.json", "bundle/**/*", "build/tray*.png", "build/icon.png"],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "build/icon.png",
+      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }],
+      "artifactName": "LegacyPet-mac-${arch}.${ext}",
+      "darkModeSupport": true,
+      "extendInfo": { "NSDocumentsFolderUsageDescription": "LegacyPet reads the git projects in the folders you choose, to give each one a pet." }
+    },
+    "dmg": { "artifactName": "LegacyPet-mac-${arch}.${ext}" },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "nsis": { "oneClick": true, "perMachine": false, "artifactName": "LegacyPet-win-x64.${ext}", "shortcutName": "LegacyPet" },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Development",
+      "target": [{ "target": "AppImage", "arch": ["x64"] }, { "target": "deb", "arch": ["x64"] }],
+      "maintainer": "Tanx-1811 <noreply@github.com>",
+      "synopsis": "Every project on your computer gets a pixel pet"
+    },
+    "appImage": { "artifactName": "LegacyPet-linux-x86_64.${ext}" },
+    "deb": { "artifactName": "LegacyPet-linux-amd64.${ext}" },
+    "publish": null
+  }
+}

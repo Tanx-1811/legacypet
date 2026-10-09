@@ -281,8 +281,9 @@ export function homeViews(kit) {
       try {
         const res = await api(`projects/${project.id}/adopt`, { style, publish, force: update, readme: !update });
         await load();
-        fill(out, h('p.ok', publish ? (res.publish?.pushed ? T.adopted : '') : T.written));
-        publishResult(out, res.publish, project);
+        if (!publish) fill(out, h('p.ok', T.written));
+        else if (res.publish?.pushed) fill(out, h('p.ok', T.adopted));
+        else { fill(out); publishResult(out, res.publish, project); }
         if (res.publish?.pushed || !publish) toast(publish ? T.adopted : T.written, 'good');
       } catch (err) {
         fill(out, h('div.callout.bad', err.message));
