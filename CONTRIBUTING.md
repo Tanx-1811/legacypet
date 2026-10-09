@@ -29,6 +29,28 @@ npm run dist:dir   # package it for this computer, without an installer
 
 `LEGACYPET_SMOKE=/tmp/smoke npm start` opens the app, saves pictures of its windows and quits (CI does this too).
 
+### Sign the desktop app (maintainers)
+
+Unsigned, the app still works, but macOS and Windows warn on the first launch. The **Desktop app** workflow
+signs whatever it has secrets for (*Settings → Secrets and variables → Actions*):
+
+| Secret | What goes in it |
+| --- | --- |
+| `MAC_CERT_P12` | A **Developer ID Application** certificate exported from Keychain Access as `.p12`, then `base64 -i cert.p12 \| pbcopy` |
+| `MAC_CERT_PASSWORD` | The password you gave the `.p12` |
+| `APPLE_ID` | The Apple Account email of the developer account |
+| `APPLE_APP_SPECIFIC_PASSWORD` | An app-specific password from account.apple.com, for notarization |
+| `APPLE_TEAM_ID` | The 10-character Team ID from developer.apple.com → Membership |
+| `WIN_CERT_PFX` | A Windows code signing certificate as base64 of its `.pfx` |
+| `WIN_CERT_PASSWORD` | The `.pfx` password |
+
+The macOS certificate needs the paid Apple Developer Program, and only its Account Holder can create a
+Developer ID certificate. With the five macOS secrets the app is signed and notarized, so it opens without a warning.
+
+On Windows, `WIN_CERT_PFX` only fits a certificate you can export as `.pfx`. Most new code signing certificates
+keep their key on a hardware token or in a cloud service and can't be exported; signing through Azure Trusted Signing
+or SignPath needs its own step in the workflow instead.
+
 ## Add a species
 
 1. Copy `src/sprites/species/blob.js` to `src/sprites/species/<your-species>.js`.

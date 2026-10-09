@@ -2,8 +2,10 @@
 # - When a release is published, the installers are attached to it, so the download page's
 #   links (releases/latest/download/…) always point at the newest app.
 # - Run it by hand from the Actions tab to get the installers as workflow artifacts.
-# Signing is optional: add the MAC_CERT_P12, MAC_CERT_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD
-# and APPLE_TEAM_ID secrets to sign and notarize the macOS app. Without them it is signed ad hoc.
+# Signing is optional (see "Sign the desktop app" in CONTRIBUTING.md):
+# - macOS: MAC_CERT_P12 (base64 of a Developer ID Application .p12), MAC_CERT_PASSWORD, APPLE_ID,
+#   APPLE_APP_SPECIFIC_PASSWORD and APPLE_TEAM_ID sign and notarize the app. Without them it is signed ad hoc.
+# - Windows: WIN_CERT_PFX (base64 of a code signing .pfx) and WIN_CERT_PASSWORD sign the installer.
 name: Desktop app
 
 on:
@@ -36,20 +38,30 @@ jobs:
 
       - name: Build the installers
         env:
-          CSC_LINK: ${{ secrets.MAC_CERT_P12 }}
-          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          MAC_CERT_P12: ${{ secrets.MAC_CERT_P12 }}
+          MAC_CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          WIN_CERT_PFX: ${{ secrets.WIN_CERT_PFX }}
+          WIN_CERT_PASSWORD: ${{ secrets.WIN_CERT_PASSWORD }}
         run: |
-          for v in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
-            [ -z "${!v}" ] && unset "$v"
+          # Each system gets only its own certificate. Missing secrets are empty: drop them.
+          for v in APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!v}" ] || [ "$RUNNER_OS" != "macOS" ]; then unset "$v"; fi
           done
           extra=()
-          if [ "$RUNNER_OS" = "macOS" ] && [ -z "${CSC_LINK:-}" ]; then
-            # No certificate: sign ad hoc, so macOS offers "Open Anyway" instead of calling the app damaged.
-            extra=(-c.mac.identity=- -c.mac.hardenedRuntime=false)
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            if [ -n "$MAC_CERT_P12" ]; then
+              export CSC_LINK="$MAC_CERT_P12" CSC_KEY_PASSWORD="$MAC_CERT_PASSWORD"
+            else
+              # No certificate: sign ad hoc, so macOS offers "Open Anyway" instead of calling the app damaged.
+              extra=(-c.mac.identity=- -c.mac.hardenedRuntime=false)
+            fi
+          elif [ "$RUNNER_OS" = "Windows" ] && [ -n "$WIN_CERT_PFX" ]; then
+            export WIN_CSC_LINK="$WIN_CERT_PFX" WIN_CSC_KEY_PASSWORD="$WIN_CERT_PASSWORD"
           fi
+          unset MAC_CERT_P12 MAC_CERT_PASSWORD WIN_CERT_PFX WIN_CERT_PASSWORD
           npm run dist -- --publish never "${extra[@]}"
           ls -la dist
 
