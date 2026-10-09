@@ -273,4 +273,32 @@ app.whenReady().then(async () => {
   if (server.projects.config.float) setFloat(true);
   if (!startHidden) showMain();
   else if (isMac) app.dock?.hide();
+  if (process.env.LEGACYPET_SMOKE) smokeTest(process.env.LEGACYPET_SMOKE);
 });
+
+// CI and release checks: LEGACYPET_SMOKE=<dir> opens the app, saves pictures of its own
+// windows (never the screen) plus a summary, then quits.
+async function smokeTest(dir) {
+  const { mkdirSync, writeFileSync } = await import('node:fs');
+  const wait = (ms) => new Promise((done) => setTimeout(done, ms));
+  mkdirSync(dir, { recursive: true });
+  const report = { ok: false, version: app.getVersion(), electron: process.versions.electron, url: server.url };
+  try {
+    showMain();
+    await wait(4000);
+    writeFileSync(join(dir, 'main.png'), (await mainWin.webContents.capturePage()).toPNG());
+    report.title = await mainWin.webContents.executeJavaScript('document.title');
+    report.view = await mainWin.webContents.executeJavaScript(`document.querySelector('main')?.innerText.slice(0, 300)`);
+    setFloat(true);
+    await wait(3000);
+    writeFileSync(join(dir, 'float.png'), (await floatWin.webContents.capturePage()).toPNG());
+    report.float = await floatWin.webContents.executeJavaScript('document.title');
+    report.pets = server.projects.list().length;
+    report.ok = true;
+  } catch (err) {
+    report.error = String(err?.stack ?? err);
+  }
+  writeFileSync(join(dir, 'smoke.json'), `${JSON.stringify(report, null, 2)}\n`);
+  quitting = true;
+  app.exit(report.ok ? 0 : 1);
+}
