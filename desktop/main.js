@@ -113,7 +113,17 @@ function showMain(hash) {
 }
 
 // The desktop pet: a small see-through window that stays on top of everything.
+const FLOAT_SIZES = { small: [150, 210], medium: [190, 260], large: [240, 325] };
+const floatSize = () => FLOAT_SIZES[server?.projects.config.floatSize] ?? FLOAT_SIZES.medium;
 let saveBounds = null;
+
+// A new size keeps the pet's feet where they were: it grows up and to the left.
+function resizeFloat() {
+  if (!floatWin || floatWin.isDestroyed()) return;
+  const [width, height] = floatSize();
+  const b = floatWin.getBounds();
+  floatWin.setBounds({ x: b.x + b.width - width, y: b.y + b.height - height, width, height });
+}
 function setFloat(on) {
   if (!on) {
     if (floatWin && !floatWin.isDestroyed()) floatWin.destroy();
@@ -128,11 +138,12 @@ function setFloat(on) {
   const { workArea } = screen.getPrimaryDisplay();
   const saved = server.projects.config.floatBounds;
   const onScreen = saved && screen.getAllDisplays().some(({ workArea: a }) => saved.x >= a.x && saved.y >= a.y && saved.x < a.x + a.width && saved.y < a.y + a.height);
+  const [width, height] = floatSize();
   floatWin = new BrowserWindow({
-    width: 190,
-    height: 260,
-    x: onScreen ? saved.x : workArea.x + workArea.width - 210,
-    y: onScreen ? saved.y : workArea.y + workArea.height - 275,
+    width,
+    height,
+    x: onScreen ? saved.x : workArea.x + workArea.width - width - 20,
+    y: onScreen ? saved.y : workArea.y + workArea.height - height - 15,
     frame: false,
     transparent: true,
     resizable: false,
@@ -227,7 +238,8 @@ function createTray() {
 }
 
 function notify(event) {
-  if (!server.projects.config.notify || !Notification.isSupported()) return;
+  // The server decides: notifications on, this kind not muted, not during quiet hours.
+  if (!(event.notify ?? server.projects.config.notify) || !Notification.isSupported()) return;
   const note = new Notification({ title: 'LegacyPet', body: event.text, silent: !event.urgent });
   note.on('click', () => showMain(`#/home/${event.projectId}`));
   note.show();
@@ -262,6 +274,7 @@ app.whenReady().then(async () => {
       },
       reveal: (path) => { shell.openPath(path); },
       setFloat,
+      resizeFloat,
       setLoginItem: (on) => app.setLoginItemSettings({ openAtLogin: on, openAsHidden: true, args: on ? ['--hidden'] : [] }),
     },
   });
