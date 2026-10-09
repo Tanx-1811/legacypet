@@ -163,6 +163,82 @@ export function homeViews(kit) {
   async function copyPath(p) {
     try { await navigator.clipboard.writeText(p.path); toast(t().home.pathCopied, 'good'); } catch { toast(p.path); }
   }
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); toast(t().home.share.copied, 'good'); } catch { toast(text); }
+  }
+
+  const CARE_ICONS = { feed: 'cookie', play: 'volleyball', pat: 'hand-heart' };
+  const careLabel = (name) => t().sim[name].replace(/^\S+\s/, '');
+  // One snack, game or pat for every pet; each pet still takes one of each a day.
+  async function careAll(name) {
+    try {
+      const res = await api('care-all', { name });
+      use(res.state);
+      toast(t().home.careAllDone(t().sim[name], res.ok, res.again + res.cant), res.ok ? 'good' : '');
+    } catch (err) { toast(err.message, 'bad'); }
+  }
+
+  function download(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = h('a', { href: url, download: name, hidden: true });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  }
+  // The card as a picture for chats and slides: drawn at twice its size, pixels kept sharp.
+  async function svgToPng(svg, scale = 2) {
+    const image = new Image();
+    await new Promise((done, fail) => { image.onload = done; image.onerror = () => fail(new Error('PNG')); image.src = svgSrc(svg); });
+    const canvas = h('canvas', { width: image.naturalWidth * scale, height: image.naturalHeight * scale });
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return new Promise((done) => canvas.toBlob(done, 'image/png'));
+  }
+
+  async function exportBackup() {
+    try {
+      const data = await api('backup');
+      download(new Blob([`${JSON.stringify(data, null, 2)}\n`], { type: 'application/json' }), `legacypet-backup-${localDayKey(new Date())}.json`);
+      toast(t().settings.exported, 'good');
+    } catch (err) { toast(err.message, 'bad'); }
+  }
+  function importBackup() {
+    const T = t().settings;
+    const input = h('input', { type: 'file', accept: 'application/json,.json', hidden: true });
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      input.remove();
+      if (!file) return;
+      let data;
+      try { data = JSON.parse(await file.text()); } catch { toast(T.badFile, 'bad'); return; }
+      try {
+        toast(t().home.refreshing);
+        const res = await api('restore', data);
+        use(res.state);
+        toast(T.restored(res.pets, res.folders), 'good');
+        kit.render();
+      } catch (err) { toast(err.status === 400 ? T.badFile : err.message, 'bad'); }
+    };
+    document.body.append(input);
+    input.click();
+  }
+
+  // The last fetch or pull per project, so its result survives the redraw that follows it.
+  const syncNotes = new Map();
+  async function syncGit(p, action) {
+    const S = t().home.sync;
+    try {
+      const res = await api(`projects/${p.id}/git`, { action });
+      syncNotes.set(p.id, res.ok ? null : res);
+      const i = state.projects.findIndex((x) => x.id === p.id);
+      if (i !== -1) state.projects[i] = res.project;
+      publish();
+      if (res.ok) toast(action === 'pull' ? S.pulled : S.fetched(res.project.behind ?? 0), 'good');
+      else toast(res.hint ? t().home.hints[res.hint] : S.failed, 'bad');
+    } catch (err) { toast(err.message, 'bad'); }
+  }
 
   // ----- Onboarding: ask before looking anywhere --------------------------------
   function onboarding(root) {
@@ -393,7 +469,9 @@ export function homeViews(kit) {
     root.append(
       h('header.page-head',
         h('div', h('h1', T.title), box.summary),
-        h('div.page-actions', box.updated, refreshBtn, btn('', { icon: 'folder-plus', title: T.addFolder, onclick: addFolder }))),
+        h('div.page-actions', box.updated,
+          menu(btn(T.careAll, { icon: 'hand-heart' }), ['feed', 'play', 'pat'].map((name) => ({ icon: CARE_ICONS[name], label: careLabel(name), run: () => careAll(name) }))),
+          refreshBtn, btn('', { icon: 'folder-plus', title: T.addFolder, onclick: addFolder }))),
       box.kpis,
       h('div.overview', h('section.panel', box.heat), box.side),
       box.notes,
@@ -551,6 +629,9 @@ export function homeViews(kit) {
         { icon: 'copy', label: T.copyPath, run: () => copyPath(p) },
         { icon: 'folder-open', label: T.openFolder, run: () => api(`projects/${p.id}/reveal`, {}).catch((e) => toast(e.message, 'bad')) },
         tools.terminals.length ? { icon: 'square-terminal', label: T.openTerminal, run: () => openWith(p, 'terminal') } : null,
+        p.remote ? '-' : null,
+        p.remote ? { icon: 'refresh-cw', label: `git ${T.sync.fetch.toLowerCase()}`, run: () => syncGit(p, 'fetch') } : null,
+        p.remote ? { icon: 'arrow-down-to-line', label: `git ${p.behind ? T.sync.pullN(p.behind).toLowerCase() : T.sync.pull.toLowerCase()}`, run: () => syncGit(p, 'pull') } : null,
         gh ? '-' : null,
         gh ? { icon: 'external-link', label: T.links.repo, href: gh } : null,
         gh ? { icon: 'circle-dot', label: T.links.issues, href: `${gh}/issues` } : null,
@@ -626,18 +707,84 @@ export function homeViews(kit) {
             h('img.card-img', { src: pic(p, 'card'), alt: `${pet.displayName}: ${pet.speech}` }),
             h('div.vitals', ['fullness', 'health', 'joy', 'energy'].map((k) => h('div.vital', h('span.vital-name', icon(VITAL_ICONS[k], { size: 13 }), L.stats[k]), h('b', pet.vitals[k]),
               h(`div.meter.${pet.vitals[k] < 35 ? 'low' : pet.vitals[k] < 60 ? 'mid' : 'ok'}`, h('i', { style: { width: `${pet.vitals[k]}%` } }))))),
-            h('div.care-row',
-              btn(t().sim.feed.replace(/^\S+\s/, ''), { icon: 'cookie', onclick: () => care('feed') }),
-              btn(t().sim.play.replace(/^\S+\s/, ''), { icon: 'volleyball', onclick: () => care('play') }),
-              btn(t().sim.pat.replace(/^\S+\s/, ''), { icon: 'hand-heart', onclick: () => care('pat') })),
-            h('p.small.muted', { style: { margin: 0 } }, T.careNote))),
+            h('div.care-row', ['feed', 'play', 'pat'].map((name) => btn(careLabel(name), { icon: CARE_ICONS[name], onclick: () => care(name) }))),
+            h('p.small.muted', { style: { margin: 0 } }, T.careNote)),
+          sharePanel(p, pet)),
         h('div.stack',
           h('section.panel.github-panel', gh),
+          p.remote ? syncPanel(p) : null,
           h('section.panel',
             h('h3', T.todo),
             local.length ? h('ul.checkup', { style: { marginBottom: '10px' } }, local.map((x) => h(`li.${x.level}`, h('span.dot'), h('span', x.text)))) : null,
             checkupList(pet, p.snapshot),
-            h('p.small.muted', { style: { margin: '10px 0 0' } }, p.snapshot.source === 'github' ? T.sourceGithub : T.sourceLocal))));
+            h('p.small.muted', { style: { margin: '10px 0 0' } }, p.snapshot.source === 'github' ? T.sourceGithub : T.sourceLocal)),
+          notesPanel(p)));
+    }
+
+    // The card, mini card and badge as files, a PNG for chats, and the README lines.
+    function sharePanel(p, pet) {
+      const S = T.share;
+      const theme = ['light', 'dark'].includes(p.options?.theme) ? p.options.theme : cardTheme();
+      const svgs = { card: () => LP.renderCard(pet, { theme }), mini: () => LP.renderMini(pet, { theme }), badge: () => LP.renderBadge(pet) };
+      const file = (kind, ext) => `${p.folder}-${kind}.${ext}`;
+      const svgBtn = (kind) => btn(S[kind], { icon: 'download', onclick: () => download(new Blob([svgs[kind]()], { type: 'image/svg+xml' }), file(kind, 'svg')) });
+      const pngBtn = btn(S.png, {
+        icon: 'image-down',
+        onclick: async () => {
+          try { download(await svgToPng(svgs.card()), file('card', 'png')); } catch (err) { toast(err.message, 'bad'); }
+        },
+      });
+      const snippet = (style) => LP.snippetFor(p.fullName, style, 'legacypet', { isPrivate: Boolean(p.isPrivate) });
+      return h('section.panel.stack',
+        h('h3', icon('image-down', { size: 16 }), S.title),
+        h('div.row', svgBtn('card'), svgBtn('mini'), svgBtn('badge'), pngBtn),
+        p.github ? h('div.row',
+          btn(S.readme, { icon: 'copy', kind: 'ghost', onclick: () => copyText(snippet('card')) }),
+          btn(S.badgeMd, { icon: 'copy', kind: 'ghost', onclick: () => copyText(snippet('badge')) })) : null);
+    }
+
+    function syncPanel(p) {
+      const S = T.sync;
+      const failed = syncNotes.get(p.id);
+      const run = (action) => async (e) => {
+        const b = e.currentTarget;
+        b.disabled = true;
+        await syncGit(p, action);
+        b.disabled = false;
+      };
+      return h('section.panel.stack',
+        h('h3', icon('git-branch', { size: 16 }), S.title),
+        h('div.row',
+          btn(S.fetch, { icon: 'refresh-cw', onclick: run('fetch') }),
+          btn(p.behind ? S.pullN(p.behind) : S.pull, { icon: 'arrow-down-to-line', kind: p.behind ? 'primary' : '', onclick: run('pull') })),
+        failed ? h('div.callout.bad', h('b', S.failed), h('pre.small', failed.error ?? ''), failed.hint ? h('p', { style: { margin: '6px 0 0' } }, T.hints[failed.hint]) : null) : null,
+        h('p.small.muted', { style: { margin: 0 } }, S.note));
+    }
+
+    // Notes to self, saved a moment after typing stops (and when leaving the box).
+    function notesPanel(p) {
+      const N = T.notes;
+      const area = h('textarea.notes', { rows: 4, placeholder: N.placeholder, maxlength: 4000, 'aria-label': N.title });
+      area.value = state.config.notes?.[p.id] ?? '';
+      let saved = area.value;
+      let timer = null;
+      const status = h('span.small.muted', { role: 'status' });
+      const save = async () => {
+        clearTimeout(timer);
+        if (area.value === saved) return;
+        saved = area.value;
+        try {
+          await api('config', { notes: { [p.id]: saved } });
+          state.config.notes = { ...state.config.notes, [p.id]: saved };
+          status.textContent = `✓ ${N.saved}`;
+        } catch (err) { toast(err.message, 'bad'); }
+      };
+      area.oninput = () => { status.textContent = ''; clearTimeout(timer); timer = setTimeout(save, 800); };
+      area.onblur = save;
+      return h('section.panel.stack',
+        h('div.panel-head', h('h3', icon('sticky-note', { size: 16 }), N.title), status),
+        area,
+        h('p.small.muted', { style: { margin: 0 } }, N.note));
     }
 
     function activityTab(p, pet) {
