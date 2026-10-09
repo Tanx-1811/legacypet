@@ -45,6 +45,7 @@ const NOTES = {
     evolved: (p) => `🧬 ${p} evolved!`,
     quest: (p) => `📜 ${p} finished a quest!`,
     streak: (p, n) => `🔥 ${p} is on a ${n}-day streak. One commit today keeps it going!`,
+    memoryReset: (p) => `🩹 ${p} couldn't read its memory file, so it started over. The old file is kept in the pets folder.`,
   },
   vi: {
     hungry: (p) => `${p} đang đói. Một commit là bữa ngon đấy.`,
@@ -59,6 +60,7 @@ const NOTES = {
     evolved: (p) => `🧬 ${p} đã tiến hóa!`,
     quest: (p) => `📜 ${p} xong một nhiệm vụ!`,
     streak: (p, n) => `🔥 ${p} đang có chuỗi ${n} ngày. Một commit hôm nay để giữ chuỗi nhé!`,
+    memoryReset: (p) => `🩹 ${p} không đọc được file trí nhớ nên đã bắt đầu lại. File cũ vẫn được giữ trong thư mục pets.`,
   },
 };
 const notes = (lang) => NOTES[lang] ?? NOTES.en;
@@ -275,12 +277,25 @@ export function createProjects({ store = createStore(), now: clock = () => new D
 
     const yaml = readWorkflow(path);
     const options = optionsFor(id, yaml);
-    const memory = store.loadMemory(id);
+    let memory = store.loadMemory(id);
     let prev = memory ?? info.seed ?? null;
     // Once the pet lives on GitHub, it is that pet: same species everywhere.
     if (memory && info.seed?.pet?.species) prev = { ...memory, pet: { ...memory.pet, species: info.seed.pet.species } };
     const user = info.user || safeUser();
-    const pet = buildPet({ snapshot, prevState: prev, now, options: { ...options, lang: options.lang || ui(), care: care ? { name: care, user } : undefined } });
+    const raise = (from) => buildPet({ snapshot, prevState: from, now, options: { ...options, lang: options.lang || ui(), care: care ? { name: care, user } : undefined } });
+    let pet;
+    try {
+      pet = raise(prev);
+    } catch (err) {
+      // Only when the pet comes out fine without its memory is the memory file to blame:
+      // then it's kept aside and the pet starts over (from its GitHub copy, if there is one).
+      if (!memory) throw err;
+      prev = info.seed ?? null;
+      pet = raise(prev);
+      store.setAsideMemory(id, now.getTime());
+      memory = null;
+      record({ projectId: id, fullName: info.fullName, mood: pet.mood, kind: 'memory', text: notes(ui()).memoryReset(`${pet.name} (${info.folder})`) });
+    }
     store.saveMemory(id, nextState(pet, prev));
     if (!care) noticeChanges({ id, folder: info.folder, fullName: info.fullName }, pet, memory);
     if (!care && memory) nudgeStreak({ id, folder: info.folder, fullName: info.fullName }, pet, info.activity, now);

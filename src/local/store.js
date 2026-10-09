@@ -78,6 +78,12 @@ export function createStore(dir = dataDir()) {
       ensure('pets');
       writeJson(petFile(id), state);
     },
+    // A memory file that can't be used any more is kept next to the others, never deleted.
+    setAsideMemory(id, stamp = Date.now()) {
+      const aside = join(dir, 'pets', `${id}.broken-${stamp}.json`);
+      if (existsSync(petFile(id))) renameSync(petFile(id), aside);
+      return aside;
+    },
     loadCache() {
       return readJson(cacheFile, { projects: [] });
     },

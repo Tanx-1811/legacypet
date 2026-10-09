@@ -583,15 +583,28 @@ test('one broken repo never stops the other pets from updating', async () => {
   assert.ok(t.summary, 'typos in the workflow are skipped, not fatal');
   assert.deepEqual(t.options, { name: 'Mo' });
 
-  // A memory file that went bad: that pet shows the problem, the other one still updates.
-  writeFileSync(join(store.dir, 'pets', `${t.id}.json`), JSON.stringify({ history: 7, achievements: 'x', quests: 5 }));
+  // A memory file that went bad: the pet starts over, the old file is kept, the other pet carries on.
+  const events = [];
+  projects.on((type, e) => { if (type === 'event') events.push(e); });
+  const bad = JSON.stringify({ history: 7, achievements: 'x', quests: 5 });
+  writeFileSync(join(store.dir, 'pets', `${t.id}.json`), bad);
   clock = new Date(NOW.getTime() + DAY);
   const after = await projects.refresh();
   const f = after.find((p) => p.path === fine.path);
   assert.equal(f.now, clock.toISOString(), 'the healthy pet was raised');
-  const broken = after.find((p) => p.path === typo.path);
-  assert.equal(broken.summary, undefined);
-  assert.match(broken.error, /history/, 'a broken pet says what went wrong');
+  const healed = after.find((p) => p.path === typo.path);
+  assert.ok(healed.summary, 'it starts over instead of staying broken');
+  assert.ok(Array.isArray(store.loadMemory(t.id).history), 'a fresh memory');
+  assert.equal(readFileSync(join(store.dir, 'pets', `${t.id}.broken-${clock.getTime()}.json`), 'utf8'), bad, 'the old file is kept');
+  assert.deepEqual(events.map((e) => e.kind), ['memory']);
+
+  // Anything else going wrong for one pet shows on that pet only; the others still update.
+  const unreadable = { ...store, loadMemory: (id) => { if (id === t.id) throw new Error('disk on fire'); return store.loadMemory(id); } };
+  const shaky = createProjects({ store: unreadable, now: () => clock, fetch: fakeGitHub });
+  clock = new Date(NOW.getTime() + 2 * DAY);
+  const listed = await shaky.refresh();
+  assert.equal(listed.find((p) => p.path === typo.path).error, 'disk on fire');
+  assert.equal(listed.find((p) => p.path === fine.path).now, clock.toISOString());
 });
 
 test('a refresh of one pet does not let two full refreshes run at once', async () => {
