@@ -83,6 +83,9 @@ export function gitHint(text) {
   const s = String(text ?? '');
   if (/workflow.*scope|without `?workflow`? scope/i.test(s)) return 'workflow-scope';
   if (/please tell me who you are|empty ident|user\.email/i.test(s)) return 'identity';
+  if (/would be overwritten|commit your changes or stash/i.test(s)) return 'dirty';
+  if (/not possible to fast-forward|diverging branches|have diverged/i.test(s)) return 'diverged';
+  if (/no tracking information|no upstream/i.test(s)) return 'no-upstream';
   if (/rejected|fetch first|non-fast-forward/i.test(s)) return 'behind';
   if (/no configured push destination|does not appear to be a git repository|no such remote/i.test(s)) return 'no-remote';
   if (/authentication failed|could not read username|permission denied|permission to .* denied|403|terminal prompts disabled|could not read from remote/i.test(s)) return 'auth';

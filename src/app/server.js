@@ -9,7 +9,7 @@ import { createServer } from 'node:http';
 import { extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CARE_ACTIONS } from '../engine/care.js';
-import { createProjects } from '../local/projects.js';
+import { cleanConfigPatch, createProjects } from '../local/projects.js';
 import { VERSION } from '../whatsnew.js';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -19,7 +19,11 @@ const TYPES = {
   '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json',
 };
 const MAX_BODY = 1024 * 1024;
-const CONFIG_KEYS = ['online', 'token', 'notify', 'refreshMinutes', 'favorite', 'float', 'hidden', 'options', 'ui', 'theme', 'roots', 'pinned', 'editor', 'terminal'];
+const MAX_BACKUP = 64 * 1024 * 1024; // a backup carries every pet's memory
+const CONFIG_KEYS = [
+  'online', 'token', 'notify', 'mute', 'reminderHour', 'quietHours', 'refreshMinutes', 'favorite', 'float', 'floatSize', 'floatBubbles',
+  'hidden', 'options', 'notes', 'ui', 'theme', 'roots', 'pinned', 'editor', 'terminal',
+];
 
 // Folder pickers that need no dependencies: the system's own dialog.
 export function systemPickFolder(prompt = 'Choose a folder with your projects') {
@@ -46,13 +50,13 @@ function send(res, status, body, headers = {}) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...headers }).end(json);
 }
 
-function readBody(req) {
+function readBody(req, limit = MAX_BODY) {
   return new Promise((done, fail) => {
     let size = 0;
     const chunks = [];
     req.on('data', (c) => {
       size += c.length;
-      if (size > MAX_BODY) { fail(Object.assign(new Error('Too large'), { status: 413 })); req.destroy(); return; }
+      if (size > limit) { fail(Object.assign(new Error('Too large'), { status: 413 })); req.destroy(); return; }
       chunks.push(c);
     });
     req.on('end', () => {
@@ -129,15 +133,22 @@ export async function startServer({
     'POST /api/scan': async () => { await projects.scan(); return state(); },
     'POST /api/refresh': async (body) => { await projects.refresh(Array.isArray(body.ids) ? body.ids : null); return state(); },
     'POST /api/config': (body) => {
-      const patch = Object.fromEntries(Object.entries(body).filter(([k]) => CONFIG_KEYS.includes(k)));
+      const patch = cleanConfigPatch(Object.fromEntries(Object.entries(body).filter(([k]) => CONFIG_KEYS.includes(k))));
       projects.updateConfig(patch);
       if ('float' in patch) desktop?.setFloat?.(Boolean(patch.float));
+      if ('floatSize' in patch) desktop?.resizeFloat?.(patch.floatSize);
       if ('roots' in patch) projects.scan().catch(() => {});
       return state();
     },
     'POST /api/pick-folder': async () => ({ path: await (desktop?.pickFolder ?? systemPickFolder)() }),
     'GET /api/token': () => ({ token: projects.token() }),
     'POST /api/reset': () => { projects.reset(); arm(); return state(); },
+    'POST /api/care-all': async (body) => {
+      if (!CARE_ACTIONS.includes(body.name)) throw Object.assign(new Error('Unknown care action'), { status: 400 });
+      return { ...(await projects.careAll(body.name)), state: state() };
+    },
+    'GET /api/backup': () => projects.backup(),
+    'POST /api/restore': async (body) => ({ ...(await projects.restore(body)), state: state() }),
     'POST /api/login-item': (body) => { desktop?.setLoginItem?.(Boolean(body.on)); return state(); },
   };
   const projectRoutes = {
@@ -153,6 +164,10 @@ export async function startServer({
       readme: body.readme !== false,
     }),
     publish: (id) => projects.publish(id),
+    git: (id, body) => {
+      if (!['fetch', 'pull'].includes(body.action)) throw Object.assign(new Error('Unknown git action'), { status: 400 });
+      return projects.sync(id, body.action);
+    },
     reveal: (id) => { (desktop?.reveal ?? systemReveal)(projects.get(id).path); return { ok: true }; },
     open: (id, body) => projects.open(id, body.with === 'terminal' ? 'terminal' : 'editor'),
     hide: (id) => { projects.updateConfig({ hidden: [...new Set([...projects.config.hidden, id])] }); return state(); },
@@ -175,7 +190,7 @@ export async function startServer({
     }
     if (req.headers['x-legacypet-token'] !== secret) return send(res, 403, { error: 'forbidden' });
     try {
-      const body = req.method === 'POST' ? await readBody(req) : {};
+      const body = req.method === 'POST' ? await readBody(req, path === '/api/restore' ? MAX_BACKUP : MAX_BODY) : {};
       const key = `${req.method} ${path}`;
       if (routes[key]) return send(res, 200, await routes[key](body));
       const m = /^\/api\/projects\/([0-9a-f]{12})\/([a-z]+)$/.exec(path);

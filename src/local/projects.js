@@ -2,17 +2,19 @@
 // It scans the folders someone allowed, reads each repo with git, raises its pet with the
 // same engine as the GitHub Action and keeps the pet's memory in ~/.legacypet.
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { userInfo } from 'node:os';
 import { join } from 'node:path';
+import { parseColor } from '../engine/look.js';
 import { buildPet } from '../engine/pet.js';
 import { MOOD_EMOJI } from '../engine/mood.js';
 import { nextState } from '../engine/memory.js';
 import { createClient } from '../github/client.js';
 import { collectSnapshot } from '../github/collect.js';
 import { strings } from '../i18n/index.js';
-import { adoptLocal, findReadme, publishAdoption, readWorkflow, workflowOptions } from './adopt.js';
-import { readRepo } from './git.js';
+import { HOMES, SPECIES_IDS } from '../sprites/index.js';
+import { adoptLocal, findReadme, gitHint, publishAdoption, readWorkflow, workflowOptions } from './adopt.js';
+import { git, readRepo } from './git.js';
 import { detectTools, launch, publicTools } from './open.js';
 import { findRepos, suggestFolders } from './scan.js';
 import { createStore, projectId } from './store.js';
@@ -59,6 +61,78 @@ const NOTES = {
   },
 };
 const notes = (lang) => NOTES[lang] ?? NOTES.en;
+
+// Kinds of news, grouped the way Settings lets people mute them.
+export const NOTIFY_GROUPS = {
+  mood: ['mood'],
+  growth: ['hatched', 'revived', 'levelUp', 'evolved'],
+  rewards: ['trophy', 'quest'],
+  streak: ['streak'],
+};
+const groupOf = (kind) => Object.keys(NOTIFY_GROUPS).find((g) => NOTIFY_GROUPS[g].includes(kind)) ?? null;
+export const FLOAT_SIZES = ['small', 'medium', 'large'];
+
+// Quiet hours wrap around midnight: { from: 22, to: 8 } is 22:00 to 07:59.
+export function inQuietHours(quiet, date) {
+  if (!quiet || !Number.isInteger(quiet.from) || !Number.isInteger(quiet.to) || quiet.from === quiet.to) return false;
+  const hour = date.getHours();
+  return quiet.from < quiet.to ? hour >= quiet.from && hour < quiet.to : hour >= quiet.from || hour < quiet.to;
+}
+
+// A muted event still shows up under "Just happened" but never pops up; `notify` says whether
+// a system notification is welcome right now.
+export function notifyRules(config, kind, date) {
+  const muted = (config.mute ?? []).includes(groupOf(kind));
+  return { muted, notify: Boolean(config.notify) && !muted && !inQuietHours(config.quietHours, date) };
+}
+
+const hourOrNull = (v) => (v === null ? null : Number.isInteger(v) && v >= 0 && v <= 23 ? v : undefined);
+const isId = (v) => typeof v === 'string' && /^[0-9a-f]{12}$/.test(v);
+const NOTE_MAX = 4000;
+
+// Checks the settings that have a shape (hours, sizes, notes), so a bad value can't break the
+// app. Keys it doesn't know pass through as they are. `remap` turns a project id from another
+// computer into the id of the same repo here (see restore).
+export function cleanConfigPatch(patch, remap = (id) => id) {
+  const out = {};
+  for (const [key, value] of Object.entries(patch)) {
+    if (key === 'mute') out.mute = Array.isArray(value) ? [...new Set(value.filter((g) => g in NOTIFY_GROUPS))] : [];
+    else if (key === 'reminderHour') { const h = hourOrNull(value); if (h !== undefined) out.reminderHour = h; }
+    else if (key === 'quietHours') {
+      if (value === null) out.quietHours = null;
+      else if (hourOrNull(value?.from) != null && hourOrNull(value?.to) != null) out.quietHours = { from: value.from, to: value.to };
+    } else if (key === 'floatSize') { if (FLOAT_SIZES.includes(value)) out.floatSize = value; }
+    else if (['notify', 'floatBubbles', 'online', 'float'].includes(key)) out[key] = Boolean(value);
+    else if (key === 'refreshMinutes') { const n = Number(value); if (n >= 1 && n <= 1440) out.refreshMinutes = n; }
+    else if (key === 'hidden' || key === 'pinned') out[key] = Array.isArray(value) ? [...new Set(value.filter(isId).map(remap))] : [];
+    else if (key === 'favorite') out.favorite = isId(value) ? remap(value) : null;
+    else if (key === 'notes' || key === 'options') {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+      out[key] = {};
+      for (const [id, v] of Object.entries(value)) {
+        if (!isId(id)) continue;
+        if (key === 'notes') out.notes[remap(id)] = typeof v === 'string' ? v.slice(0, NOTE_MAX) : '';
+        else if (v && typeof v === 'object' && !Array.isArray(v)) {
+          out.options[remap(id)] = Object.fromEntries(Object.entries(v).filter(([, x]) => typeof x === 'string').map(([k, x]) => [k, x.slice(0, 200)]));
+        }
+      }
+    } else out[key] = value;
+  }
+  return out;
+}
+
+// Options picked in the app or read from a workflow file. One with a typo (a species that
+// doesn't exist) is dropped instead of breaking the pet.
+export function cleanOptions(options) {
+  const out = { ...options };
+  if (out.species && out.species !== 'auto' && !SPECIES_IDS.includes(out.species)) delete out.species;
+  if (out.scenery && out.scenery !== 'auto' && !HOMES.includes(out.scenery)) delete out.scenery;
+  if (out.theme && !['auto', 'light', 'dark'].includes(out.theme)) delete out.theme;
+  if (out.color) {
+    try { parseColor(out.color); } catch { delete out.color; }
+  }
+  return out;
+}
 
 export const attention = (mood) => (BAD_MOODS.includes(mood) ? 'bad' : WARN_MOODS.includes(mood) ? 'warn' : 'good');
 
@@ -113,12 +187,13 @@ export function createProjects({ store = createStore(), now: clock = () => new D
   }
 
   function optionsFor(id, yaml) {
-    return { ...workflowOptions(yaml), ...(config.options[id] ?? {}) };
+    return cleanOptions({ ...workflowOptions(yaml), ...(config.options[id] ?? {}) });
   }
 
   function record(event) {
     seq += 1;
-    const entry = { id: seq, at: clock().toISOString(), ...event };
+    const now = clock();
+    const entry = { id: seq, at: now.toISOString(), ...event, ...notifyRules(config, event.kind, now) };
     events.unshift(entry);
     events.length = Math.min(events.length, KEEP_EVENTS);
     emit('event', entry);
@@ -146,7 +221,9 @@ export function createProjects({ store = createStore(), now: clock = () => new D
   // An evening nudge when a commit streak would end tonight: once a day, only for streaks worth keeping.
   function nudgeStreak(project, pet, activity, now) {
     const today = localDay(now);
-    if (now.getHours() < STREAK_REMINDER_HOUR || pet.facts.streak < 3 || activity[today] || reminded.get(project.id) === today) return;
+    const hour = config.reminderHour === undefined ? STREAK_REMINDER_HOUR : config.reminderHour;
+    if (hour == null || (config.mute ?? []).includes('streak')) return;
+    if (now.getHours() < hour || pet.facts.streak < 3 || activity[today] || reminded.get(project.id) === today) return;
     reminded.set(project.id, today);
     record({ projectId: project.id, fullName: project.fullName, mood: pet.mood, kind: 'streak', text: notes(ui()).streak(`${pet.name} (${project.folder})`, pet.facts.streak) });
   }
@@ -318,7 +395,8 @@ export function createProjects({ store = createStore(), now: clock = () => new D
 
     updateConfig(patch) {
       const before = config;
-      config = { ...config, ...patch, options: { ...config.options, ...(patch.options ?? {}) } };
+      config = { ...config, ...patch, options: { ...config.options, ...(patch.options ?? {}) }, notes: { ...config.notes, ...(patch.notes ?? {}) } };
+      for (const [id, text] of Object.entries(patch.notes ?? {})) if (!text) delete config.notes[id];
       if ('token' in patch || 'online' in patch) { tokenInfo = null; online.clear(); }
       store.saveConfig(config);
       emit('config', { before, config });
@@ -339,6 +417,87 @@ export function createProjects({ store = createStore(), now: clock = () => new D
       persist();
       emit('change');
       return fresh;
+    },
+
+    // One snack (or game, or pat) for every pet at once. Says how many enjoyed it.
+    async careAll(name) {
+      const targets = list().filter((p) => p.summary);
+      const fresh = await pool(targets, POOL, (p) => visit(p.path, { care: name }));
+      const tally = { ok: 0, again: 0, cant: 0 };
+      for (const p of fresh) {
+        projects.set(p.id, p);
+        const outcome = p.summary?.careOutcome;
+        if (outcome in tally) tally[outcome] += 1;
+      }
+      persist();
+      emit('change');
+      return tally;
+    },
+
+    // `git fetch` (safe: only learns what's new on GitHub) or `git pull --ff-only` (never merges
+    // or rewrites anything: it only moves forward when nothing would conflict).
+    async sync(id, action) {
+      const p = get(id);
+      if (!p.remote) throw Object.assign(new Error('This repo has no remote to sync with.'), { status: 400 });
+      const result = { action, ok: false, error: null, hint: null };
+      try {
+        await git(p.path, action === 'pull' ? ['pull', '--ff-only'] : ['fetch', '--prune', 'origin'], { timeout: 120_000 });
+        result.ok = true;
+      } catch (err) {
+        const text = `${err.stderr ?? ''}\n${err.message ?? ''}`;
+        result.error = text.trim().split('\n').filter(Boolean).slice(-3).join('\n');
+        result.hint = gitHint(text);
+      }
+      const fresh = await visit(p.path);
+      projects.set(id, fresh);
+      persist();
+      emit('change');
+      return { ...result, project: fresh };
+    },
+
+    // Everything worth keeping when moving to another computer: the settings (never the token)
+    // and every pet's memory. Each pet goes with its repo's name, so it finds its repo again there.
+    backup() {
+      const { token: _token, floatBounds: _bounds, ...settings } = config;
+      const pets = {};
+      for (const p of projects.values()) {
+        const memory = store.loadMemory(p.id);
+        if (memory) pets[p.id] = memory;
+      }
+      return {
+        app: 'legacypet',
+        kind: 'backup',
+        version: 1,
+        exportedAt: clock().toISOString(),
+        settings,
+        projects: [...projects.values()].map((p) => ({ id: p.id, fullName: p.github ? p.fullName : null, folder: p.folder })),
+        pets,
+      };
+    },
+
+    async restore(data) {
+      if (data?.app !== 'legacypet' || data.kind !== 'backup' || typeof data.settings !== 'object') {
+        throw Object.assign(new Error('This is not a LegacyPet backup file.'), { status: 400 });
+      }
+      // Same repo, other computer: other path, other id. The repo's GitHub name links them.
+      const here = new Map([...projects.values()].filter((p) => p.github).map((p) => [p.fullName.toLowerCase(), p.id]));
+      const names = new Map((data.projects ?? []).filter((x) => isId(x?.id) && typeof x.fullName === 'string').map((x) => [x.id, x.fullName.toLowerCase()]));
+      const remap = (id) => (projects.has(id) ? id : here.get(names.get(id)) ?? id);
+      const allowed = ['notify', 'mute', 'reminderHour', 'quietHours', 'refreshMinutes', 'floatSize', 'floatBubbles', 'hidden', 'options', 'notes', 'pinned', 'favorite', 'editor', 'terminal', 'online'];
+      const patch = cleanConfigPatch(Object.fromEntries(Object.entries(data.settings).filter(([k]) => allowed.includes(k))), remap);
+      for (const key of ['editor', 'terminal']) if (key in patch && patch[key] !== null && typeof patch[key] !== 'string') delete patch[key];
+      // Folders from another computer only count when they exist here too.
+      const roots = (Array.isArray(data.settings.roots) ? data.settings.roots : []).filter((r) => typeof r === 'string' && existsSync(r));
+      let pets = 0;
+      for (const [id, memory] of Object.entries(data.pets ?? {})) {
+        if (!isId(id) || !memory || typeof memory !== 'object' || Array.isArray(memory)) continue;
+        store.saveMemory(remap(id), memory);
+        pets += 1;
+      }
+      const newRoots = roots.filter((r) => !config.roots.includes(r));
+      this.updateConfig({ ...patch, ...(newRoots.length ? { roots: [...config.roots, ...newRoots], consented: true } : {}) });
+      await (newRoots.length ? scan() : refresh());
+      return { pets, settings: Object.keys(patch).length, folders: newRoots.length };
     },
 
     // Writes the pet's files into the repo; with `publish`, commits just those and pushes.
