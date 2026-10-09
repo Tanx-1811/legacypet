@@ -149,9 +149,9 @@ export const MOVES = {
   chomp: {
     frames: `0%,78%,100%${T(REST)}82%${T('translate(-4px,0) rotate(0) scale(.92,1.04) skewX(0)')}86%,90%${T('translate(12px,0) rotate(0) scale(1.2,.9) skewX(0)')}88%${T('translate(12px,0) rotate(0) scale(1.05,1) skewX(0)')}95%${T(REST)}`,
   },
-  // Ice penguin: flops on its belly, slides away and pops back up.
+  // Ice penguin: dives forward onto its belly, slides away and pops back up.
   slide: {
-    frames: `0%,76%,100%${T(REST)}80%${T('translate(0,0) rotate(-80deg) scale(1,1) skewX(0)')}87%${T('translate(-16px,0) rotate(-80deg) scale(1,1) skewX(0)')}90%${T('translate(-16px,-6px) rotate(0) scale(1,1) skewX(0)')}96%${T(REST)}`,
+    frames: `0%,76%,100%${T(REST)}80%${T('translate(0,2px) rotate(-35deg) scale(1.08,.86) skewX(0)')}87%${T('translate(-16px,2px) rotate(-35deg) scale(1.08,.86) skewX(0)')}90%${T('translate(-16px,-6px) rotate(0) scale(1,1) skewX(0)')}96%${T(REST)}`,
   },
   // Axolotl: a lazy double bob, like it's floating in the pond.
   float: {
