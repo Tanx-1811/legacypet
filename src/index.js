@@ -17,6 +17,8 @@ export { ACHIEVEMENTS } from './engine/achievements.js';
 export { QUESTS, QUEST_IDS, weekOf } from './engine/quests.js';
 export { PATHS, PATH_IDS, pathScores, EVOLVE_AFTER_DAYS } from './engine/evolution.js';
 export { ITEMS, ITEM_IDS, SLOTS, isUnlocked } from './engine/items.js';
+export { COLOR_IDS, MOTTO_MAX, PET_COLORS, cleanMotto, parseColor } from './engine/look.js';
+export { NAME_PARTS, petName, randomName } from './engine/identity.js';
 export { CARE_ACTIONS, careBonus, topFriends } from './engine/care.js';
 export { levelProgress, MAX_LEVEL, RANKS, rankFor } from './engine/rank.js';
 export { nextState, updateDiary, diaryEntry, moodStrip } from './engine/memory.js';

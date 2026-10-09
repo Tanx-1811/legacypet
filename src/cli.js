@@ -6,7 +6,7 @@ import { parseArgs } from 'node:util';
 import {
   buildPet, checkup, collectPark, collectSnapshot, createClient, insertSnippet, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
   parseRemote, PLAYGROUND, renderBadge, renderCard, renderFiles, renderMini, renderPark, resolveParkRepos,
-  snippetFor, HOMES, adoptRepo, hasPet, listRepos, parseSelection, ITEMS, PATHS, RANKS, renderStats, SPECIES_IDS, terminalArt, workflowYaml,
+  snippetFor, HOMES, COLOR_IDS, adoptRepo, hasPet, listRepos, parseSelection, ITEMS, PATHS, RANKS, renderStats, SPECIES_IDS, terminalArt, workflowYaml,
 } from './index.js';
 import { adoptLocal, findReadme } from './local/adopt.js';
 
@@ -26,6 +26,8 @@ Options
   --species <id>   auto | ${SPECIES_IDS.join(' | ')}
   --scenery <home> auto | ${HOMES.join(' | ')}
   --name <name>    custom pet name
+  --color <color>  auto | ${COLOR_IDS.join(' | ')} | #rrggbb   repaint the pet
+  --motto <text>   a catchphrase the pet says on good days
   --lang <code>    ${Object.keys(LANG_NAMES).join(' | ')}
   --theme <mode>   auto | light | dark
   --out <dir>      output directory (default: legacypet-out)
@@ -58,6 +60,8 @@ const { values: opts, positionals } = parseArgs({
     commits: { type: 'string' },
     holiday: { type: 'string' },
     name: { type: 'string' },
+    color: { type: 'string' },
+    motto: { type: 'string' },
     lang: { type: 'string', default: 'en' },
     theme: { type: 'string', default: 'auto' },
     out: { type: 'string', default: 'legacypet-out' },
@@ -112,7 +116,7 @@ async function visit(fullName, now = new Date()) {
   if (!owner || !repo) throw new Error('Expected a repo like owner/name');
   const snapshot = await collectSnapshot(createClient({ token: token() }), { owner, repo, now });
   snapshot.warnings.forEach((w) => console.warn(`⚠ ${w}`));
-  const pet = buildPet({ snapshot, now, options: { species: opts.species, scenery: opts.scenery, vacation: opts.vacation, name: opts.name, lang: opts.lang } });
+  const pet = buildPet({ snapshot, now, options: { species: opts.species, scenery: opts.scenery, vacation: opts.vacation, name: opts.name, color: opts.color, motto: opts.motto, lang: opts.lang } });
   return { pet, snapshot };
 }
 
@@ -184,7 +188,7 @@ async function adopt(owner) {
   const picked = parseSelection(answer, repos).map((i) => repos[i]);
   if (!picked.length) return console.log('Nothing picked. Your repos stay pet-free for now.');
 
-  const options = { lang: opts.lang, species: opts.species, scenery: opts.scenery, name: opts.name };
+  const options = { lang: opts.lang, species: opts.species, scenery: opts.scenery, name: opts.name, color: opts.color, motto: opts.motto };
   let failed = 0;
   for (const repo of picked) {
     try {
@@ -229,7 +233,7 @@ async function init() {
   const hasReadme = Boolean(findReadme('.'));
   const { files, snippet } = adoptLocal('.', {
     fullName, repoName: name, isPrivate, style, force: opts.force, readme: hasReadme,
-    options: { lang: opts.lang, species: opts.species, scenery: opts.scenery, name: opts.name, park: parkSpec },
+    options: { lang: opts.lang, species: opts.species, scenery: opts.scenery, name: opts.name, color: opts.color, motto: opts.motto, park: parkSpec },
   });
   const [workflowFile, readmeFile] = files;
   if (workflowFile.status === 'exists') console.log(`• ${workflowFile.path} already exists${opts.force ? ' and is up to date' : ' (use --force to overwrite)'}`);
@@ -253,16 +257,16 @@ Next steps
   2. Your pet hatches by itself a minute after the push. Refresh your README and say hi!`);
 }
 
-function demoPet({ mood = 'happy', species = 'auto', scenery, vacation, stage, shiny, aura, levelUp, commits, holiday = null, season, lang = 'en', name, fullName, wear, path, now = new Date() }) {
+function demoPet({ mood = 'happy', species = 'auto', scenery, vacation, stage, shiny, aura, levelUp, commits, holiday = null, season, lang = 'en', name, color, motto, fullName, wear, path, now = new Date() }) {
   const snapshot = mockSnapshot({ mood, stage: stage ?? 'adult', now, fullName });
   if (commits != null) snapshot.commits.total = Number(commits); // sets the level: √commits + 1
-  return buildPet({ snapshot, now, options: { species, scenery, vacation, mood, stage, shiny: shiny ?? false, aura: aura ?? false, levelUp, holiday, season, lang, name, wear, path, unlockAll: true } });
+  return buildPet({ snapshot, now, options: { species, scenery, vacation, mood, stage, shiny: shiny ?? false, aura: aura ?? false, levelUp, holiday, season, lang, name, color, motto, wear, path, unlockAll: true } });
 }
 
 function demo() {
   const pet = demoPet({
     mood: opts.mood ?? 'happy', species: opts.species, scenery: opts.scenery, vacation: opts.vacation, stage: opts.stage, shiny: opts.shiny, aura: opts.aura, levelUp: opts['level-up'], commits: opts.commits,
-    holiday: opts.holiday ?? null, lang: opts.lang, name: opts.name,
+    holiday: opts.holiday ?? null, lang: opts.lang, name: opts.name, color: opts.color, motto: opts.motto, wear: opts.wear, path: opts.path,
   });
   write(opts.out, 'demo.svg', renderCard(pet, { theme: opts.theme }));
   write(opts.out, 'demo-mini.svg', renderMini(pet, { theme: opts.theme }));

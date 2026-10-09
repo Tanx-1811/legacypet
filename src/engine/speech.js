@@ -1,3 +1,4 @@
+import { fillMotto } from './look.js';
 import { AURA_DAYS } from './mood.js';
 
 // The pet talks about what is really happening in the repo.
@@ -70,5 +71,10 @@ export function chooseSpeech(pet, snapshot, tr, rng) {
   if (v.quest && (chatty || mood === 'party')) pool.push(...lines.questDone);
   if (pet.path && chatty) pool.push(...(lines.paths?.[pet.path.id] ?? []));
   if (chatty || mood === 'party') pool.push(...(lines.species?.[pet.speciesId] ?? []));
+  // The maintainer's catchphrase comes up about one good day in three.
+  if (pet.motto && (chatty || mood === 'party')) {
+    const motto = fillMotto(pet.motto, { ...v, repo: v.repoName });
+    pool.push(...Array(Math.max(1, Math.round(pool.length / 2))).fill(motto));
+  }
   return pick(pool);
 }

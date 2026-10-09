@@ -9,6 +9,7 @@ import { applyPathBonus, evolve, pathById } from './evolution.js';
 import { isShiny, petName } from './identity.js';
 import { AURA_DAYS, blissStreak, chooseAccessories, deriveMood } from './mood.js';
 import { itemById, parseWear, resolveWear, unlockedItems, wearCommand } from './items.js';
+import { cleanMotto, parseColor } from './look.js';
 import { VITALS } from './memory.js';
 import { evaluateQuests, questJoy } from './quests.js';
 import { levelEvents, levelProgress, rankFor } from './rank.js';
@@ -20,6 +21,7 @@ import { computeFacts, computeGrowth, computeVitals } from './vitals.js';
 // needed to draw it. Pure: the same inputs always give the same pet.
 //
 // options: species, name, lang, scenery (the pet's home; auto = the species' own),
+//          color (a coat color from engine/look.js, or a hex), motto (a catchphrase for good days),
 //          vacation (the input, e.g. "until 2027-01-05"), vacationCommand ({ name: 'vacation', days } | { name: 'back' }),
 //          wear (the input, e.g. "cap, bird"), wearCommand (the argument of `/pet wear`),
 //          care ({ name: 'feed' | 'play' | 'pat', user } from a `/pet` comment),
@@ -29,6 +31,7 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
   const lang = resolveLang(options.lang);
   const tr = strings(lang);
   const fullName = snapshot.repo.fullName;
+  const tint = parseColor(options.color);
   const species = pickSpecies({
     requested: options.species, fullName, language: snapshot.repo.language, previous: prevState?.pet?.species,
   });
@@ -116,6 +119,8 @@ export function buildPet({ snapshot, prevState = null, options = {}, now = new D
     species,
     speciesId: species.id,
     shiny,
+    tint,
+    motto: cleanMotto(options.motto),
     home,
     stage: growth.stage,
     level: growth.level,

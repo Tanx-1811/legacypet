@@ -14,12 +14,18 @@ export const DEFAULT_CONFIG = {
   online: false, // read CI, issues and stars from GitHub too
   token: '', // a pasted GitHub token, used only when `online` is on
   notify: true,
+  mute: [], // notification groups to keep quiet: mood, growth, rewards, streak (see local/projects.js)
+  reminderHour: 18, // the evening nudge before a streak ends (local time); null: never
+  quietHours: null, // { from, to } in local hours: no system notifications in between
   refreshMinutes: 15,
   favorite: null, // the project whose pet floats on the desktop
   float: false,
   floatBounds: null,
+  floatSize: 'medium', // small | medium | large
+  floatBubbles: true, // the desktop pet says what's new on its own
   hidden: [],
-  options: {}, // per project: species, name, scenery, lang, wear picked in the app
+  options: {}, // per project: species, name, scenery, lang, color, motto, theme, wear picked in the app
+  notes: {}, // per project: a few lines of notes to self
   pinned: [], // projects kept at the top
   editor: null, // the code editor to open projects in (null: the first one found)
   terminal: null,
@@ -58,7 +64,7 @@ export function createStore(dir = dataDir()) {
     dir,
     loadConfig() {
       const saved = readJson(configFile, {});
-      return { ...DEFAULT_CONFIG, ...saved, options: { ...(saved.options ?? {}) } };
+      return { ...DEFAULT_CONFIG, ...saved, options: { ...(saved.options ?? {}) }, notes: { ...(saved.notes ?? {}) } };
     },
     saveConfig(config) {
       ensure();

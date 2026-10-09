@@ -166,6 +166,7 @@ async function main() {
   const ignoreChecks = [process.env.GITHUB_JOB, ...input('ignore-checks').split(',').map((s) => s.trim())];
   const options = {
     species: input('species', 'auto'), scenery: input('scenery', 'auto'), name: input('name'), lang: input('lang', 'en'),
+    color: input('color'), motto: input('motto'),
     vacation: input('vacation'),
     wear: input('wear') || undefined,
   };
@@ -269,7 +270,7 @@ async function main() {
   const news = await announceUpdates(client, { owner, repo, prevState: previous.state });
   const previousMood = previous.state?.lastMood ?? '';
   setOutputs({
-    mood: pet.mood, name: pet.name, level: pet.level, species: pet.speciesId,
+    mood: pet.mood, name: pet.name, level: pet.level, species: pet.speciesId, color: pet.tint?.id ?? 'auto',
     stage: pet.stage, speech: pet.speech, 'svg-path': join(outputDir, 'pet.svg'),
     'previous-mood': previousMood,
     'mood-changed': Boolean(previousMood) && previousMood !== pet.mood,

@@ -24,6 +24,12 @@ inputs:
   name:
     description: 'Custom pet name. Leave empty and the repo names its own pet.'
     default: ''
+  color:
+    description: 'Repaint the pet: auto (its species colors), red, orange, gold, lime, green, teal, sky, blue, indigo, purple, pink, mono, or a hex color like "#ff8800". Eyes and details keep their colors.'
+    default: 'auto'
+  motto:
+    description: 'A catchphrase the pet says on good days (up to 60 characters). {name}, {repo}, {level}, {streak} and {days} fill in.'
+    default: ''
   lang:
     description: 'Language for the speech bubble, card and diary: en, vi, ja, zh, ko, es or fr.'
     default: 'en'
@@ -73,6 +79,8 @@ outputs:
     description: 'Level, from 1 to 99'
   species:
     description: 'Species id'
+  color:
+    description: 'The color the pet wears: auto, a color name or a hex color'
   stage:
     description: 'egg, baby, adult or elder'
   speech:

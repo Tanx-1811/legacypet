@@ -22,12 +22,17 @@ export function snippetFor(fullName, style = 'card', branch = 'legacypet', { isP
   return `[![LegacyPet](${src})](https://github.com/${fullName}/blob/${branch}/DIARY.md)`;
 }
 
-export function workflowYaml({ lang = 'en', species = 'auto', scenery = 'auto', name = '', park = '', wear = '', alerts = '', vacation = '' } = {}) {
+export function workflowYaml({
+  lang = 'en', species = 'auto', scenery = 'auto', name = '', color = '', motto = '', theme = '', park = '', wear = '', alerts = '', vacation = '',
+} = {}) {
   const inputs = [];
   if (lang && lang !== 'en') inputs.push(`lang: ${lang}`);
   if (species && species !== 'auto') inputs.push(`species: ${species}`);
   if (scenery && scenery !== 'auto') inputs.push(`scenery: ${scenery}`);
   if (name) inputs.push(`name: ${JSON.stringify(name)}`);
+  if (color && color !== 'auto') inputs.push(`color: ${JSON.stringify(color)}`);
+  if (motto) inputs.push(`motto: ${JSON.stringify(motto)}`);
+  if (theme && theme !== 'auto') inputs.push(`theme: ${theme}`);
   if (park) inputs.push(`park: ${park}`);
   if (wear) inputs.push(`wear: ${JSON.stringify(wear)}`);
   if (alerts) inputs.push(`alerts: ${alerts}`);

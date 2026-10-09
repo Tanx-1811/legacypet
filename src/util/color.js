@@ -48,6 +48,8 @@ function fromHsl({ h, s, l }) {
   return { r: f(0) * 255, g: f(8) * 255, b: f(4) * 255 };
 }
 
+export const hueOf = (hex) => Math.round(toHsl(parseHex(hex)).h) % 360;
+
 export function shiftHue(hex, degrees) {
   const rgb = parseHex(hex);
   const hsl = toHsl(rgb);
