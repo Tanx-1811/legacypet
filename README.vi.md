@@ -54,7 +54,13 @@ Windows hoặc Linux, mở lên và bấm **Cho phép & tìm dự án**. Vậy l
   sẽ đứt nếu hôm nay không commit (có nhắc nhở buổi tối).
 - Bấm **⌘K** (**Ctrl+K**) để nhảy tới bất kỳ dự án, trang hay thao tác nào, và mở dự án bằng VS Code, Cursor,
   Zed hoặc terminal ngay từ trang của nó. Trong bản desktop, **⌘⇧L** (**Ctrl+Shift+L**) gọi app lên từ bất kỳ đâu.
-- Mỗi ngày cho ăn, chơi, xoa đầu từng thú, mặc đồ cho nó, hoặc nuôi thử trong trình giả lập.
+- Mỗi ngày cho ăn, chơi, xoa đầu từng thú (hoặc chăm tất cả một lượt), mặc đồ cho nó, hoặc nuôi thử trong trình giả lập.
+- **Biến thú thành của riêng bạn** ở thẻ *Tuỳ chỉnh* của từng thú: tên (hoặc tung xúc xắc lấy tên ngẫu nhiên), loài,
+  màu lông, câu cửa miệng, quê nhà, giao diện thẻ và tủ đồ, có xem trước trực tiếp. *Cập nhật lên GitHub* mang theo tất cả.
+- Tiện ích ngay trên trang của thú: tải thẻ, thẻ nhỏ hay huy hiệu (SVG hoặc PNG), chép đoạn README,
+  ghi chú cho dự án, và `git fetch` / `git pull --ff-only` mà không cần rời app.
+- Chọn loại tin nào được báo, giờ nhắc giữ chuỗi và giờ yên lặng. Chỉnh cỡ thú trên màn hình, cho nó tự lên tiếng
+  hay im lặng. Một tệp sao lưu mang cài đặt, ghi chú và trí nhớ của mọi thú sang máy khác.
 
 **Riêng tư ngay từ đầu.** Không tài khoản, không theo dõi. App chỉ đọc những thư mục bạn cho phép, chỉ ghi khi
 bạn bấm nhận nuôi, và chỉ kết nối GitHub khi bạn bật *Dữ liệu GitHub* (CI, issue, sao) bằng đăng nhập GitHub CLI
@@ -250,6 +256,15 @@ Khi thú mệt hay ốm thì nó thôi, và người xem bật reduced motion th
 | Xương rồng | đung đưa chậm rãi trong gió | | | |
 Muốn chọn loài khác? Đặt `species: ninja`. Muốn đặt tên? Đặt `name: Bánh Bao`.
 
+### 🎨 Màu lông và câu cửa miệng
+
+Đổi màu cho thú bằng `color: teal` (`red`, `orange`, `gold`, `lime`, `green`, `teal`, `sky`, `blue`, `indigo`,
+`purple`, `pink`, `mono` cho màu bạc, hoặc mã hex như `"#ff8800"`). Mắt và chi tiết riêng của loài (áo choàng siêu anh hùng,
+vàng của rồng, băng đô ninja) giữ nguyên màu, và thú ốm hay thành thây ma vẫn trông đúng như vậy.
+
+Cho thú một câu cửa miệng với `motto: "Ship it, {name}!"`. Thú nói câu này vào khoảng 1/3 số ngày vui;
+`{name}`, `{repo}`, `{level}`, `{streak}` và `{days}` sẽ tự điền.
+
 ### ✨ Thú lấp lánh
 
 Cứ 64 repo thì có 1 repo nở ra thú **lấp lánh (shiny)** với màu khác và ánh sao, và không có cách nào quay lại.
@@ -422,6 +437,8 @@ Rồng Thần tính mỗi commit bằng 1,5 nên leo hạng nhanh hơn.
 | `species` | `auto` | `auto` hoặc một trong 13 loài ở trên |
 | `scenery` | `auto` | Nơi ở: `auto` (quê nhà của loài), `meadow`, `garden`, `pond`, `beach`, `reef`, `jungle`, `desert` |
 | `name` | | Tên tự đặt. Để trống thì repo tự đặt tên |
+| `color` | `auto` | Màu lông: `red`, `orange`, `gold`, `lime`, `green`, `teal`, `sky`, `blue`, `indigo`, `purple`, `pink`, `mono` hoặc mã hex |
+| `motto` | | Câu cửa miệng cho ngày vui, tối đa 60 ký tự. `{name}`, `{repo}`, `{level}`, `{streak}`, `{days}` tự điền |
 | `lang` | `en` | `en`, `vi`, `ja`, `zh`, `ko`, `es`, `fr` |
 | `theme` | `auto` | `auto` theo chế độ sáng/tối của người xem, hoặc `light`, `dark` |
 | `park` | | Vẽ thêm `park.svg`: `auto` hoặc danh sách repo |
@@ -431,7 +448,7 @@ Rồng Thần tính mỗi commit bằng 1,5 nên leo hạng nhanh hơn.
 | `wear` | | Đồ đã mở khóa muốn mặc, ví dụ `cap, bird`. Để trống thì dùng `/pet wear` |
 | `keepalive` | `true` | Không để GitHub tạm dừng lịch chạy sau 60 ngày im ắng (cần `actions: write`) |
 
-**Output:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `level-up`, `rank`, `on-vacation`, `alert-issue`, `path`, `quest-stars`, `quests-done`, `wearing`, `svg-path`.
+**Output:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `color`, `stage`, `speech`, `aura`, `new-trophies`, `level-up`, `rank`, `on-vacation`, `alert-issue`, `path`, `quest-stars`, `quests-done`, `wearing`, `svg-path`.
 Ví dụ, chỉ báo cho team khi thú *vừa* bị ốm:
 
 ```yaml

@@ -15,7 +15,8 @@ export const CHANGELOG = [
       '🍪 New commands: `/pet feed`, `/pet play`, `/pet quests`, `/pet wardrobe` and `/pet wear` (maintainers). Snacks and games give a small boost, once a day per person',
       '🏆 New trophies: Quester, Perfect Week, Evolved and Beloved',
       '🕹️ The playground is now a full app: hatch a repo, play with a pet day by day in the simulator, browse the codex and build a Pet Park',
-      '📤 New outputs: `path`, `quest-stars`, `quests-done`, `wearing`',
+      '🎨 Make it yours: `color: teal` repaints your pet (or any hex color), and `motto: "Ship it, {name}!"` gives it a catchphrase for good days',
+      '📤 New outputs: `path`, `quest-stars`, `quests-done`, `wearing`, `color`',
     ],
   },
   {

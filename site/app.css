@@ -621,6 +621,7 @@ button.swatch:hover, .swatch:hover { border-color: var(--panel); box-shadow: 0 0
 .slot-head { font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
 button.tile:disabled { cursor: not-allowed; }
 @media (min-width: 881px) { .sticky-col { position: sticky; top: 16px; } }
+@media (max-width: 880px) { .customize .sticky-col { order: -1; } }
 
 /* ---- Notes, sync, notification options ---- */
 textarea.notes { display: block; margin: 0; resize: vertical; min-height: 96px; line-height: 1.5; }

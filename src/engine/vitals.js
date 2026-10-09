@@ -15,7 +15,15 @@ const clamp = (value, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, Math.round(
 const DEFAULT_MODIFIERS = {
   hungerRate: 1, ciPenalty: 1, issuePenalty: 1, releaseJoy: 0, teamEnergy: 0,
   streakEnergy: 0, ciEnergyFloor: 0, inboxJoy: 0, healthFloor: 0, xpRate: 1, starJoy: 0,
+  joyFloor: 0, energyFloor: 0, energyRate: 1, dailyEnergy: 0, releaseEnergy: 0,
+  teamJoy: 0, streakJoy: 0, prJoy: 0, tidyJoy: 0, ageJoy: 0,
 };
+
+// Bonuses that grow with a count stop at +20 joy (team, stars) or +12 (age).
+const BONUS_CAP = 20;
+const AGE_CAP = 12;
+const RELEASE_DAYS = 14;
+const TIDY_HEALTH = 80;
 
 export const withDefaults = (modifiers = {}) => ({ ...DEFAULT_MODIFIERS, ...modifiers });
 
@@ -81,19 +89,28 @@ function joyFromIssues(issues, penalty) {
 //   hygiene  ← GitHub's community profile score (README, license, CoC…)
 export function computeVitals(snapshot, facts, modifiers, now) {
   const m = withDefaults(modifiers);
+  const extraAuthors = Math.max(0, facts.activeAuthors30 - 1);
+  const freshRelease = snapshot.release && daysBetween(snapshot.release.publishedAt, now) <= RELEASE_DAYS;
   let joy = joyFromIssues(snapshot.issues, m.issuePenalty);
-  if (m.releaseJoy && snapshot.release && daysBetween(snapshot.release.publishedAt, now) <= 14) joy += m.releaseJoy;
+  if (m.releaseJoy && freshRelease) joy += m.releaseJoy;
   if (m.inboxJoy && snapshot.issues && !snapshot.issues.unanswered.length) joy += m.inboxJoy;
-  if (m.starJoy) joy += Math.min(20, Math.floor(facts.stars / 100) * m.starJoy);
-  let energy = 100 * (1 - Math.exp(-facts.commits14 / 6));
-  if (m.teamEnergy) energy += m.teamEnergy * Math.max(0, facts.activeAuthors30 - 1);
+  if (m.prJoy && snapshot.issues && !snapshot.issues.stalePRs) joy += m.prJoy;
+  if (m.tidyJoy && (snapshot.community?.health ?? 0) >= TIDY_HEALTH) joy += m.tidyJoy;
+  if (m.starJoy) joy += Math.min(BONUS_CAP, Math.floor(facts.stars / 100) * m.starJoy);
+  if (m.teamJoy) joy += Math.min(BONUS_CAP, m.teamJoy * extraAuthors);
+  if (m.streakJoy) joy += m.streakJoy * Math.min(facts.streak, 6);
+  if (m.ageJoy) joy += Math.min(AGE_CAP, m.ageJoy * Math.floor(facts.ageDays / 365));
+  let energy = 100 * (1 - Math.exp(-(facts.commits14 * m.energyRate) / 6));
+  if (m.teamEnergy) energy += m.teamEnergy * extraAuthors;
   if (m.streakEnergy) energy += m.streakEnergy * Math.min(facts.streak, 6);
+  if (m.dailyEnergy && facts.commits1 > 0) energy += m.dailyEnergy;
+  if (m.releaseEnergy && freshRelease) energy += m.releaseEnergy;
   if (m.ciEnergyFloor && snapshot.ci?.state === 'passing') energy = Math.max(energy, m.ciEnergyFloor);
   return {
     fullness: clamp(100 * Math.exp(-((facts.hungerDays ?? facts.daysSinceCommit) * m.hungerRate) / 21)),
     health: Math.max(healthFromCi(snapshot.ci, m.ciPenalty), m.healthFloor),
-    joy: clamp(joy),
-    energy: clamp(energy),
+    joy: Math.max(clamp(joy), m.joyFloor),
+    energy: Math.max(clamp(energy), m.energyFloor),
     hygiene: snapshot.community?.health ?? null,
   };
 }

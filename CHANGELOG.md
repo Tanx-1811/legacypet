@@ -34,15 +34,33 @@ Releases that need a change to your workflow file say so.
 - 🕹️ **The playground is now an app**: Hatch, Raise (a day-by-day simulator with feeding, playing, dressing up,
   autoplay habits and a `/pet` console), Codex, Park builder and Adopt, in English and Vietnamese, with light/dark themes,
   keyboard shortcuts and choices that carry over between views.
-- 📤 **New outputs**: `path`, `quest-stars`, `quests-done`, `wearing`. The CLI demo takes `--wear` and `--path`.
+- 📤 **New outputs**: `path`, `quest-stars`, `quests-done`, `wearing`, `color`. The CLI demo takes `--wear` and `--path`.
+- 🎨 **Colors and catchphrases**: `color: teal` repaints the pet (12 colors, silver, or any hex color; eyes and each
+  species' own details keep theirs), and `motto: "Ship it, {name}!"` gives it a catchphrase for good days.
+  Both work in the CLI (`--color`, `--motto`), the playground and the app.
+- 🧑‍🎨 **A Customize tab worth the name**: name (with a random-name dice), species, coat color, catchphrase, home,
+  card theme and the whole wardrobe for each pet, with a live preview and a reset button.
+- 🧰 **Tools on each pet's page**: download the card, mini card or badge as SVG or PNG, copy the README or badge
+  Markdown, keep notes for the project, and `git fetch` / `git pull --ff-only` from the app.
+- 🔔 **More settings**: choose which news notifies you (moods, growth, rewards, streaks), the streak reminder hour
+  (or none), quiet hours, the desktop pet's size and whether it speaks up on its own. **Care for all** feeds, plays
+  with or pats every pet at once (also in ⌘K).
+- 💾 **Backup & restore**: one JSON file with your settings, notes and every pet's memory (never the token). On another
+  computer each pet finds its repo again by its GitHub name.
 
 ### Changed
 
 - The command hint under each `/pet` reply lists just the command names; `/pet help` explains them.
+- A typo in a workflow input (an unknown species, home or color) no longer breaks the pet in the app: the option is skipped.
+
+### Fixed
+
+- The app showed an empty page when opened or reloaded straight on Settings.
+- `legacypet demo` ignored `--wear` and `--path`.
 
 ### Workflow
 
-Nothing to change. `wear` is optional.
+Nothing to change. `wear`, `color` and `motto` are optional.
 
 ## 1.2.1 (2026-10-08)
 

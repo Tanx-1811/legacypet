@@ -55,7 +55,13 @@ for macOS, Windows or Linux, open it and press **Allow & find my projects**. Tha
   and the streaks that end tonight without a commit (with an evening reminder).
 - Press **⌘K** (**Ctrl+K**) to jump to any project, page or action, and open a project in VS Code, Cursor,
   Zed or a terminal straight from its page. In the desktop app, **⌘⇧L** (**Ctrl+Shift+L**) brings it up from anywhere.
-- Feed, play and pat every pet once a day, dress it up, or raise it in the simulator.
+- Feed, play and pat every pet once a day (or all of them at once), dress it up, or raise it in the simulator.
+- **Make it yours** on each pet's *Customize* tab: name (or roll a random one), species, a coat color,
+  a catchphrase, its home, the card theme and its wardrobe, with a live preview. *Update on GitHub* takes it all along.
+- Handy extras on each pet's page: download the card, mini card or badge (SVG or PNG), copy the README snippet,
+  keep notes for the project, and `git fetch` / `git pull --ff-only` without leaving the app.
+- Pick which news notifies you, when the streak reminder comes, and quiet hours. Size the desktop pet and
+  let it speak up or stay quiet. A backup file carries your settings, notes and every pet's memory to another computer.
 
 **Private by design.** No account, no tracking. It reads only the folders you allow, writes only when you
 press adopt, and talks to GitHub only when you turn on *GitHub details* (CI, issues and stars), with your
@@ -255,6 +261,15 @@ on top of its mood animation. It stops when the pet feels bad, and with reduced 
 
 Prefer a different one? Set `species: cactus`. Want a name? Set `name: Mochi`.
 Otherwise the repo names its pet too. You don't choose, you adopt.
+
+### 🎨 Colors and catchphrases
+
+Repaint your pet with `color: teal` (`red`, `orange`, `gold`, `lime`, `green`, `teal`, `sky`, `blue`, `indigo`,
+`purple`, `pink`, `mono` for silver, or any hex color like `"#ff8800"`). Eyes and each species' own details
+(the hero's cape, the dragon's gold, the ninja's headband) keep their colors, and a sick or zombie pet still looks it.
+
+Give it a catchphrase with `motto: "Ship it, {name}!"`. It says it on about one good day in three;
+`{name}`, `{repo}`, `{level}`, `{streak}` and `{days}` fill in.
 
 ### ✨ Shiny pets
 
@@ -555,6 +570,8 @@ The default token can read your public repos. To include private ones, pass a pe
 | `species` | `auto` | `auto`, `blob`, `cat`, `duck`, `crab`, `octopus`, `snake`, `cactus`, `ninja`, `mecha`, `dragon`, `bunny`, `bat`, `hero` |
 | `scenery` | `auto` | Where the pet lives. `auto` is its species' home, or `meadow`, `garden`, `pond`, `beach`, `reef`, `jungle`, `desert` |
 | `name` | | Custom name. Empty means the repo names it. |
+| `color` | `auto` | Repaint the pet: `red`, `orange`, `gold`, `lime`, `green`, `teal`, `sky`, `blue`, `indigo`, `purple`, `pink`, `mono` or a hex color. See [colors](#-colors-and-catchphrases) |
+| `motto` | | A catchphrase for good days, up to 60 characters. `{name}`, `{repo}`, `{level}`, `{streak}`, `{days}` fill in. |
 | `lang` | `en` | `en`, `vi`, `ja`, `zh`, `ko`, `es` or `fr` |
 | `theme` | `auto` | `auto` follows the viewer's light/dark mode. Also `light` or `dark`. |
 | `branch` | `legacypet` | Where the pet lives. Rewritten on every run, so use a dedicated branch. |
@@ -571,7 +588,7 @@ The default token can read your public repos. To include private ones, pass a pe
 | `repository` | current repo | Visit another repo's pet |
 | `github-token` | `github.token` | Token used for the API |
 
-**Outputs:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `stage`, `speech`, `aura`, `new-trophies`, `level-up`, `rank`, `on-vacation`, `alert-issue`, `path`, `quest-stars`, `quests-done`, `wearing`, `svg-path`.
+**Outputs:** `mood`, `previous-mood`, `mood-changed`, `name`, `level`, `species`, `color`, `stage`, `speech`, `aura`, `new-trophies`, `level-up`, `rank`, `on-vacation`, `alert-issue`, `path`, `quest-stars`, `quests-done`, `wearing`, `svg-path`.
 For example, ping your team only when the pet *just* got sick:
 
 ```yaml
@@ -595,6 +612,7 @@ npx github:Tanx-1811/legacypet park sindresorhus          # draw someone's Pet P
 npx github:Tanx-1811/legacypet demo --mood zombie --species cat --lang vi
 npx github:Tanx-1811/legacypet demo --species crab --scenery reef
 npx github:Tanx-1811/legacypet demo --species dragon --path sage --wear "wizard, drone"
+npx github:Tanx-1811/legacypet demo --species cat --color teal --motto "Ship it, {name}!"
 ```
 
 In a terminal with true color, it draws the pet right in your shell.
