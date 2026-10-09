@@ -1,18 +1,20 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
   buildPet, checkup, collectPark, collectSnapshot, createClient, insertSnippet, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
   parseRemote, PLAYGROUND, renderBadge, renderCard, renderFiles, renderMini, renderPark, resolveParkRepos,
   snippetFor, HOMES, adoptRepo, hasPet, listRepos, parseSelection, ITEMS, PATHS, RANKS, renderStats, SPECIES_IDS, terminalArt, workflowYaml,
 } from './index.js';
+import { adoptLocal, findReadme } from './local/adopt.js';
 
 const HELP = `
 🐾 legacypet: a pixel pet that lives in your README
 
 Usage
+  legacypet app                   Open the LegacyPet app: every project on this computer gets a pet
   legacypet init                  Adopt a pet: add the workflow and put the pet in README.md
   legacypet adopt [owner]         Pick any of your repos from a list and adopt pets in all of them (no clone)
   legacypet render <owner/repo>   Visit a real repo, draw its pet and give it a checkup
@@ -32,6 +34,7 @@ Options
   init:    --repo <owner/name>  --style card|mini|badge|park  --park auto|<repos>  --force  --private
   adopt:   --repos "1,3" | "app,lib" | all  --all (include forks)  --style  --force   (token: $GITHUB_TOKEN or gh)
   park:    --size <1-8>
+  app:     --port <n>  --no-open (just print the address)
   demo:    --mood ${MOODS.join('|')}  --stage egg|baby|adult|elder  --shiny  --aura  --level-up  --commits <n>  --holiday <id>
   render, demo:  --vacation "until 2027-01-05"  preview the pet on vacation
   demo:    --wear "cap, bird" (any item, locked or not)  --path swift|guardian|social|sage
@@ -67,6 +70,8 @@ const { values: opts, positionals } = parseArgs({
     private: { type: 'boolean' },
     repos: { type: 'string' },
     all: { type: 'boolean' },
+    port: { type: 'string' },
+    'no-open': { type: 'boolean' },
     help: { type: 'boolean', short: 'h' },
   },
 });
@@ -208,15 +213,6 @@ async function init() {
   const style = opts.style ?? (parkSpec ? 'park' : 'card');
   console.log(`🥚 Adopting a pet for ${fullName}${isProfile ? ' (profile README: adding a Pet Park)' : ''}\n`);
 
-  const workflow = join('.github', 'workflows', 'legacypet.yml');
-  if (existsSync(workflow) && !opts.force) {
-    console.log(`• ${workflow} already exists (use --force to overwrite)`);
-  } else {
-    mkdirSync(dirname(workflow), { recursive: true });
-    writeFileSync(workflow, workflowYaml({ lang: opts.lang, species: opts.species, scenery: opts.scenery, name: opts.name, park: parkSpec }));
-    console.log(`✔ Created ${workflow}`);
-  }
-
   // Peek at the repo first: for the preview, and to know whether the README needs private-friendly
   // image URLs. A 404 on a repo we just read from `git remote` almost always means private + no token.
   let peek = null;
@@ -230,19 +226,19 @@ async function init() {
   const isPrivate = opts.private ?? (peek ? peek.snapshot.repo.isPrivate : hidden);
   if (isPrivate) console.log('🔒 Private repo: the README will load the pet through github.com, so everyone with access sees it.');
 
-  const snippet = snippetFor(fullName, style, 'legacypet', { isPrivate });
-  const readme = readdirSync('.').find((f) => /^readme\.md$/i.test(f));
-  if (readme) {
-    const before = readFileSync(readme, 'utf8');
-    const after = insertSnippet(before, snippet);
-    if (after === before) console.log(`• ${readme} already shows your pet`);
-    else {
-      writeFileSync(readme, after);
-      console.log(`✔ Added your pet to ${readme}`);
-    }
-  } else {
-    console.log(`• No README.md here. Paste this where you want your pet:\n\n  ${snippet}\n`);
-  }
+  const hasReadme = Boolean(findReadme('.'));
+  const { files, snippet } = adoptLocal('.', {
+    fullName, repoName: name, isPrivate, style, force: opts.force, readme: hasReadme,
+    options: { lang: opts.lang, species: opts.species, scenery: opts.scenery, name: opts.name, park: parkSpec },
+  });
+  const [workflowFile, readmeFile] = files;
+  if (workflowFile.status === 'exists') console.log(`• ${workflowFile.path} already exists${opts.force ? ' and is up to date' : ' (use --force to overwrite)'}`);
+  else console.log(`✔ ${workflowFile.status === 'created' ? 'Created' : 'Updated'} ${workflowFile.path}`);
+  if (!readmeFile) console.log(`• No README.md here. Paste this where you want your pet:\n\n  ${snippet}\n`);
+  else if (readmeFile.status === 'exists') console.log(`• ${readmeFile.path} already shows your pet`);
+  else console.log(`✔ Added your pet to ${readmeFile.path}`);
+  const workflow = workflowFile.path;
+  const readme = readmeFile?.path;
 
   if (peek) {
     console.log('\n🔮 Here is who will hatch:');
@@ -253,7 +249,7 @@ async function init() {
 
   console.log(`
 Next steps
-  1. git add ${workflow.replace(/\\/g, '/')} ${readme ?? ''} && git commit -m "Adopt a LegacyPet 🐾" && git push
+  1. git add ${workflow} ${readme ?? ''} && git commit -m "Adopt a LegacyPet 🐾" && git push
   2. Your pet hatches by itself a minute after the push. Refresh your README and say hi!`);
 }
 
@@ -373,9 +369,43 @@ ${sections.map((s) => `<h2>${s.title}</h2><div class="grid">${s.items.map((i) =>
   console.log(`Wrote the gallery to ${join(out, 'index.html')}`);
 }
 
+// The app: a local server plus a window. Quits when the last window closes.
+async function app() {
+  const { DEFAULT_PORT, startServer } = await import('./app/server.js');
+  const { openAppWindow } = await import('./app/launch.js');
+  const { dataDir } = await import('./local/store.js');
+  const port = Number(opts.port) || DEFAULT_PORT;
+  // Already open? Just show another window of that one.
+  try {
+    const ping = await fetch(`http://127.0.0.1:${port}/api/ping`, { signal: AbortSignal.timeout(800) }).then((r) => r.json());
+    if (ping?.app === 'legacypet') {
+      const url = `http://127.0.0.1:${port}/#/home`;
+      if (!opts['no-open']) openAppWindow(url, { profileDir: join(dataDir(), 'window') });
+      return console.log(`🐾 LegacyPet is already running at ${url}`);
+    }
+  } catch { /* nothing there: start it */ }
+
+  let server;
+  const quit = async () => {
+    await server?.close();
+    process.exit(0);
+  };
+  server = await startServer({ port, onIdle: opts['no-open'] ? null : quit });
+  const url = server.appUrl();
+  console.log(`🐾 LegacyPet is running at ${url}`);
+  console.log('   Everything stays on this computer. Press Ctrl+C to quit.');
+  if (opts['no-open']) return;
+  const win = openAppWindow(url, { profileDir: join(dataDir(), 'window') });
+  if (win.kind === 'tab') console.log('   (Opened in your browser. Install Chrome or Edge for an app window.)');
+  win.closed?.then(() => setTimeout(() => { if (!server.windows) quit(); }, 1500));
+  process.on('SIGINT', quit);
+  process.on('SIGTERM', quit);
+}
+
 async function main() {
   const [command, ...args] = positionals;
   if (opts.help || !command || command === 'help') return console.log(HELP);
+  if (command === 'app' || command === 'desktop') return app();
   if (command === 'init') return init();
   if (command === 'adopt') return adopt(args[0]);
   if (command === 'render') return render(args[0]);

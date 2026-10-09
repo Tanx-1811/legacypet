@@ -270,6 +270,7 @@ export function createProjects({ store = createStore(), now: clock = () => new D
   };
 
   return {
+    store,
     get config() { return config; },
     get scanning() { return scanning; },
     get lastScan() { return lastScan; },
@@ -317,8 +318,6 @@ export function createProjects({ store = createStore(), now: clock = () => new D
       const p = get(id);
       if (!p.github) throw Object.assign(new Error('This repo is not on GitHub, so its pet can only live here.'), { status: 400 });
       const merged = { ...p.options, ...options };
-      delete merged.lang; // empty lang means "English" in the workflow; keep whatever was picked
-      if (options.lang || p.options.lang) merged.lang = options.lang || p.options.lang;
       let isPrivate = p.isPrivate;
       if (isPrivate == null) isPrivate = await guessPrivate(p.fullName, token(), fetchImpl);
       const written = adoptLocal(p.path, { fullName: p.fullName, repoName: p.folder, isPrivate, options: merged, style, force });
