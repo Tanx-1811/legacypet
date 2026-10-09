@@ -98,6 +98,7 @@ export async function startServer({
       scanning: projects.scanning,
       lastScan: projects.lastScan,
       projects: projects.list(),
+      hiddenProjects: projects.hiddenList(),
       events: projects.events().slice(0, 20),
       desktop: desktop?.info?.() ?? null,
     };
@@ -148,6 +149,7 @@ export async function startServer({
       options: typeof body.options === 'object' && body.options ? body.options : {},
       publish: Boolean(body.publish),
       force: Boolean(body.force),
+      readme: body.readme !== false,
     }),
     publish: (id) => projects.publish(id),
     reveal: (id) => { (desktop?.reveal ?? systemReveal)(projects.get(id).path); return { ok: true }; },

@@ -263,6 +263,8 @@ export function createProjects({ store = createStore(), now: clock = () => new D
     return [...projects.values()].filter((p) => !hidden.has(p.id));
   }
 
+  const hiddenList = () => [...projects.values()].filter((p) => config.hidden.includes(p.id)).map((p) => ({ id: p.id, name: p.fullName ?? p.folder }));
+
   const get = (id) => {
     const p = projects.get(id);
     if (!p) throw Object.assign(new Error('No such project'), { status: 404 });
@@ -276,6 +278,7 @@ export function createProjects({ store = createStore(), now: clock = () => new D
     get lastScan() { return lastScan; },
     events: () => events,
     list,
+    hiddenList,
     get,
     scan,
     refresh,
@@ -314,13 +317,13 @@ export function createProjects({ store = createStore(), now: clock = () => new D
     },
 
     // Writes the pet's files into the repo; with `publish`, commits just those and pushes.
-    async adopt(id, { style = 'card', options = {}, publish = false, force = false } = {}) {
+    async adopt(id, { style = 'card', options = {}, publish = false, force = false, readme = true } = {}) {
       const p = get(id);
       if (!p.github) throw Object.assign(new Error('This repo is not on GitHub, so its pet can only live here.'), { status: 400 });
       const merged = { ...p.options, ...options };
       let isPrivate = p.isPrivate;
       if (isPrivate == null) isPrivate = await guessPrivate(p.fullName, token(), fetchImpl);
-      const written = adoptLocal(p.path, { fullName: p.fullName, repoName: p.folder, isPrivate, options: merged, style, force });
+      const written = adoptLocal(p.path, { fullName: p.fullName, repoName: p.folder, isPrivate, options: merged, style, force, readme });
       const changed = written.files.filter((f) => f.status !== 'exists').map((f) => f.path);
       const result = { ...written, isPrivate, publish: null };
       if (publish) result.publish = await publishAdoption(p.path, changed.length ? changed : written.files.map((f) => f.path));
