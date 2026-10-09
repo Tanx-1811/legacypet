@@ -42,6 +42,7 @@
     },
     "nsis": { "oneClick": true, "perMachine": false, "artifactName": "LegacyPet-win-x64.${ext}", "shortcutName": "LegacyPet" },
     "linux": {
+      "executableName": "legacypet",
       "icon": "build/icon.png",
       "category": "Development",
       "target": [{ "target": "AppImage", "arch": ["x64"] }, { "target": "deb", "arch": ["x64"] }],

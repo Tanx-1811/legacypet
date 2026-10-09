@@ -20,10 +20,15 @@ const defaults = () => ({
   user: 'you',
   park: [],
 });
+// Whether this browser had nothing saved yet (a new window of the app picks up its settings).
+let freshStore = true;
 const store = (() => {
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null');
-    if (saved && typeof saved === 'object') return { ...defaults(), ...saved, cfg: { ...defaults().cfg, ...saved.cfg } };
+    if (saved && typeof saved === 'object') {
+      freshStore = false;
+      return { ...defaults(), ...saved, cfg: { ...defaults().cfg, ...saved.cfg } };
+    }
   } catch { /* private mode or blocked storage: start fresh */ }
   return defaults();
 })();
@@ -1100,7 +1105,13 @@ async function bootLocal() {
   if (desktop?.platform) document.documentElement.classList.add(`os-${desktop.platform}`);
   const state = await homeKit.load().catch(() => null);
   if (!state) return;
-  if (!state.config.ui) api('config', { ui: store.ui }).catch(() => {});
+  // The app remembers the interface language for its notifications and its menu bar menu;
+  // a window that has nothing saved yet (a new desktop window) takes it from there.
+  if (freshStore && ['vi', 'en'].includes(state.config.ui) && state.config.ui !== store.ui) {
+    store.ui = state.config.ui;
+    store.cfg.lang = state.config.ui;
+    save();
+  } else if (state.config.ui !== store.ui) api('config', { ui: store.ui }).catch(() => {});
   if (state.config.online) api('token').then((r) => { if (r.token) ghToken = r.token; }).catch(() => {});
   homeKit.subscribe(() => drawNav(route().view));
   listen({

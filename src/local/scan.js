@@ -1,6 +1,6 @@
 // Finds git repos inside the folders someone allowed. Before that, it only suggests
 // folders by name: nothing is opened or listed until they say yes.
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, realpathSync, statSync } from 'node:fs';
 import { readdir, realpath, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
@@ -39,7 +39,16 @@ export function suggestFolders({ home = homedir(), platform = process.platform, 
     seen.add(key);
     out.push({ path, label, exists, checked, ...(current ? { current } : {}) });
   };
-  if (cwd && cwd !== home && isRepo(cwd)) add(cwd, cwd.replace(home, '~'), { exists: true, checked: true, current: true });
+  // The folder's real name on disk: on macOS and Windows "Code" and "code" are the same folder.
+  const real = (path) => {
+    try {
+      return realpathSync.native(path);
+    } catch {
+      return path;
+    }
+  };
+  const tilde = (path) => (path === home ? '~' : path.startsWith(home + sep) ? `~${path.slice(home.length)}` : path);
+  if (cwd && cwd !== home && isRepo(cwd)) add(cwd, tilde(cwd), { exists: true, checked: true, current: true });
   for (const rel of CANDIDATES) {
     const path = join(home, ...rel.split('/'));
     const label = `~${sep}${rel.split('/').join(sep)}`;
@@ -52,7 +61,10 @@ export function suggestFolders({ home = homedir(), platform = process.platform, 
     try {
       exists = statSync(path).isDirectory();
     } catch { /* not there */ }
-    if (exists) add(path, label, { exists: true, checked: true });
+    if (exists) {
+      const actual = real(path);
+      add(actual, tilde(actual), { exists: true, checked: true });
+    }
   }
   add(home, '~', { exists: true, checked: false });
   return out;

@@ -32,13 +32,12 @@ export function workflowOptions(yaml) {
     const m = /^\s*([\w-]+):\s*(.*)$/.exec(line);
     if (!m || !INPUTS.includes(m[1])) continue;
     let value = m[2].trim();
-    if (/^["']/.test(value)) {
-      const quote = value[0];
-      const end = value.indexOf(quote, 1);
-      value = end === -1 ? value.slice(1) : value.slice(1, end);
-    } else {
-      value = value.replace(/\s+#.*$/, '');
-    }
+    const double = /^"((?:[^"\\]|\\.)*)"/.exec(value);
+    const single = /^'((?:[^']|'')*)'/.exec(value);
+    if (double) {
+      try { value = JSON.parse(`"${double[1]}"`); } catch { value = double[1]; }
+    } else if (single) value = single[1].replace(/''/g, "'");
+    else value = value.replace(/\s+#.*$/, '');
     out[m[1]] = value;
   }
   return out;
@@ -85,8 +84,8 @@ export function gitHint(text) {
   if (/workflow.*scope|without `?workflow`? scope/i.test(s)) return 'workflow-scope';
   if (/please tell me who you are|empty ident|user\.email/i.test(s)) return 'identity';
   if (/rejected|fetch first|non-fast-forward/i.test(s)) return 'behind';
-  if (/authentication failed|could not read username|permission denied|permission to .* denied|403|terminal prompts disabled|could not read from remote/i.test(s)) return 'auth';
   if (/no configured push destination|does not appear to be a git repository|no such remote/i.test(s)) return 'no-remote';
+  if (/authentication failed|could not read username|permission denied|permission to .* denied|403|terminal prompts disabled|could not read from remote/i.test(s)) return 'auth';
   return null;
 }
 

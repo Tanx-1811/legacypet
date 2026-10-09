@@ -1,0 +1,89 @@
+# Builds the desktop app for macOS, Windows and Linux.
+# - When a release is published, the installers are attached to it, so the download page's
+#   links (releases/latest/download/…) always point at the newest app.
+# - Run it by hand from the Actions tab to get the installers as workflow artifacts.
+# Signing is optional: add the MAC_CERT_P12, MAC_CERT_PASSWORD, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD
+# and APPLE_TEAM_ID secrets to sign and notarize the macOS app. Without them it is signed ad hoc.
+name: Desktop app
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write # attach the installers to the release
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+
+      - name: Build the installers
+        env:
+          CSC_LINK: ${{ secrets.MAC_CERT_P12 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for v in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            [ -z "${!v}" ] && unset "$v"
+          done
+          extra=()
+          if [ "$RUNNER_OS" = "macOS" ] && [ -z "${CSC_LINK:-}" ]; then
+            # No certificate: sign ad hoc, so macOS offers "Open Anyway" instead of calling the app damaged.
+            extra=(-c.mac.identity=- -c.mac.hardenedRuntime=false)
+          fi
+          npm run dist -- --publish never "${extra[@]}"
+          ls -la dist
+
+      # Opens the freshly built app, which saves pictures of its own windows and quits.
+      - name: Smoke test
+        env:
+          LEGACYPET_HOME: ${{ runner.temp }}/legacypet-home
+          LEGACYPET_SMOKE: ${{ runner.temp }}/smoke
+        run: |
+          case "$RUNNER_OS" in
+            macOS) dir=dist/mac-arm64; [ -d "$dir" ] || dir=dist/mac; "$dir/LegacyPet.app/Contents/MacOS/LegacyPet" ;;
+            Windows) ./dist/win-unpacked/LegacyPet.exe ;;
+            Linux) sudo apt-get install -y xvfb >/dev/null && xvfb-run -a ./dist/linux-unpacked/legacypet --no-sandbox ;;
+          esac
+          cat "$LEGACYPET_SMOKE/smoke.json"
+          grep -q '"ok": true' "$LEGACYPET_SMOKE/smoke.json"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LegacyPet-${{ runner.os }}
+          path: |
+            desktop/dist/LegacyPet-*.dmg
+            desktop/dist/LegacyPet-*.exe
+            desktop/dist/LegacyPet-*.AppImage
+            desktop/dist/LegacyPet-*.deb
+            ${{ runner.temp }}/smoke/*.png
+          if-no-files-found: error
+
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          shopt -s nullglob
+          files=(dist/LegacyPet-*.dmg dist/LegacyPet-*.exe dist/LegacyPet-*.AppImage dist/LegacyPet-*.deb)
+          gh release upload "$TAG" "${files[@]}" --clobber
