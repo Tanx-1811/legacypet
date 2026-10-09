@@ -8,7 +8,7 @@ export default {
   move: 'beam',
   palette: {
     o: '#1c3315', b: '#a6e04f', l: '#dcf7a8', s: '#72b33a', y: '#ffe14d', Y: '#fffbd0',
-    m: '#e3e8f0', M: '#9aa5b8', r: '#ff4d6d',
+    m: '#e3e8f0', M: '#9aa5b8', r: '#ff4d6d', n: '#6c5ce7',
   },
   shinyKeep: ['y', 'Y', 'm', 'M', 'r'],
   grid: [

@@ -6,7 +6,10 @@ export default {
   modifiers: { energyRate: 1.25 },
   food: 'kibble',
   move: 'gale',
-  palette: { o: '#0e0c16', b: '#36324f', l: '#6b6699', s: '#221f35', f: '#dddbe9', k: '#121019', r: '#e63946', w: '#ffffff', a: '#ffb627', A: '#e07a10' },
+  palette: {
+    o: '#0e0c16', b: '#36324f', l: '#6b6699', s: '#221f35', f: '#dddbe9', k: '#121019', r: '#e63946',
+    w: '#ffffff', a: '#ffb627', A: '#e07a10',
+  },
   shinyKeep: ['f', 'k', 'r', 'w', 'a', 'A'],
   grid: [
     '.......oo.......',
@@ -20,7 +23,7 @@ export default {
     'obffffffffffffbo',
     'obbbffffffffbbbo',
     'oobbbbbbbbbbbboo',
-    'lsobwwbbbbwwbosl',
+    'lsobbwwbbwwbbosl',
     'lssobwfbbwfbossl',
     '.lsoobbbbbboosl.',
     '..ll.oooooo.ll..',
