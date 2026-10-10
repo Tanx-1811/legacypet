@@ -1111,7 +1111,7 @@ function viewCodex(root, arg, params) {
   search.oninput = filter;
   root.append(h('h2', T.title), h('p.lead', T.lead),
     h('div.codex-nav', h('div.search-box', icon('search', { size: 16 }), search), secs.map((s) => s.chip)),
-    empty, secs.map((s) => s.el));
+    empty, ...secs.map((s) => s.el));
   filter();
   if (arg && sections[arg]) requestAnimationFrame(() => document.getElementById(`codex-${arg}`)?.scrollIntoView());
   return { focusSearch: () => { search.focus(); return true; } };
