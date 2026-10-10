@@ -7,7 +7,7 @@ import { join, sep } from 'node:path';
 import { after, test } from 'node:test';
 import { startServer } from '../src/app/server.js';
 import { adoptLocal, gitHint, publishAdoption, workflowOptions } from '../src/local/adopt.js';
-import { communityHealth, dailyCounts, guessLanguage, readRepo } from '../src/local/git.js';
+import { communityHealth, dailyCounts, fingerprint, guessLanguage, readRepo } from '../src/local/git.js';
 import { detectTools, publicTools } from '../src/local/open.js';
 import {
   cleanConfigPatch, cleanOptions, createProjects, inQuietHours, localDay, notifyRules, STREAK_REMINDER_HOUR,
@@ -342,6 +342,25 @@ test('readRepo keeps a year of activity and the latest commits', async () => {
   assert.equal(info.log.length, 4);
   assert.equal(info.log[0].subject, 'change 3');
   assert.match(info.log[0].sha, /^[0-9a-f]{7,}$/);
+});
+
+test('readRepo reuses what it read until the history moves, and always sees uncommitted work', async () => {
+  const { path } = makeRepo('cached', { commits: [3, 1] });
+  const first = await readRepo(path, { now: NOW });
+  const print = fingerprint(path);
+  assert.ok(print);
+  assert.equal(fingerprint(path), print, 'reading a repo leaves its fingerprint alone');
+  writeFileSync(join(path, 'wip.txt'), 'wip');
+  const dirty = await readRepo(path, { now: NOW });
+  assert.equal(dirty.dirty, first.dirty + 1, 'a new file shows up without a commit');
+  assert.equal(dirty.snapshot.commits.total, first.snapshot.commits.total);
+  sh(path, ['add', '.'], 0);
+  sh(path, ['commit', '-q', '-m', 'more'], 0);
+  assert.notEqual(fingerprint(path), print, 'a commit moves it');
+  const after = await readRepo(path, { now: NOW });
+  assert.equal(after.snapshot.commits.total, first.snapshot.commits.total + 1);
+  assert.equal(after.dirty, 0);
+  assert.equal(fingerprint(dir('not-a-repo')), null);
 });
 
 test('an evening nudge keeps a streak alive, once a day', async () => {

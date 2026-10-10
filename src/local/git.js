@@ -2,7 +2,9 @@
 // snapshot the GitHub Action builds from the API. Nothing here touches the network:
 // CI, issues and stars are unknown offline, and the pet treats them as such.
 import { execFile } from 'node:child_process';
-import { basename } from 'node:path';
+import { readFileSync, statSync } from 'node:fs';
+import { availableParallelism } from 'node:os';
+import { basename, isAbsolute, join, resolve } from 'node:path';
 import { parseRemote } from '../setup.js';
 import { DAY } from '../util/time.js';
 
@@ -98,8 +100,7 @@ export function dailyCounts(dates) {
 
 // The pet the GitHub Action already raised, if the `legacypet` branch has been fetched:
 // its memory keeps the species, trophies and history in step with the one on GitHub.
-async function petFromBranch(dir) {
-  const text = await git(dir, ['show', 'refs/remotes/origin/legacypet:pet.json'], { allowFail: true });
+function parsePet(text) {
   if (!text) return null;
   try {
     const state = JSON.parse(text);
@@ -109,13 +110,78 @@ async function petFromBranch(dir) {
   }
 }
 
-// Everything about one local repo: its snapshot for the pet engine, plus what only a local
-// copy knows (uncommitted changes, commits not pushed yet, whether the pet is installed).
-export async function readRepo(dir, { now = new Date() } = {}) {
-  const ok = (args) => git(dir, args, { allowFail: true });
+// Reading a repo takes a dozen small git commands. Dozens of them at once (several repos, each
+// running all of its commands together) make a slow computer stutter, and on Windows starting a
+// process is costly, so reads share a few slots: at most as many git processes as the computer
+// has cores (between 2 and 8). A waiting command gets the slot straight from the one finishing.
+const SLOTS = Math.max(2, Math.min(8, availableParallelism()));
+let busy = 0;
+const queue = [];
+async function inSlot(fn) {
+  if (busy < SLOTS) busy += 1;
+  else await new Promise((go) => queue.push(go));
+  try {
+    return await fn();
+  } finally {
+    const next = queue.shift();
+    if (next) next();
+    else busy -= 1;
+  }
+}
+
+// Where a repo keeps its history: `.git`, or the folder a `.git` file points to (a worktree).
+function gitDirs(dir) {
+  const dotGit = join(dir, '.git');
+  try {
+    if (!statSync(dotGit).isFile()) return { own: dotGit, common: dotGit };
+    const target = /^gitdir:\s*(.+)$/m.exec(readFileSync(dotGit, 'utf8'))?.[1]?.trim();
+    if (!target) return null;
+    const own = isAbsolute(target) ? target : resolve(dir, target);
+    let common = own;
+    try { common = resolve(own, readFileSync(join(own, 'commondir'), 'utf8').trim()); } catch { /* not a worktree */ }
+    return { own, common };
+  } catch {
+    return null;
+  }
+}
+
+// A cheap summary of everything that moves when the repo's history does: the size and time of
+// HEAD's reflog, the index, the refs and the config, from a few stat() calls and no process.
+// The same fingerprint (on the same day) gives the same answers, so they can be reused.
+export function fingerprint(dir) {
+  const dirs = gitDirs(dir);
+  if (!dirs) return null;
+  let head;
+  try {
+    head = readFileSync(join(dirs.own, 'HEAD'), 'utf8').trim();
+  } catch {
+    return null;
+  }
+  const ref = /^ref:\s*(.+)$/.exec(head)?.[1];
+  const files = [
+    join(dirs.own, 'index'), join(dirs.own, 'logs', 'HEAD'), join(dirs.own, 'FETCH_HEAD'),
+    join(dirs.common, 'packed-refs'), join(dirs.common, 'config'), join(dirs.common, 'refs', 'heads'),
+    join(dirs.common, 'refs', 'remotes', 'origin'), join(dirs.common, 'refs', 'tags'),
+    ...(ref ? [join(dirs.common, ref)] : []),
+  ];
+  const stamp = (file) => {
+    try {
+      const st = statSync(file);
+      return `${st.size}:${st.mtimeMs}`;
+    } catch {
+      return '-';
+    }
+  };
+  return [head, ...files.map(stamp)].join('|');
+}
+
+// What git says about a repo, boiled down (the file list alone can be megabytes; only what the
+// pet needs from it is kept). None of it changes until the history does.
+async function gather(dir, now) {
+  const ok = (args) => inSlot(() => git(dir, args, { allowFail: true }));
   const since = new Date(now.getTime() - RECENT_DAYS * DAY).toISOString();
   const yearAgo = new Date(now.getTime() - 371 * DAY).toISOString();
-  const [remote, branch, originHead, count, roots, log, last, tag, authors, status, aheadBehind, petBranch, tree, user, year, latest] = await Promise.all([
+  const [remote, branch, originHead, count, roots, log, last, tag, authors, aheadBehind, petBranch, tree, user, year, latest] = await Promise.all([
     ok(['config', '--get', 'remote.origin.url']),
     ok(['rev-parse', '--abbrev-ref', 'HEAD']),
     ok(['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']),
@@ -125,7 +191,6 @@ export async function readRepo(dir, { now = new Date() } = {}) {
     ok(['log', '-1', `--format=%H${SEP}%cI`, 'HEAD']),
     ok(['for-each-ref', '--sort=-creatordate', '--count=1', `--format=%(refname:short)${SEP}%(creatordate:iso-strict)`, 'refs/tags']),
     ok(['shortlog', '-s', '-n', '-e', 'HEAD']),
-    ok(['status', '--porcelain=v1']),
     ok(['rev-list', '--left-right', '--count', '@{upstream}...HEAD']),
     ok(['rev-parse', '--verify', '--quiet', 'refs/remotes/origin/legacypet']),
     ok(['ls-tree', '-r', '-l', 'HEAD']),
@@ -133,6 +198,33 @@ export async function readRepo(dir, { now = new Date() } = {}) {
     ok(['log', `--since=${yearAgo}`, '--format=%cI', 'HEAD']),
     ok(['log', '-n', '15', `--format=%h${SEP}%cI${SEP}%an${SEP}%s`, 'HEAD']),
   ]);
+  const files = parseTree(tree);
+  const paths = new Set(files.map((f) => f.path));
+  return {
+    remote, branch, originHead, count, roots, log, last, tag, authors: lines(authors).length, aheadBehind, user, year, latest,
+    seed: petBranch ? parsePet(await ok(['show', 'refs/remotes/origin/legacypet:pet.json'])) : null,
+    petBranch: Boolean(petBranch),
+    language: guessLanguage(files),
+    health: files.length ? communityHealth(files.map((f) => f.path)) : null,
+    committedWorkflow: paths.has('.github/workflows/legacypet.yml'),
+  };
+}
+
+// The last answers per repo, with the fingerprint (and day) they were read at.
+const reads = new Map();
+
+// Everything about one local repo: its snapshot for the pet engine, plus what only a local
+// copy knows (uncommitted changes, commits not pushed yet, whether the pet is installed).
+// A repo whose history hasn't moved since the last read today only runs `git status`.
+export async function readRepo(dir, { now = new Date() } = {}) {
+  const print = fingerprint(dir);
+  const key = print && `${print}|${now.toISOString().slice(0, 10)}`;
+  const [known, status] = await Promise.all([
+    key && reads.get(dir)?.key === key ? reads.get(dir).facts : gather(dir, now),
+    inSlot(() => git(dir, ['status', '--porcelain=v1'], { allowFail: true })),
+  ]);
+  if (key) reads.set(dir, { key, facts: known });
+  const { remote, branch, originHead, count, roots, log, last, tag, authors, aheadBehind, user, year, latest, seed } = known;
 
   const github = parseRemote(remote ?? '');
   const folder = basename(dir);
@@ -146,10 +238,8 @@ export async function readRepo(dir, { now = new Date() } = {}) {
     return { sha, date, author: author || null, bot: isBot(author) };
   });
   const [tagName, tagDate] = tag ? tag.trim().split(SEP) : [];
-  const files = parseTree(tree);
   const [behind, ahead] = aheadBehind ? aheadBehind.trim().split(/\s+/).map(Number) : [null, null];
   const defaultBranch = originHead?.trim().replace(/^origin\//, '') || (branch?.trim() !== 'HEAD' ? branch?.trim() : null) || 'main';
-  const seed = petBranch ? await petFromBranch(dir) : null;
 
   // The Action's last run saw CI; offline we can't. Its health tells us how CI looked then.
   let ci = { state: 'unknown', total: 0, failing: 0, failingNames: [] };
@@ -162,21 +252,20 @@ export async function readRepo(dir, { now = new Date() } = {}) {
   const snapshot = {
     repo: {
       owner, name, fullName, defaultBranch, archived: false, isPrivate: false, stars: seed?.facts?.stars ?? 0, forks: 0,
-      language: guessLanguage(files), createdAt: firstDate, pushedAt: lastDate ?? firstDate,
+      language: known.language, createdAt: firstDate, pushedAt: lastDate ?? firstDate,
     },
     commits: { total, lastDate: lastDate ?? null, headSha: headSha ?? null, recent },
     ci,
     issues: null,
     release: tagName ? { tag: tagName, name: tagName, publishedAt: tagDate } : null,
-    community: files.length ? { health: communityHealth(files.map((f) => f.path)) } : null,
-    contributors: { total: Math.max(1, lines(authors).length) },
+    community: known.health == null ? null : { health: known.health },
+    contributors: { total: Math.max(1, authors) },
     treats: [],
     warnings: [],
     fetchedAt: now.toISOString(),
     source: 'local',
   };
 
-  const paths = new Set(files.map((f) => f.path));
   return {
     activity: dailyCounts(lines(year)),
     log: lines(latest).map((line) => {
@@ -194,8 +283,8 @@ export async function readRepo(dir, { now = new Date() } = {}) {
     dirty: lines(status).length,
     ahead: Number.isFinite(ahead) ? ahead : null,
     behind: Number.isFinite(behind) ? behind : null,
-    petBranch: Boolean(petBranch),
-    committedWorkflow: paths.has('.github/workflows/legacypet.yml'),
+    petBranch: known.petBranch,
+    committedWorkflow: known.committedWorkflow,
     user: user?.trim() || null,
     seed,
     snapshot,

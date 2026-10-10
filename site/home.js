@@ -5,6 +5,8 @@ import { api, byNeed, desktop, LOCAL, MODE, petOf } from './local.js';
 
 export function homeViews(kit) {
   const { h, svgSrc, toast, t, tr, store, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP, icon, btn, gridPic, stillAll } = kit;
+  // Shared with the playground's pages (see app.js).
+  const { dialog, closeX, download, svgToPng, copyText } = kit;
   // replaceChildren() would print "null" for a missing piece: drop those first.
   const fill = (el, ...kids) => el.replaceChildren(...kids.flat().filter((k) => k != null && k !== false && k !== ''));
 
@@ -164,10 +166,6 @@ export function homeViews(kit) {
   async function copyPath(p) {
     try { await navigator.clipboard.writeText(p.path); toast(t().home.pathCopied, 'good'); } catch { toast(p.path); }
   }
-  async function copyText(text) {
-    try { await navigator.clipboard.writeText(text); toast(t().home.share.copied, 'good'); } catch { toast(text); }
-  }
-
   const CARE_ICONS = { feed: 'cookie', play: 'volleyball', pat: 'hand-heart' };
   const careLabel = (name) => t().sim[name].replace(/^\S+\s/, '');
   // One snack, game or pat for every pet; each pet still takes one of each a day.
@@ -177,25 +175,6 @@ export function homeViews(kit) {
       use(res.state);
       toast(t().home.careAllDone(t().sim[name], res.ok, res.again + res.cant), res.ok ? 'good' : '');
     } catch (err) { toast(err.message, 'bad'); }
-  }
-
-  function download(blob, name) {
-    const url = URL.createObjectURL(blob);
-    const a = h('a', { href: url, download: name, hidden: true });
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
-  }
-  // The card as a picture for chats and slides: drawn at twice its size, pixels kept sharp.
-  async function svgToPng(svg, scale = 2) {
-    const image = new Image();
-    await new Promise((done, fail) => { image.onload = done; image.onerror = () => fail(new Error('PNG')); image.src = svgSrc(svg); });
-    const canvas = h('canvas', { width: image.naturalWidth * scale, height: image.naturalHeight * scale });
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    return new Promise((done) => canvas.toBlob(done, 'image/png'));
   }
 
   async function exportBackup() {
@@ -485,16 +464,6 @@ export function homeViews(kit) {
   }
 
   // ----- Adopting: a dialog that says exactly what will change -------------------
-  function dialog(...children) {
-    const el = h('dialog.sheet', ...children);
-    el.addEventListener('close', () => el.remove());
-    el.addEventListener('click', (e) => { if (e.target === el) el.close(); });
-    document.body.append(el);
-    el.showModal();
-    return el;
-  }
-  const closeX = () => h('form', { method: 'dialog' }, btn('', { icon: 'x', kind: 'ghost close', title: t().common.close, type: 'submit' }));
-
   function publishResult(box, result, project) {
     const T = t().home;
     if (!result) return;
@@ -675,11 +644,8 @@ export function homeViews(kit) {
       // GitHub: where the pet lives, and the one button that moves it there.
       const gh = [h('div.panel-head', h('h3', T.onGithub), statusPill(p))];
       if (p.status === 'local') gh.push(h('p.muted', T.localNote));
-      else if (p.status === 'live') {
-        gh.push(h('p.muted', T.liveNote), h('div.row',
-          btn(T.links.repo, { icon: 'external-link', href: `https://github.com/${p.fullName}` }),
-          btn(T.openDiary, { icon: 'notebook-pen', href: `https://github.com/${p.fullName}/blob/legacypet/DIARY.md` })));
-      } else if (p.status === 'waiting') {
+      else if (p.status === 'live') gh.push(h('p.muted', T.liveNote));
+      else if (p.status === 'waiting') {
         const out = h('div.stack');
         const last = pushNotes.get(p.id);
         if (last?.error) fill(out, h('div.callout.bad', last.error));
@@ -705,6 +671,16 @@ export function homeViews(kit) {
         gh.push(h('p.muted', T.waitingNote), p.ahead ? h('p.small', T.ahead(p.ahead)) : null, h('div.row', push), out);
       } else {
         gh.push(h('p.muted', T.noneNote), h('div.row', btn(T.adopt, { icon: 'cloud-upload', kind: 'primary big', onclick: () => adoptDialog(p) })));
+      }
+      // The repo's pages on GitHub, in sight instead of behind the "more" menu.
+      if (p.github) {
+        const url = `https://github.com/${p.fullName}`;
+        gh.push(h('div.quick.gh-links',
+          btn(T.links.repo, { icon: 'external-link', kind: 'sm', href: url }),
+          btn(T.links.issues, { icon: 'circle-dot', kind: 'sm', href: `${url}/issues` }),
+          btn(T.links.pulls, { icon: 'git-pull-request', kind: 'sm', href: `${url}/pulls` }),
+          btn(T.links.actions, { icon: 'activity', kind: 'sm', href: `${url}/actions` }),
+          p.status === 'live' ? btn(T.openDiary, { icon: 'notebook-pen', kind: 'sm', href: `${url}/blob/legacypet/DIARY.md` }) : null));
       }
       const local = [
         p.dirty ? { level: 'tip', text: T.dirty(p.dirty) } : null,

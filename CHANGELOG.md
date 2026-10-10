@@ -57,11 +57,26 @@ Releases that need a change to your workflow file say so.
   Captain Otter, Sakura Sprite and Mimic. Each has its own trait, signature move and catchphrases in all 7 languages.
   New trait rules: energy and joy floors, faster charging, daily training, release energy, team and streak joy,
   a bonus for fresh PRs, a tidy community profile or an old repo. Pets that already hatched keep their species.
+- ✨ **HD pets**: every pet is drawn at twice the resolution of its 16×16 sprite, still with zero dependencies.
+  The sprite is magnified with MMPX (rounder corners, smooth diagonals, nothing blurred), its outline is thinned,
+  and each part is lit from the top left with hue-shifted shading (shadows lean toward purple, highlights toward warm
+  yellow, built in OKLCH), so pets look round instead of flat. New faces too: glossy eyes with a highlight and an iris,
+  finer mouths, rounder blush, and HD hats, glasses, eggs and auras. A pet keeps exactly the same shape in every mood
+  and color. The 16px badge and the terminal keep the classic pixels.
+- 🪶 **Lighter on slow computers**: pet pictures are smaller (a card is about 14% smaller, a badge less than half),
+  made of less than half as many SVG elements, and render faster. In the app, a **Motion** setting (Auto, Full, Power saver, Off) keeps
+  lists and the desktop pet still until you point at them; Auto picks Power saver on computers with 4 CPU threads or
+  4 GB of memory or less, and Off when the system asks for reduced motion. Pets out of view aren't drawn at all.
+- ⚡ **Faster refreshes in the app**: a repo whose history hasn't changed since its last read today only runs
+  `git status` (one process instead of seventeen), and the app never runs more git processes at once than the
+  computer has cores, so refreshing many repos no longer freezes a slow computer.
 
 ### Changed
 
 - The command hint under each `/pet` reply lists just the command names; `/pet help` explains them.
 - A typo in a workflow input (an unknown species, home or color) no longer breaks the pet in the app: the option is skipped.
+- With reduced motion, cards now hold the first frame of their animations (snow and confetti stay spread across
+  the sky) instead of dropping them, and blush is blended onto the pet's cheeks instead of showing the sky through.
 
 ### Fixed
 

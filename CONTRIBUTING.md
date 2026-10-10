@@ -78,6 +78,13 @@ or SignPath needs its own step in the workflow instead.
 
 Tips: draw in a monospace editor, keep it to about 6 colors, and make sure the silhouette reads at 80px wide.
 
+You only draw the 16×16 grid; the renderer does the rest. Cards, minis and the park show pets in HD: the grid is
+doubled with MMPX (`src/render/mmpx.js`: corners rounded, diagonals smoothed), the outline thinned to half its width,
+and every part lit from the top left with hue-shifted shading ramps (`src/render/shading.js`), with finer eyes and
+mouths (`EYES_HD` and `MOUTHS_HD` in `src/sprites/faces.js`). So draw flat colors and let the light do the shading:
+keep `l` and `s` for what the light can't guess, like stripes or the shine on a gem. The badge and the terminal keep
+the original pixels.
+
 ## Translate
 
 Copy `src/i18n/en.js` to `src/i18n/<code>.js`, translate it, and register it in `src/i18n/index.js`:
@@ -119,3 +126,7 @@ Breaking changes (renamed inputs, new required permissions) go to a new major ta
 - Rendering is deterministic: the same snapshot and date always produce the same SVG. Use `createRng`, never `Math.random`.
 - The pet judges what visitors care about, not vanity metrics. Being kind to maintainers is a feature.
 - Animations must be decorative. The card has to make sense as a still image and with reduced motion.
+  Lists in the app and the *Power saver* motion setting show pets with their animations paused on the first frame
+  (`still: true`), so start effects part-way through their loop (a negative `animation-delay`) to keep them in view.
+- Mind slow computers. Every moving element makes the browser repaint the whole picture each frame: keep new effects
+  few and cheap (no SVG filters or blur), and measure before adding a dozen of anything.

@@ -18,6 +18,7 @@ export const CHANGELOG = [
       '🎨 Make it yours: `color: teal` repaints your pet (or any hex color), and `motto: "Ship it, {name}!"` gives it a catchphrase for good days',
       '📤 New outputs: `path`, `quest-stars`, `quests-done`, `wearing`, `color`',
       '🏮 The anime crew: 30 new species, from a kappa and a nine-tailed fox to an isekai knight and a mimic, each with its own trait, move and catchphrases. Pick one with `species: kitsune`; pets that already hatched keep theirs',
+      '✨ HD pets: every pet is drawn at twice the resolution, smoothed and lit from the top left so it looks round, with glossy eyes and finer faces. Pictures are smaller too, and lighter on slow computers',
     ],
   },
   {

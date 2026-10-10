@@ -260,6 +260,7 @@ function recentChips(onpick, { skip = [] } = {}) {
     }, icon('x', { size: 13 })));
 }
 function markAdopted(fullName) {
+  if (!/^[\w.-]+\/[\w.-]+$/.test(fullName ?? '')) return;
   addRecent(fullName);
   if (!store.adopted.includes(fullName)) store.adopted = [...store.adopted, fullName].slice(-20);
   save();
@@ -296,13 +297,19 @@ function journey(active) {
   return bar;
 }
 
+// "Surprise me": a random species, coat and name, and now and then a new home.
+const anyOf = (list) => list[Math.floor(Math.random() * list.length)];
+function surpriseLook() {
+  Object.assign(store.cfg, { species: anyOf(LP.SPECIES_IDS), scenery: Math.random() < 0.5 ? 'auto' : anyOf(LP.HOMES), color: anyOf(['auto', ...LP.COLOR_IDS]), name: LP.randomName() });
+  save();
+}
+
 // Pickers shared by several views: species, home, coat color, the pet's language, name and catchphrase.
 // "Surprise me" and "Reset" change everything at once, so the box draws itself again after them.
 // `extra`: more buttons for its header (the simulator's "Adopt with this look").
 function lookFields(onchange, { title = t().adopt.look, extra = null } = {}) {
   const box = h('div.look');
-  const any = (list) => list[Math.floor(Math.random() * list.length)];
-  const changeAll = (patch) => { Object.assign(store.cfg, patch); save(); onchange(); draw(); };
+  const changeAll = (change) => { change(); save(); onchange(); draw(); };
   function draw() {
     const T = t();
     const L = tr();
@@ -335,11 +342,11 @@ function lookFields(onchange, { title = t().adopt.look, extra = null } = {}) {
     box.replaceChildren(
       h('div.look-head', h('h3', `🎨 ${title}`), h('div.row',
         extra,
-        btn(T.common.surprise, {
-          icon: 'dices', kind: 'sm',
-          onclick: () => changeAll({ species: any(LP.SPECIES_IDS), scenery: Math.random() < 0.5 ? 'auto' : any(LP.HOMES), color: any(['auto', ...LP.COLOR_IDS]), name: LP.randomName() }),
-        }),
-        btn(T.common.resetLook, { icon: 'rotate-ccw', kind: 'sm ghost', onclick: () => changeAll({ species: 'auto', scenery: 'auto', color: 'auto', name: '', motto: '' }) }))),
+        btn(T.common.surprise, { icon: 'dices', kind: 'sm', onclick: () => changeAll(surpriseLook) }),
+        btn(T.common.resetLook, {
+          icon: 'rotate-ccw', kind: 'sm ghost',
+          onclick: () => changeAll(() => Object.assign(cfg, { species: 'auto', scenery: 'auto', color: 'auto', name: '', motto: '' })),
+        }))),
       h('div.fields',
         h('label.field', T.common.species, select([['auto', `${T.common.auto} 🎲`], ...LP.SPECIES_IDS.map((id) => [id, L.species[id]])], cfg.species, set('species'))),
         h('label.field', T.common.scenery, select([['auto', T.common.auto], ...LP.HOMES.map((id) => [id, T.homes[id]])], cfg.scenery, set('scenery'))),
@@ -409,11 +416,12 @@ function demoPet({ mood = 'happy', species = 'cat', fullName = 'you/your-repo', 
 }
 
 // ----- Hatch: a real repo (or a made-up mood) through the real engine ---------
-const hatch = { snapshot: null, mood: null, now: new Date(), repo: '', blind: false };
+const hatch = { snapshot: null, mood: null, now: new Date(), repo: '', blind: false, hasPet: null, species: '' };
 
-function viewHatch(root, arg) {
+function viewHatch(root, arg, params) {
   const T = t().hatch;
   const C = t().common;
+  const S = t().home.share;
   const input = h('input', { type: 'text', placeholder: T.placeholder, 'aria-label': 'GitHub repository', autocomplete: 'off', spellcheck: 'false', value: hatch.repo });
   const go = h('button.primary', { type: 'submit' }, T.button);
   const token = h('input', { type: 'password', placeholder: T.tokenPlaceholder, autocomplete: 'off', value: ghToken });
@@ -438,12 +446,16 @@ function viewHatch(root, arg) {
       hatch.snapshot = await LP.collectSnapshot(client(), { owner, repo, now: hatch.now });
       hatch.mood = null;
       hatch.blind = false;
+      hatch.hasPet = null;
       store.cfg.repo = hatch.snapshot.repo.fullName;
       store.cfg.private = Boolean(hatch.snapshot.repo.isPrivate);
       save();
       history.replaceState(null, '', `#/hatch/${hatch.snapshot.repo.fullName}`);
       setStatus(hatch.snapshot.warnings.length ? T.partial(hatch.snapshot.warnings.length) : '');
+      addRecent(hatch.snapshot.repo.fullName);
+      drawRecent();
       draw();
+      findPet(hatch.snapshot);
     } catch (err) {
       if (err.status === 404) {
         setStatus(T.notFound(hatch.repo), true);
@@ -467,6 +479,7 @@ function viewHatch(root, arg) {
     hatch.blind = true;
     hatch.snapshot = LP.mockSnapshot({ mood: 'happy', now: hatch.now, fullName });
     hatch.snapshot.repo.isPrivate = true;
+    hatch.hasPet = null;
     store.cfg.repo = fullName;
     store.cfg.private = true;
     save();
@@ -484,21 +497,27 @@ function viewHatch(root, arg) {
     draw();
   }
 
+  // Whether the repo already has a pet, asked the same way as the picker below does.
+  async function findPet(snapshot) {
+    const { fullName, isPrivate } = snapshot.repo;
+    hatch.hasPet = null;
+    try {
+      if (!isPrivate) hatch.hasPet = (await fetch(`https://raw.githubusercontent.com/${fullName}/legacypet/pet.json`, { method: 'HEAD' })).ok;
+      else if (ghToken) hatch.hasPet = await LP.hasPet(client(), fullName);
+    } catch { /* unknown: no diary link */ }
+    if (hatch.snapshot === snapshot) drawLinks();
+  }
+
   // The layout is built once; draw() only refills the parts that change, so typing a
   // name never loses focus.
-  const box = { card: h('div'), shots: h('div.shots'), links: h('div.links'), checkup: h('div'), quests: h('div'), scores: h('div') };
-  const shareBtn = h('button.ghost', {
-    type: 'button',
-    onclick: async (e) => {
-      const b = e.currentTarget;
-      try { await navigator.clipboard.writeText(location.href); b.textContent = `✔ ${C.shared}`; } catch { b.textContent = location.href; }
-      setTimeout(() => { b.textContent = `🔗 ${C.share}`; }, 1600);
-    },
-  }, `🔗 ${C.share}`);
+  const box = { card: h('div.spot'), shots: h('div.shots'), downloads: h('div.quick'), links: h('div.result-block'), checkup: h('div'), quests: h('div'), scores: h('div') };
+  const steps = journey('hatch');
+  const shareBtn = h('button.ghost', { type: 'button', onclick: () => shareLink(shareUrl()) }, `🔗 ${C.share}`);
+  const shareUrl = () => (hatch.mood || !hatch.snapshot ? linkTo('hatch', '', { mood: hatch.mood }) : linkTo('hatch', hatch.snapshot.repo.fullName));
   result.append(
     h('div.grid2',
-      h('section.panel', box.card, box.shots, box.links,
-        h('div.row', { style: { marginTop: '14px' } },
+      h('section.panel', box.card, box.shots,
+        h('div.row.result-actions',
           h('button.primary', {
             type: 'button',
             onclick: () => {
@@ -510,13 +529,33 @@ function viewHatch(root, arg) {
             },
           }, T.playInSim),
           h('button', { type: 'button', onclick: () => go_('adopt') }, T.adoptIt),
-          shareBtn)),
+          shareBtn),
+        h('div.result-block', h('div.quick-label', icon('download', { size: 13 }), C.download), box.downloads),
+        box.links),
       h('div.stack',
         h('section.panel', lookFields(() => draw())),
         h('section.panel', h('h3', `🩺 ${T.checkup}`), box.checkup))),
     h('div.grid2', { style: { marginTop: '16px' } },
       h('section.panel', h('h3', `📜 ${T.quests}`), box.quests, h('p.small.muted', { style: { margin: '10px 0 0' } }, T.questsNote)),
       h('section.panel', h('h3', `🧬 ${T.leaning}`), box.scores)));
+
+  // Where to go next with this repo: GitHub, its pet's diary, the park and its species in the codex.
+  function drawLinks() {
+    if (!hatch.snapshot || hatch.mood) return box.links.replaceChildren();
+    const H = t().home;
+    const repo = hatch.snapshot.repo.fullName;
+    const gh = `https://github.com/${repo}`;
+    box.links.replaceChildren(
+      h('div.quick-label', icon('link', { size: 13 }), C.quickLinks, hatch.hasPet ? h('span.pill.live', T.hasPetNote) : null),
+      h('div.quick',
+        btn(H.links.repo, { icon: 'external-link', kind: 'sm', href: gh }),
+        btn(H.links.issues, { icon: 'circle-dot', kind: 'sm', href: `${gh}/issues` }),
+        btn(H.links.pulls, { icon: 'git-pull-request', kind: 'sm', href: `${gh}/pulls` }),
+        btn(H.links.actions, { icon: 'activity', kind: 'sm', href: `${gh}/actions` }),
+        hatch.hasPet ? btn(H.openDiary, { icon: 'notebook-pen', kind: 'sm', href: LP.petUrls(repo).diary }) : null,
+        btn(T.rowPark, { icon: 'trees', kind: 'sm', onclick: () => addToPark(repo) }),
+        hatch.species ? btn(C.inCodex(hatch.species), { icon: 'book-open', kind: 'sm', href: `#/codex?q=${encodeURIComponent(hatch.species)}` }) : null));
+  }
 
   function draw() {
     if (!hatch.snapshot) return;
@@ -527,11 +566,24 @@ function viewHatch(root, arg) {
     const scores = LP.pathScores({ snapshot: hatch.snapshot, facts: pet.facts });
     const best = LP.PATH_IDS.reduce((a, b) => (scores[b] > scores[a] ? b : a));
     const max = Math.max(1, ...Object.values(scores));
-    const files = [['pet', LP.renderCard(pet, { theme })], ['pet-mini', LP.renderMini(pet, { theme })], ['pet-badge', LP.renderBadge(pet)]];
-    const shown = stillAll() ? [LP.renderCard(pet, { theme, still: true }), LP.renderMini(pet, { theme, still: true })] : [files[0][1], files[1][1]];
+    const files = { card: LP.renderCard(pet, { theme }), mini: LP.renderMini(pet, { theme }), badge: LP.renderBadge(pet) };
+    const shown = stillAll() ? [LP.renderCard(pet, { theme, still: true }), LP.renderMini(pet, { theme, still: true })] : [files.card, files.mini];
     box.card.replaceChildren(img(shown[0], 'card-img', `${pet.displayName}: ${pet.speech}`));
-    box.shots.replaceChildren(img(shown[1], 'mini-img', pet.name), img(files[2][1], 'badge-img', 'badge'));
-    box.links.replaceChildren(...files.map(([file, svg]) => h('a', { href: svgSrc(svg), download: `${file}.svg` }, `⬇ ${file}.svg`)));
+    box.shots.replaceChildren(img(shown[1], 'mini-img', pet.name), img(files.badge, 'badge-img', 'badge'));
+    // The same three files the action publishes, a PNG for chats, and the README line.
+    const svgFile = (kind, name) => btn(S[kind], { icon: 'download', kind: 'sm', onclick: () => download(new Blob([files[kind]], { type: 'image/svg+xml' }), name) });
+    box.downloads.replaceChildren(...[
+      svgFile('card', 'pet.svg'), svgFile('mini', 'pet-mini.svg'), svgFile('badge', 'pet-badge.svg'),
+      btn(S.png, { icon: 'image-down', kind: 'sm', onclick: async () => { try { download(await svgToPng(files.card), 'pet.png'); } catch (err) { toast(err.message, 'bad'); } } }),
+      hatch.mood ? null : btn(S.readme, {
+        icon: 'copy', kind: 'sm',
+        onclick: () => copyText(LP.snippetFor(hatch.snapshot.repo.fullName, 'card', 'legacypet', { isPrivate: Boolean(hatch.snapshot.repo.isPrivate) }), { label: T.adoptIt, run: () => go_('adopt') }),
+      }),
+    ].filter(Boolean));
+    hatch.species = L.species[pet.speciesId];
+    drawLinks();
+    for (const chip of moodChips) chip.setAttribute('aria-pressed', String(chip.dataset.mood === hatch.mood));
+    steps.redraw();
     box.checkup.replaceChildren(checkupList(pet, hatch.snapshot));
     box.quests.replaceChildren(questList(pet, L));
     box.scores.replaceChildren(
@@ -540,7 +592,6 @@ function viewHatch(root, arg) {
         h('div.meter', h('i', { style: { width: `${Math.round((scores[p.id] / max) * 100)}%`, background: p.color } })),
         h('b', scores[p.id].toFixed(2))))),
       h('p.small.muted', { style: { margin: '10px 0 0' } }, T.leaningNote(`${LP.PATHS.find((p) => p.id === best).emoji} ${L.paths[best]}`)));
-    shareBtn.hidden = Boolean(hatch.mood);
     result.hidden = false;
   }
 
@@ -603,7 +654,7 @@ function viewHatch(root, arg) {
   function adoptFromList(r) {
     store.cfg.repo = r.fullName;
     store.cfg.private = r.isPrivate;
-    save();
+    markAdopted(r.fullName);
     toast(T.adoptOpened);
     go_('adopt');
   }
@@ -630,24 +681,24 @@ function viewHatch(root, arg) {
             href: LP.adoptUrl(r.fullName, r.defaultBranch, adoptOptions()), target: '_blank', rel: 'noopener',
             onclick: () => adoptFromList(r),
           }, T.rowAdopt),
-        h('button.ghost', {
-          type: 'button', title: T.rowPark, 'aria-label': T.rowPark,
-          onclick: () => {
-            if (!store.park.includes(r.fullName) && store.park.length < LP.PARK_MAX) store.park = [...store.park.filter((n) => !n.startsWith('demo/')), r.fullName];
-            save();
-            toast(T.addedPark(r.fullName));
-          },
-        }, '🏞️+')))));
+        h('button.ghost', { type: 'button', title: T.rowPark, 'aria-label': T.rowPark, onclick: () => addToPark(r.fullName) }, '🏞️+')))));
   }
 
-  const form = h('form.hatch', { onsubmit: (e) => { e.preventDefault(); visit(input.value); } }, input, go);
+  const form = h('form.hatch', { onsubmit: (e) => { e.preventDefault(); visit(input.value); } }, icon('search', { size: 18 }), input, go);
+  const recentBox = h('div.recent-box');
+  const drawRecent = () => recentBox.replaceChildren(...[recentChips((r) => visit(r))].filter(Boolean));
+  const moodChips = LP.MOODS.map((m) => h('button.chip', { type: 'button', 'data-mood': m, 'aria-pressed': 'false', onclick: () => demo(m) }, `${LP.MOOD_EMOJI[m]} ${tr().moods[m]}`));
+  drawRecent();
   root.append(
+    steps,
     h('div.hero',
+      h('span.eyebrow', icon('sparkles', { size: 13 }), T.eyebrow(LP.SPECIES_IDS.length, Object.keys(LP.LANG_NAMES).length)),
       h('h2', T.title),
       h('p.lead', { style: { margin: '6px auto 0' } }, t().tagline),
       form,
+      recentBox,
       h('div.examples', T.try, mineBtn, ...['rust-lang/rustlings', 'sindresorhus/awesome', 'Tanx-1811/legacypet'].map((r) => h('button.chip', { type: 'button', onclick: () => visit(r) }, r))),
-      h('div.examples', T.moods, ...LP.MOODS.map((m) => h('button.chip', { type: 'button', onclick: () => demo(m) }, `${LP.MOOD_EMOJI[m]} ${tr().moods[m]}`))),
+      h('div.examples', T.moods, ...moodChips),
       h('details', h('summary', T.tokenSummary), token, h('div', T.tokenNote)),
       status,
       privateBtn),
@@ -655,10 +706,14 @@ function viewHatch(root, arg) {
     result);
 
   if (picker.repos) { drawPicker(); pickPanel.hidden = false; }
-  if (arg && arg.includes('/')) visit(arg);
+  const mood = params?.get('mood');
+  // Back on a repo it has already read (in another language, say): no need to ask GitHub again.
+  const known = hatch.snapshot && !hatch.mood && hatch.snapshot.repo.fullName.toLowerCase() === arg.toLowerCase();
+  if (arg && arg.includes('/') && !known) visit(arg);
+  else if (LP.MOODS.includes(mood)) demo(mood);
   else if (hatch.snapshot) { draw(); if (hatch.mood) setStatus(T.demo(tr().moods[hatch.mood])); }
   else demo(LP.MOODS[Math.floor(Math.random() * 4)]);
-  return { redraw: draw };
+  return { redraw: draw, shareLink: shareUrl, focusSearch: () => { input.focus(); return true; } };
 }
 
 function checkupList(pet, snapshot) {
@@ -810,7 +865,9 @@ function viewSim(root) {
   };
   const habitSel = select(Object.entries(T.habit), store.habit, (v) => { store.habit = v; remember(); }, T.habits);
 
+  const steps = journey('raise');
   root.append(
+    steps,
     h('div.sim-head',
       h('div', h('h2', T.title), h('p.lead', { style: { margin: 0 } }, T.lead)),
       h('div.row', h('span.small.muted', T.start), startSel, resetBtn)),
@@ -818,7 +875,7 @@ function viewSim(root) {
       h('div.stack',
         h('section.panel.stage',
           h('div.row', { style: { justifyContent: 'space-between' } }, els.day, els.status),
-          h('div.pics', els.card),
+          h('div.pics.spot', els.card),
           els.vitals,
           h('div.big-actions',
             h('button', { type: 'button', onclick: () => care('feed') }, T.feed),
@@ -833,7 +890,8 @@ function viewSim(root) {
           h('p.small.muted', { style: { margin: 0 } }, `⌨️ ${T.keys}`))),
       // Today's plan sits next to the pet, so the effect of a slider is visible at a glance.
       h('div.stack', controls, h('section.panel', els.tabs, els.panel))),
-    h('section.panel', { style: { marginTop: '16px' } }, h('h3', `🎨 ${t().adopt.look}`), lookFields(() => update())));
+    h('section.panel', { style: { marginTop: '16px' } },
+      lookFields(() => update(), { extra: btn(T.adoptLook, { icon: 'heart-handshake', kind: 'sm primary', onclick: () => go_('adopt') }) })));
 
   // Side panel: quests, evolution, wardrobe, trophies, diary, chart and a /pet console.
   for (const [id, label] of Object.entries(T.tabs)) {
@@ -942,6 +1000,7 @@ function viewSim(root) {
 
   function update() {
     for (const sync of syncs) sync();
+    steps.redraw();
     last = Sim.run(w, { options: options() });
     const { pet } = last;
     const L = tr();
@@ -987,7 +1046,7 @@ function cachedMini(key, make, still = false) {
   return codexCache.get(k);
 }
 
-function viewCodex(root, arg) {
+function viewCodex(root, arg, params) {
   const T = t().codex;
   const U = t();
   const L = tr();
@@ -996,7 +1055,7 @@ function viewCodex(root, arg) {
   const sections = {
     species: () => h('div.tiles', LP.SPECIES_IDS.map((id) => {
       const sp = LP.SPECIES[id];
-      return h('button.tile', { type: 'button', onclick: () => tryIn({ species: id }), title: U.common.tryIt },
+      return h(`button.tile${store.cfg.species === id ? '.on' : ''}`, { type: 'button', onclick: () => tryIn({ species: id }), title: U.common.tryIt },
         pic(`sp-${id}`, () => demoPet({ species: id, mood: 'happy', name: L.species[id] })),
         h('span.name', L.species[id]), h('span.hint', `${L.traits[sp.trait]}: ${U.speciesFx[id]}`), h('span.hint', `🏞️ ${U.homes[sp.home ?? 'meadow']}`));
     })),
@@ -1015,17 +1074,47 @@ function viewCodex(root, arg) {
       h('b', `${r.emoji} ${L.ranks[r.id]}`), h('span.small.muted', T.rankFrom(r.min)), h('div.small.muted', T.commits((r.min - 1) ** 2))))),
     trophies: () => h('div.tiles', LP.ACHIEVEMENTS.map((a) => h('div.tile',
       h('span.em', a.emoji), h('span.name', L.achievements[a.id]), h('span.hint', U.trophyHow[a.id])))),
-    homes: () => h('div.tiles', LP.HOMES.map((home) => h('button.tile', { type: 'button', onclick: () => tryIn({ scenery: home }) },
+    homes: () => h('div.tiles', LP.HOMES.map((home) => h(`button.tile${store.cfg.scenery === home ? '.on' : ''}`, { type: 'button', onclick: () => tryIn({ scenery: home }) },
       pic(`home-${home}`, () => demoPet({ species: Object.values(LP.SPECIES).find((s) => s.home === home)?.id ?? 'blob', mood: 'happy', scenery: home, season: 'summer' })),
       h('span.name', U.homes[home])))),
   };
-  const nav = h('div.codex-nav', Object.entries(T.sections).map(([id, label]) => h('button.chip', {
-    type: 'button', onclick: () => { document.getElementById(`codex-${id}`)?.scrollIntoView({ behavior: 'smooth' }); history.replaceState(null, '', `#/codex/${id}`); },
-  }, label)));
-  root.append(h('h2', T.title), h('p.lead', T.lead), nav,
-    ...Object.entries(sections).map(([id, make]) => h('section.codex-sec', { id: `codex-${id}` }, h('h3', T.sections[id]), make())));
+  // The search ignores accents, so "rong" finds "Rồng" too.
+  const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase();
+  const search = h('input', { type: 'search', placeholder: T.search, 'aria-label': T.search, autocomplete: 'off', spellcheck: 'false', value: params?.get('q') ?? '' });
+  const empty = h('p.empty', { hidden: true });
+  const secs = Object.entries(sections).map(([id, make]) => {
+    const grid = make();
+    const count = h('span.count');
+    const chip = h('button.chip', {
+      type: 'button', onclick: () => { document.getElementById(`codex-${id}`)?.scrollIntoView({ behavior: 'smooth' }); history.replaceState(null, '', `#/codex/${id}`); },
+    }, T.sections[id], count);
+    const el = h('section.codex-sec', { id: `codex-${id}` }, h('h3', T.sections[id]), grid);
+    return { el, chip, count, tiles: [...grid.children].map((tile) => ({ tile, text: fold(tile.textContent) })) };
+  });
+  function filter() {
+    const q = fold(search.value.trim());
+    let found = 0;
+    for (const s of secs) {
+      let n = 0;
+      for (const { tile, text } of s.tiles) {
+        tile.hidden = Boolean(q) && !text.includes(q);
+        if (!tile.hidden) n += 1;
+      }
+      s.el.hidden = !n;
+      s.chip.hidden = !n;
+      s.count.textContent = n;
+      found += n;
+    }
+    empty.hidden = found > 0;
+    empty.textContent = T.noMatch(search.value.trim());
+  }
+  search.oninput = filter;
+  root.append(h('h2', T.title), h('p.lead', T.lead),
+    h('div.codex-nav', h('div.search-box', icon('search', { size: 16 }), search), secs.map((s) => s.chip)),
+    empty, secs.map((s) => s.el));
+  filter();
   if (arg && sections[arg]) requestAnimationFrame(() => document.getElementById(`codex-${arg}`)?.scrollIntoView());
-  return {};
+  return { focusSearch: () => { search.focus(); return true; } };
 }
 
 // ----- Park: several pets in one picture ---------------------------------------
@@ -1037,13 +1126,19 @@ function viewPark(root) {
   const pic = h('div');
   const yaml = h('div');
   const input = h('input', { type: 'text', placeholder: T.placeholder, class: 'mono' });
-  const owner = h('input', { type: 'text', placeholder: T.ownerPlaceholder, class: 'mono' });
+  const owner = h('input', { type: 'text', placeholder: T.ownerPlaceholder, class: 'mono', value: store.recent[0]?.split('/')[0] ?? '' });
+  const recentBox = h('div.recent-box');
+  const parkLink = () => linkTo('park', '', { repos: store.park.join(',') });
 
+  // The first real repo sends the made-up pets home.
   async function addRepo(raw) {
-    const name = raw.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, '');
-    if (!name.includes('/')) return;
-    if (store.park.length >= LP.PARK_MAX) return void (status.textContent = T.full);
-    if (!store.park.includes(name)) store.park.push(name);
+    const name = raw.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '').replace(/\/+$/, '');
+    if (!/^[\w.-]+\/[\w.-]+$/.test(name)) return void (status.textContent = t().adopt.badFormat);
+    const real = store.park.filter((n) => !n.startsWith('demo/'));
+    if (!real.includes(name)) {
+      if (real.length >= LP.PARK_MAX) return void (status.textContent = T.full);
+      store.park = [...real, name];
+    }
     save();
     await draw();
   }
@@ -1064,8 +1159,11 @@ function viewPark(root) {
   }
 
   async function draw() {
-    list.replaceChildren(...store.park.map((name) => h('span.chip', name.startsWith('demo/') ? name.split('/').slice(2).join(' · ') : name,
+    // A real repo's chip opens its pet on the Hatch page.
+    list.replaceChildren(...store.park.map((name) => h('span.chip',
+      name.startsWith('demo/') ? name.split('/').slice(2).join(' · ') : h('a', { href: `#/hatch/${name}`, title: `${t().hatch.rowHatch} · ${name}` }, name),
       h('button', { type: 'button', 'aria-label': 'remove', onclick: () => { store.park = store.park.filter((x) => x !== name); save(); draw(); } }, '×'))));
+    recentBox.replaceChildren(...[recentChips((r) => addRepo(r), { skip: store.park })].filter(Boolean));
     if (!store.park.length) {
       pic.replaceChildren(h('div.empty', T.empty));
       yaml.replaceChildren();
@@ -1086,14 +1184,18 @@ function viewPark(root) {
       status.textContent = '';
       const svg = LP.renderPark(pets, { owner: store.cfg.repo.split('/')[0] || 'you', lang: store.cfg.lang, theme: cardTheme() });
       const shown = stillAll() ? LP.renderPark(pets, { owner: store.cfg.repo.split('/')[0] || 'you', lang: store.cfg.lang, theme: cardTheme(), still: true }) : svg;
-      pic.replaceChildren(img(shown, 'park-img', 'park'), h('div.links', h('a', { href: svgSrc(svg), download: 'park.svg' }, `${t().common.download} park.svg`)));
+      pic.replaceChildren(h('div.spot', img(shown, 'park-img', 'park')),
+        h('div.quick', { style: { marginTop: '12px' } },
+          btn('park.svg', { icon: 'download', kind: 'sm', onclick: () => download(new Blob([svg], { type: 'image/svg+xml' }), 'park.svg') }),
+          btn('park.png', { icon: 'image-down', kind: 'sm', onclick: async () => { try { download(await svgToPng(svg), 'park.png'); } catch (err) { toast(err.message, 'bad'); } } }),
+          btn(t().common.share, { icon: 'link', kind: 'sm', onclick: () => shareLink(parkLink()) })));
       const real = store.park.filter((n) => !n.startsWith('demo/'));
       yaml.replaceChildren(h('p.small.muted', T.yaml), codeBlock(`      - uses: Tanx-1811/legacypet@v1\n        with:\n          park: ${real.length ? real.join(', ') : 'auto'}`));
     }
   }
 
   const demo = () => {
-    store.park = [['ecstatic', 'duck'], ['happy', 'cat'], ['sick', 'octopus'], ['hungry', 'snake'], ['party', 'crab'], ['zombie', 'blob']].map(([m, s]) => `demo/x/${m}/${s}`);
+    store.park = DEMO_PARK;
     save();
     draw();
   };
@@ -1114,12 +1216,16 @@ function viewPark(root) {
   root.append(h('h2', T.title), h('p.lead', T.lead),
     h('section.panel.stack',
       h('form.row', { onsubmit: (e) => { e.preventDefault(); addRepo(input.value); input.value = ''; } }, h('div', { style: { flex: '1 1 220px' } }, input), h('button.primary', { type: 'submit' }, T.add)),
+      recentBox,
       h('form.row', { onsubmit: (e) => { e.preventDefault(); fetchOwner(); } }, h('span.small.muted', T.owner), h('div', { style: { flex: '1 1 160px' } }, owner), h('button', { type: 'submit' }, T.fetchOwner)),
-      h('div.row', h('button', { type: 'button', onclick: demo }, `🎲 ${T.demo}`), h('button.ghost', { type: 'button', onclick: () => { store.park = []; save(); draw(); } }, T.clear)),
+      h('div.row',
+        btn(T.demo, { icon: 'dices', onclick: demo }),
+        btn(T.clear, { icon: 'trash-2', kind: 'ghost', onclick: () => { store.park = []; save(); draw(); } }),
+        btn(t().common.share, { icon: 'link', kind: 'ghost', onclick: () => shareLink(parkLink()) })),
       list, status),
     h('section.panel', pic, yaml));
   draw();
-  return { redraw: draw };
+  return { redraw: draw, shareLink: parkLink, focusSearch: () => { input.focus(); return true; } };
 }
 
 // The workflow inputs, from the choices made anywhere in the playground.
@@ -1139,8 +1245,11 @@ function viewAdopt(root) {
   const T = t().adopt;
   const C = t().common;
   const L = () => tr();
-  const preview = h('div.shots');
+  const preview = h('div.spot');
   const steps = h('div.steps');
+  const bar = journey('adopt');
+  const repoHint = h('p.status.small', { role: 'status' });
+  const recentBox = h('div.recent-box');
   // Suggests the repos the picker already listed, and knows their privacy.
   const repo = h('input', { type: 'text', value: store.cfg.repo, placeholder: T.repoPlaceholder, class: 'mono', list: 'picked-repos' });
   const repoList = h('datalist', { id: 'picked-repos' }, (picker.repos ?? []).map((r) => h('option', { value: r.fullName })));
@@ -1157,11 +1266,21 @@ function viewAdopt(root) {
   const privateBox = h('input', { type: 'checkbox', checked: Boolean(store.cfg.private) });
   privateBox.onchange = () => { store.cfg.private = privateBox.checked; save(); draw(); };
   const alertBox = h('div.row');
+  // Off to GitHub: the journey ticks its last step.
+  const adopted = () => {
+    markAdopted(store.cfg.repo);
+    bar.redraw();
+    toast(t().hatch.adoptOpened, 'good');
+  };
 
   function draw() {
     const cfg = store.cfg;
     const lang = L();
     const fullName = cfg.repo.includes('/') ? cfg.repo : 'OWNER/REPO';
+    const ready = /^[\w.-]+\/[\w.-]+$/.test(cfg.repo);
+    repoHint.textContent = cfg.repo && !ready ? T.badFormat : '';
+    repoHint.className = `status small${cfg.repo && !ready ? ' bad' : ''}`;
+    recentBox.replaceChildren(...[recentChips((r) => { repo.value = r; repo.oninput(); }, { skip: [cfg.repo] })].filter(Boolean));
     const pet = demoPet({ species: cfg.species === 'auto' ? 'cat' : cfg.species, scenery: cfg.scenery, name: cfg.name || undefined, color: cfg.color, motto: cfg.motto, wear: cfg.wear.join(','), unlockAll: true, fullName });
     preview.replaceChildren(img(LP.renderCard(pet, { theme: cardTheme(), still: stillAll() }), 'card-img', pet.displayName));
     wearBox.replaceChildren(...LP.ITEMS.map((item) => h(`button.tile${cfg.wear.includes(item.id) ? '.on' : ''}`, {
@@ -1188,14 +1307,20 @@ function viewAdopt(root) {
     const commands = LP.COMMANDS.map((c) => `/pet${c === 'status' ? '' : ` ${c}`}  ${lang.command.usage[c]}`).join('\n');
     // One click: GitHub's "new file" page with the workflow filled in (see adoptUrl in src/setup.js).
     const known = hatch.snapshot && !hatch.mood && hatch.snapshot.repo.fullName === cfg.repo ? hatch.snapshot.repo.defaultBranch : (pickedRepo(cfg.repo)?.defaultBranch ?? 'main');
-    const ready = /^[\w.-]+\/[\w.-]+$/.test(cfg.repo);
+    const gh = `https://github.com/${cfg.repo}`;
     // The one-click path comes first; the terminal and hand-made routes wait behind a toggle.
-    steps.replaceChildren(
+    // Every step after it links straight to the GitHub page it needs: the README editor, then the run.
+    steps.replaceChildren(...[
       h('div.step', h('h3', T.oneClick),
-        h('a.button.primary', { href: ready ? LP.adoptUrl(cfg.repo, known, options) : null, target: '_blank', rel: 'noopener', 'aria-disabled': String(!ready) }, T.oneClickButton),
+        h('a.button.primary', { href: ready ? LP.adoptUrl(cfg.repo, known, options) : null, target: '_blank', rel: 'noopener', 'aria-disabled': String(!ready), onclick: adopted }, T.oneClickButton),
         h('p', ready ? T.oneClickNote : T.needRepo, ready && hatch.blind && hatch.snapshot?.repo.fullName === cfg.repo ? ` ${T.blindBranch}` : '')),
-      h('div.step', h('h3', T.step3), seg(Object.entries(T.styles), cfg.style, (v) => { cfg.style = v; save(); draw(); }, T.style), codeBlock(LP.snippetFor(fullName, cfg.style, 'legacypet', { isPrivate: Boolean(cfg.private) }))),
-      h('div.step', h('h3', T.commands), codeBlock(commands)));
+      h('div.step', h('h3', T.step3), seg(Object.entries(T.styles), cfg.style, (v) => { cfg.style = v; save(); draw(); }, T.style), codeBlock(LP.snippetFor(fullName, cfg.style, 'legacypet', { isPrivate: Boolean(cfg.private) })),
+        ready ? h('div.row', btn(T.editReadme, { icon: 'pencil', kind: 'sm', href: `${gh}/edit/${encodeURIComponent(known)}/README.md` })) : null),
+      ready ? h('div.step', h('h3', T.watch), h('p', T.watchNote), h('div.row',
+        btn(T.watchButton, { icon: 'activity', kind: 'sm', href: `${gh}/actions/workflows/legacypet.yml` }),
+        btn(T.seePet, { icon: 'paw-print', kind: 'sm', href: `${gh}/tree/legacypet` }))) : null,
+      h('div.step', h('h3', T.commands), codeBlock(commands)),
+    ].filter(Boolean));
     manual.replaceChildren(
       h('div.alt-step', h('h4', T.step1), h('p', T.step1Note), codeBlock(['npx github:Tanx-1811/legacypet init', ...flags].join(' '))),
       h('div.or', T.or),
@@ -1203,18 +1328,18 @@ function viewAdopt(root) {
   }
   // Built once, so redrawing (typing the repo name) never snaps the toggles shut.
   const manual = h('div.alt');
-  const extrasSet = store.cfg.wear.length || store.cfg.alerts.length || store.cfg.vacation || store.cfg.private;
 
-  root.append(h('h2', T.title), h('p.lead', T.lead),
+  root.append(bar, h('h2', T.title), h('p.lead', T.lead),
     h('div.grid2',
       h('div.stack',
-        h('section.panel.stack', h('label.field', T.repo, repo, repoList), h('h3', { style: { margin: '6px 0 0' } }, T.look), lookFields(draw), preview),
-        h('details.panel.more', { open: Boolean(extrasSet) }, h('summary', T.moreOptions),
+        h('section.panel.stack', h('label.field', T.repo, repo, repoList), repoHint, recentBox, lookFields(draw), preview),
+        // Open from the start: every option is in sight, none is required.
+        h('details.panel.more', { open: true }, h('summary', T.moreOptions),
           h('div.stack', h('div.small.muted', T.wear), wearBox,
             h('div.small.muted', T.alerts), alertBox, h('label.field', T.vacation, vacation), h('label.check', privateBox, T.private)))),
       h('section.panel', steps, h('details.manual', h('summary', T.advanced), manual))));
   draw();
-  return { redraw: draw };
+  return { redraw: draw, focusSearch: () => { repo.focus(); return true; } };
 }
 
 // ---------------------------------------------------------------------------
@@ -1225,6 +1350,7 @@ function viewAdopt(root) {
 const homeKit = homeViews({
   h, img, svgSrc, toast, t, tr, store, save, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP, Sim, stopAuto, demoPet,
   icon, btn, render: () => render(), motion, stillAll, gridPic, setMotion: (v) => setMotion(v),
+  dialog, closeX, download, svgToPng, copyText,
 });
 const VIEWS = {
   home: homeKit.views.home, hatch: viewHatch, sim: viewSim, codex: viewCodex, park: viewPark, adopt: viewAdopt,
@@ -1242,12 +1368,17 @@ const DEFAULT_VIEW = NAV[0];
 const isMac = /mac/i.test(navigator.userAgentData?.platform ?? navigator.platform ?? '');
 let current = null;
 
+// #/view/arg?params: the params are what a shared link carries (see linkTo).
 function route() {
-  const raw = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
+  const hash = location.hash.replace(/^#\/?/, '');
+  const cut = hash.indexOf('?');
+  let raw = cut === -1 ? hash : hash.slice(0, cut);
+  try { raw = decodeURIComponent(raw); } catch { /* a mangled link: take it as it is */ }
+  const params = new URLSearchParams(cut === -1 ? '' : hash.slice(cut + 1));
   const [view, ...rest] = raw.split('/');
   // Old share links were #owner/repo.
-  if (raw && !VIEWS[view] && raw.includes('/')) return { view: 'hatch', arg: raw };
-  return { view: NAV.includes(view) ? view : DEFAULT_VIEW, arg: rest.join('/') };
+  if (raw && !VIEWS[view] && raw.includes('/')) return { view: 'hatch', arg: raw, params };
+  return { view: NAV.includes(view) ? view : DEFAULT_VIEW, arg: rest.join('/'), params };
 }
 
 function go_(view, arg = '') {
@@ -1270,7 +1401,13 @@ function drawNav(view) {
 }
 
 function render() {
-  const { view, arg } = route();
+  const { view, arg, params } = route();
+  // A shared link's look and park are taken in once, then the address is tidied, so a later
+  // redraw (a new language, say) can't undo what was changed since.
+  if ([...params.keys()].length) {
+    takeLink(params);
+    history.replaceState(null, '', `#/${view}${arg ? `/${arg}` : ''}`);
+  }
   current?.leave?.();
   const T = t();
   document.documentElement.lang = store.ui;
@@ -1281,7 +1418,7 @@ function render() {
   main.replaceChildren();
   const root = h('div.view');
   main.append(root);
-  current = VIEWS[view](root, arg) ?? {};
+  current = VIEWS[view](root, arg, params) ?? {};
   $('#footer-text').textContent = LOCAL ? T.footerLocal : T.footer;
   $('#tagline').textContent = T.tagline;
   drawToolbar();
@@ -1309,7 +1446,46 @@ function drawToolbar() {
     seg(Object.entries(UI_LANGS).map(([code]) => [code, code.toUpperCase()]), store.ui, (v) => setLang(v), T.common.uiLang),
     btn('', { icon: themeIcon, kind: 'ghost', title: `${T.common.theme}: ${T.common.themes[store.theme]}`, onclick: cycleTheme }),
     btn('', { icon: 'gauge', kind: 'ghost', title: `${T.common.motion}: ${T.common.motions[store.motion]}`, onclick: () => setMotion(MOTIONS[(MOTIONS.indexOf(store.motion) + 1) % MOTIONS.length]) }),
-    btn('', { icon: 'external-link', kind: 'ghost', title: 'GitHub', href: 'https://github.com/Tanx-1811/legacypet' }));
+    btn('', { icon: 'circle-help', kind: 'ghost', title: `${T.help.title} (?)`, onclick: openHelp }),
+    btn('', { icon: 'external-link', kind: 'ghost hide-sm', title: 'GitHub', href: LP.HOMEPAGE }));
+}
+
+// Where to learn more, from the help sheet and ⌘K.
+const HELP_LINKS = [
+  ['docs', 'book-open', `${LP.HOMEPAGE}#readme`],
+  ['changelog', 'sparkles', `${LP.HOMEPAGE}/blob/main/CHANGELOG.md`],
+  ['gallery', 'palette', `${LP.PLAYGROUND}gallery/`],
+  ['species', 'paw-print', `${LP.HOMEPAGE}/issues/new?template=new-species.yml`],
+  ['bug', 'circle-alert', `${LP.HOMEPAGE}/issues/new?template=bug.yml`],
+  ['source', 'code-xml', LP.HOMEPAGE],
+];
+
+// "?" or the help button: the three steps, every shortcut, and where to learn more.
+function openHelp() {
+  const T = t().help;
+  const J = t().journey;
+  const mod = isMac ? '⌘' : 'Ctrl';
+  const keys = (...list) => h('dt', list.map((k) => (k === '–' ? ' – ' : h('kbd.kbd', k))));
+  const el = dialog(
+    closeX(),
+    h('h2', T.title),
+    h('h3', icon('rocket', { size: 16 }), T.how),
+    h('ol.help-steps', [['hatch', 'hatch'], ['raise', 'sim'], ['adopt', 'adopt']].map(([id, view], i) => h('li', h('a', { href: `#/${view}` },
+      h('span.journey-num', String(i + 1)), h('span.journey-text', h('b', J[id]), h('small', J[`${id}Note`])), icon('chevron-right', { size: 16, cls: 'row-go' }))))),
+    h('h3', icon('keyboard', { size: 16 }), T.keys),
+    h('dl.keys-list',
+      keys(mod, 'K'), h('dd', T.keyPalette),
+      keys('/'), h('dd', T.keySlash),
+      keys('1', '–', String(Math.min(9, NAV.length))), h('dd', T.keyNumbers),
+      keys('N', 'W', 'F', 'P', 'T', 'Space'), h('dd', T.keySim),
+      keys('?'), h('dd', T.keyHelp),
+      keys('Esc'), h('dd', T.keyEsc),
+      MODE === 'desktop' ? [keys(mod, isMac ? '⇧' : 'Shift', 'L'), h('dd', T.keyShow)] : null),
+    h('h3', icon('link', { size: 16 }), T.links),
+    h('div.quick', HELP_LINKS.map(([id, name, href]) => btn(T[id], { icon: name, kind: 'sm', href }))));
+  el.classList.add('wide');
+  // A step leads to its page, so the sheet steps aside.
+  el.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"]')) el.close(); });
 }
 
 function setLang(v) {
@@ -1369,12 +1545,24 @@ const palette = createPalette({
       );
       if (MODE === 'desktop') items.push({ group: 'actions', icon: 'monitor', label: A.float, run: () => homeKit.actions.toggleFloat() });
     }
+    for (const repo of store.recent) items.push({ group: 'recent', icon: 'history', label: repo, hint: A.hatchAgain, run: () => go_('hatch', repo) });
+    const { view } = route();
     items.push(
+      { group: 'actions', icon: 'dices', label: A.surprise, run: () => { surpriseLook(); if (['hatch', 'sim', 'adopt'].includes(view)) render(); else go_('hatch'); } },
+      // The app's own pages live on this computer only: there is nothing to link to.
+      ['home', 'settings'].includes(view) ? null : { group: 'actions', icon: 'link', label: A.share, run: () => shareLink(current?.shareLink?.() ?? linkTo(view)) },
       { group: 'actions', icon: { auto: 'sun-moon', light: 'sun', dark: 'moon' }[store.theme], label: A.theme, run: cycleTheme },
       { group: 'actions', icon: 'gauge', label: A.motion, run: () => setMotion(MOTIONS[(MOTIONS.indexOf(store.motion) + 1) % MOTIONS.length]) },
       { group: 'actions', icon: 'languages', label: A.lang, run: () => setLang(store.ui === 'vi' ? 'en' : 'vi') },
+      { group: 'actions', icon: 'circle-help', label: A.help, run: openHelp },
+      // Every species, once something is typed: "fox" → raise a fox.
+      ...LP.SPECIES_IDS.map((id) => ({
+        group: 'species', icon: 'paw-print', label: tr().species[id], hint: T.palette.speciesHint, keywords: id, searchOnly: true,
+        run: () => { store.cfg.species = id; save(); go_('sim'); },
+      })),
+      ...HELP_LINKS.map(([id, name, href]) => ({ group: 'links', icon: name, label: T.help[id], hint: href.replace(/^https:\/\//, ''), run: () => window.open(href, '_blank', 'noopener') })),
     );
-    return items;
+    return items.filter(Boolean);
   },
 });
 
@@ -1403,6 +1591,16 @@ document.addEventListener('keydown', (e) => {
   if (e.key === '/') {
     e.preventDefault();
     if (!current?.focusSearch?.()) palette.open();
+    return;
+  }
+  if (e.key === '?') {
+    e.preventDefault();
+    openHelp();
+    return;
+  }
+  // 1–9: the pages, in sidebar order.
+  if (/^[1-9]$/.test(e.key) && NAV[Number(e.key) - 1]) {
+    go_(NAV[Number(e.key) - 1]);
     return;
   }
   current?.keys?.(e);

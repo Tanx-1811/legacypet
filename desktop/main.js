@@ -83,7 +83,7 @@ function showMain(hash) {
       minHeight: 640,
       show: false,
       title: 'LegacyPet',
-      backgroundColor: nativeTheme.shouldUseDarkColors ? '#0f0e16' : '#f6f4fb',
+      backgroundColor: nativeTheme.shouldUseDarkColors ? '#0b0b0f' : '#f7f7f9', // site/app.css --bg
       titleBarStyle: isMac ? 'hiddenInset' : 'default',
       trafficLightPosition: { x: 18, y: 16 },
       icon: isMac ? undefined : join(here, 'build', 'icon.png'),
