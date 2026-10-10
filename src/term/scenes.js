@@ -158,9 +158,9 @@ export function sayLine(event, ctx) {
 
 export function commitScene(ctx) {
   const s = ctx.look.scale;
-  const W = 34 * s;
+  const W = 34 * s + ctx.look.pad;
   const H = 22 * s;
-  const P = { x: 10 * s, y: H };
+  const P = { x: 10 * s + ctx.look.pad, y: H };
   const T = { fly: 0.25, eat: 0.8, react: 1.4, party: 2.4 };
   const food = sprite(foodFor(ctx.info.kind, ctx.look.pet.species), s);
   const heart = sprite(PROPS.tinyHeart, s);
@@ -279,10 +279,10 @@ export function commitScene(ctx) {
 
 export function pushScene(ctx) {
   const s = ctx.look.scale;
-  const W = 30 * s;
+  const W = 30 * s + ctx.look.pad;
   const H = 22 * s;
-  const P = { x: 10 * s, y: H };
-  const R = { x: 22 * s, y: H };
+  const P = { x: 10 * s + ctx.look.pad, y: H };
+  const R = { x: 22 * s + ctx.look.pad, y: H };
   const T = { lift: 0.45, gone: 1.45 };
   const rocket = sprite(PROPS.rocket, s);
   const flame = sprite(PROPS.flame, s);
@@ -343,9 +343,9 @@ export function pushScene(ctx) {
 
 export function mergeScene(ctx) {
   const s = ctx.look.scale;
-  const W = 42 * s;
+  const W = 42 * s + ctx.look.pad;
   const H = 22 * s;
-  const P = { x: 10 * s, y: H };
+  const P = { x: 10 * s + ctx.look.pad, y: H };
   const gift = PROPS.gift;
   const g = sprite(gift, s);
   const count = () => Math.max(1, Math.min(5, ctx.data?.count ?? 1));
@@ -363,7 +363,7 @@ export function mergeScene(ctx) {
       let landed = 0;
       for (let i = 0; i < count(); i++) {
         const [col, level] = spots[i];
-        const x = 19 * s + col * (g.w + s) + g.w / 2;
+        const x = 19 * s + ctx.look.pad + col * (g.w + s) + g.w / 2;
         const ground = H - level * g.h;
         const u = final ? 9 : t - drop(i);
         if (u < 0) continue;
@@ -400,10 +400,10 @@ export function checkoutScene(ctx) {
   const label = truncate(ctx.info.branch ?? ctx.info.sha ?? '?', 28);
   const boardW = textWidth(label) + 2;
   const H = 22 * s;
-  const W = ctx.look.width + 12 * s + boardW + 2;
+  const W = ctx.look.width + ctx.look.pad + 12 * s + boardW + 2;
   const signX = W - boardW - 1;
   const row = Math.floor((H - 13 * s) / 2);
-  const x0 = Math.round(ctx.look.width / 2) + s;
+  const x0 = Math.round(ctx.look.width / 2) + ctx.look.pad + s;
   const x1 = signX - Math.round(ctx.look.width / 2) - 2 * s;
   const say = () => SAY.checkout(ctx);
   return {
@@ -429,9 +429,9 @@ export function checkoutScene(ctx) {
 
 export function helloScene(ctx) {
   const s = ctx.look.scale;
-  const W = 24 * s;
+  const W = 24 * s + ctx.look.pad;
   const H = 22 * s;
-  const P = { x: 12 * s, y: H };
+  const P = { x: 12 * s + ctx.look.pad, y: H };
   const heart = sprite(PROPS.tinyHeart, s);
   return {
     size: { w: W, h: H },

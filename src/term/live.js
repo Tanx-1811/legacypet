@@ -254,11 +254,12 @@ export async function live({
   }
 
   // --- drawing ----------------------------------------------------------------------------
-  const stageSize = () => ({ w: 36 * actor.scale, h: 22 * actor.scale });
+  // Room for the pet (and its pal) and for a ball to bounce; scenes may draw wider.
+  const stageSize = () => ({ w: 30 * actor.scale + actor.pad, h: 22 * actor.scale });
 
   function drawIdle(c, t) {
     const s = actor.scale;
-    const x = 10 * s;
+    const x = 10 * s + actor.pad;
     const y = c.height;
     const sleepy = asleep || pet.mood === 'sleepy' || pet.mood === 'hibernating';
     let face = asleep ? 'sleepy' : null;

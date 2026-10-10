@@ -258,6 +258,8 @@ export function createActor(pet, { hd = false } = {}) {
     pet,
     scale,
     width: main.width,
+    // Room the pet needs on its left, for the pal it wears.
+    pad: palSprite ? palSprite.w + scale : 0,
     height: main.height,
     mouth: main.mouth,
     track,
