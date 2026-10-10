@@ -1,4 +1,4 @@
-// Tiny color helpers used to tint pets (shiny, zombie, sick) without a dependency.
+// Tiny color helpers used to tint pets (shiny, zombie, sick) and shade them, without a dependency.
 // Colors are '#rrggbb' or '#rrggbbaa'; the alpha suffix is preserved.
 
 export function parseHex(hex) {
@@ -62,4 +62,70 @@ export function desaturate(hex, amount) {
   const rgb = parseHex(hex);
   const hsl = toHsl(rgb);
   return toHex({ ...fromHsl({ ...hsl, s: hsl.s * (1 - amount) }), a: rgb.a });
+}
+
+// OKLab and its polar form OKLCH (Björn Ottosson, 2020): a perceptual color space, so equal
+// steps in lightness look equal whatever the hue. The pets' shading ramps are built in it.
+const toLinear = (v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+const toGamma = (v) => (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055);
+
+function toOklab({ r, g, b }) {
+  const [lr, lg, lb] = [r, g, b].map((v) => toLinear(v / 255));
+  const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+  const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+  const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+  return {
+    L: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    A: 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    B: 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  };
+}
+
+function linearFromOklab(L, A, B) {
+  const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+  const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+  const s = (L - 0.0894841775 * A - 1.291485548 * B) ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+}
+
+// { l: 0..1, c: chroma (about 0..0.37), h: hue in degrees }
+export function oklchOf(hex) {
+  const { L, A, B } = toOklab(parseHex(hex));
+  return { l: L, c: Math.hypot(A, B), h: ((Math.atan2(B, A) * 180) / Math.PI + 360) % 360 };
+}
+
+const fits = (rgb) => rgb.every((v) => v >= -1e-4 && v <= 1 + 1e-4);
+
+// A color outside sRGB keeps its lightness and hue and gives up chroma until it fits.
+export function fromOklch({ l, c, h }, alpha = '') {
+  const L = Math.min(1, Math.max(0, l));
+  const rad = (h * Math.PI) / 180;
+  const at = (chroma) => linearFromOklab(L, chroma * Math.cos(rad), chroma * Math.sin(rad));
+  let rgb = at(c);
+  if (!fits(rgb)) {
+    let lo = 0;
+    let hi = c;
+    for (let i = 0; i < 16; i++) {
+      const mid = (lo + hi) / 2;
+      if (fits(at(mid))) lo = mid;
+      else hi = mid;
+    }
+    rgb = at(lo);
+  }
+  const [r, g, b] = rgb.map((v) => toGamma(Math.min(1, Math.max(0, v))) * 255);
+  return toHex({ r, g, b, a: alpha });
+}
+
+// Like mix(), but through OKLab, so a blend never passes through a muddy grey.
+export function mixOklab(from, to, amount) {
+  const x = toOklab(parseHex(from));
+  const y = toOklab(parseHex(to));
+  const L = x.L + (y.L - x.L) * amount;
+  const A = x.A + (y.A - x.A) * amount;
+  const B = x.B + (y.B - x.B) * amount;
+  return fromOklch({ l: L, c: Math.hypot(A, B), h: ((Math.atan2(B, A) * 180) / Math.PI + 360) % 360 }, parseHex(from).a);
 }
