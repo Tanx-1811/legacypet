@@ -82,6 +82,45 @@ It opens the same app in its own window (Chrome or Edge) and quits when you clos
 > go to **System Settings → Privacy & Security** and press **Open Anyway**. On Windows, press
 > **More info → Run anyway** on the SmartScreen prompt.
 
+### ⌨️ In your terminal
+
+Your pet can live where you code, too. Inside a repo:
+
+```sh
+npx github:Tanx-1811/legacypet hooks install
+```
+
+From then on it pops up right in your terminal, animated, whenever git does something:
+
+- **Commit**, and it eats the commit. Each kind tastes different: a `feat:` is cake 🍰, a `fix:` an apple 🍎,
+  `test:` broccoli 🥦, `docs:` a fortune cookie 🥠, `refactor:` an onigiri 🍙 and a merge a whole bento 🍱
+  (Conventional Commits, gitmoji or plain words, in English or Vietnamese). Then it shows the XP it got, your streak
+  and how far the next level is, and throws a party with confetti when it levels up, ranks up, hatches or comes back
+  from the dead. It notices the first commit of the day, round numbers (commit #100!), streak milestones and late nights too.
+- **Push**, and your commits take off in a rocket 🚀 (a tag gets confetti).
+- **Pull**, and your team's commits rain down as gifts 📦, with who sent them.
+- **Switch branches**, and it walks over to a signpost with the branch's name 🌿.
+
+It's the same pet as in the app and the README, doing its own signature move, wearing its own hat. A reaction takes about
+two seconds and can never fail a commit or a push. Your own hooks keep running (a team's hooks in `core.hooksPath`, like
+husky's, are left alone unless you pass `--force`), rebases and bisects stay quiet, and an editor's commit button just
+gets one line. `legacypet hooks remove` takes it all out again; `--all` does every repo the app found.
+
+Two more ways to meet it in a terminal:
+
+```sh
+legacypet live    # a companion for a split pane while you code
+legacypet hi      # the pet waves and shows how the repo is doing
+```
+
+`live` keeps the pet on screen: it idles, blinks, hums a tune and shows off its move, reacts the moment you commit, pull,
+push or switch branches, nudges you when a lot of work hasn't been committed, and falls asleep when you stop.
+Keys: **f** feed, **p** play, **space** pat, **t** a focus timer (25 minutes, or `--focus 50`), **q** quit.
+
+Environment variables: `LEGACYPET_QUIET=1` silences one command, `LEGACYPET_HOOK=line` (just a line), `still`
+(no animation) or `off`, and `LEGACYPET_SIZE=big` draws the pet twice as big. No repo at hand?
+`legacypet react commit --demo --species ninja --level-up` plays a reaction with a made-up pet.
+
 ### 1. Adopt it in one click (nothing to install)
 
 Open the **[playground](https://tanx-1811.github.io/legacypet/)**, type your `owner/repo`
@@ -679,9 +718,12 @@ npx github:Tanx-1811/legacypet demo --mood zombie --species cat --lang vi
 npx github:Tanx-1811/legacypet demo --species crab --scenery reef
 npx github:Tanx-1811/legacypet demo --species dragon --path sage --wear "wizard, drone"
 npx github:Tanx-1811/legacypet demo --species cat --color teal --motto "Ship it, {name}!"
+npx github:Tanx-1811/legacypet hooks install              # the pet reacts in your terminal to commits, pushes, pulls
+npx github:Tanx-1811/legacypet live                       # keep the pet in a terminal pane while you code
+npx github:Tanx-1811/legacypet hi                         # say hi: an animated checkup of the repo you're in
 ```
 
-In a terminal with true color, it draws the pet right in your shell.
+In a terminal with true color, it draws the pet right in your shell (see [In your terminal](#️-in-your-terminal)).
 
 `adopt` lists your repos (🐣 already has a pet, 🔒 private), asks which ones (`1,3`, `2-5`, `all` or names), and commits the workflow and README snippet to each one through the API. It uses `$GITHUB_TOKEN` or your `gh` login; writing workflow files needs the `workflow` scope (`gh auth refresh -s workflow`). Pass an owner (`adopt my-org`) for an organization's repos, or `--repos "app,lib"` to skip the question.
 

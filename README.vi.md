@@ -81,6 +81,45 @@ Lệnh này mở cùng ứng dụng trong cửa sổ riêng (Chrome hoặc Edge)
 > **Cài đặt hệ thống → Quyền riêng tư & Bảo mật** và bấm **Vẫn mở**. Trên Windows, bấm
 > **Thông tin thêm → Vẫn chạy** khi SmartScreen hiện lên.
 
+### ⌨️ Ngay trong terminal
+
+Thú cũng có thể sống ngay chỗ bạn code. Chạy trong một repo:
+
+```sh
+npx github:Tanx-1811/legacypet hooks install
+```
+
+Từ đó trở đi, mỗi khi git làm gì đó, thú hiện ra ngay trong terminal, có chuyển động hẳn hoi:
+
+- **Commit** là thú ăn commit đó. Mỗi loại một món: `feat:` là bánh kem 🍰, `fix:` là quả táo 🍎, `test:` là bông cải
+  xanh 🥦, `docs:` là bánh may mắn 🥠, `refactor:` là cơm nắm 🍙, còn merge là nguyên hộp bento 🍱 (hiểu Conventional
+  Commits, gitmoji hay lời thường, tiếng Anh lẫn tiếng Việt). Sau đó thú khoe XP vừa nhận, chuỗi ngày commit và còn bao
+  nhiêu commit nữa lên cấp, rồi bắn pháo giấy ăn mừng khi lên cấp, lên hạng, nở hay sống lại. Nó còn để ý commit đầu
+  tiên trong ngày, các con số tròn (commit thứ 100!), mốc chuỗi ngày và cả những đêm code khuya.
+- **Push** là các commit cất cánh trên một tên lửa 🚀 (push tag thì có pháo giấy).
+- **Pull** là commit của cả nhóm rơi xuống thành những hộp quà 📦, kèm tên người gửi.
+- **Đổi nhánh** là thú đi tới một cột biển báo ghi tên nhánh 🌿.
+
+Vẫn là chú thú trong app và trong README, với động tác đặc trưng và chiếc mũ của riêng nó. Mỗi lần thú phản ứng mất
+khoảng hai giây và không bao giờ làm hỏng commit hay push. Hook sẵn có của bạn vẫn chạy (hook dùng chung của cả nhóm
+trong `core.hooksPath`, như của husky, được để nguyên trừ khi bạn thêm `--force`), rebase và bisect thì thú im lặng, còn
+nút commit trong trình soạn thảo chỉ nhận một dòng chữ. `legacypet hooks remove` gỡ tất cả; `--all` làm cho mọi repo app đã tìm thấy.
+
+Thêm hai cách gặp thú trong terminal:
+
+```sh
+legacypet live    # bạn đồng hành trong một ô terminal khi bạn code
+legacypet hi      # thú vẫy chào và cho biết repo đang thế nào
+```
+
+`live` giữ thú trên màn hình: nó đứng chơi, chớp mắt, ngân nga và khoe động tác đặc trưng, phản ứng ngay khi bạn commit,
+pull, push hay đổi nhánh, nhắc khéo khi có nhiều thay đổi chưa commit, và lăn ra ngủ khi bạn nghỉ tay.
+Phím: **f** cho ăn, **p** chơi, **space** vuốt ve, **t** hẹn giờ tập trung (25 phút, hoặc `--focus 50`), **q** thoát.
+
+Biến môi trường: `LEGACYPET_QUIET=1` cho một lệnh im lặng, `LEGACYPET_HOOK=line` (chỉ một dòng), `still` (không chuyển
+động) hoặc `off`, và `LEGACYPET_SIZE=big` vẽ thú to gấp đôi. Chưa có repo trong tay?
+`legacypet react commit --demo --species ninja --level-up` diễn thử với một chú thú mẫu.
+
 ### Cách 1: một cú click trên web (không cần cài gì, khuyên dùng)
 
 Mở **[playground](https://tanx-1811.github.io/legacypet/)**, gõ `owner/repo` của bạn để xem nó nở ra con gì,
