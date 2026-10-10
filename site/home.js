@@ -4,7 +4,7 @@ import { barList, heatmap, localDayKey, statTile } from './charts.js';
 import { api, byNeed, desktop, LOCAL, MODE, petOf } from './local.js';
 
 export function homeViews(kit) {
-  const { h, svgSrc, toast, t, tr, store, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP, icon, btn } = kit;
+  const { h, svgSrc, toast, t, tr, store, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP, icon, btn, gridPic, stillAll } = kit;
   // replaceChildren() would print "null" for a missing piece: drop those first.
   const fill = (el, ...kids) => el.replaceChildren(...kids.flat().filter((k) => k != null && k !== false && k !== ''));
 
@@ -35,14 +35,14 @@ export function homeViews(kit) {
   };
   const num = (n) => Number(n ?? 0).toLocaleString(store.ui);
 
-  // Pictures are the slow part: draw each pet once per (run, language, theme).
+  // Pictures are the slow part: draw each pet once per (run, language, theme, still or moving).
   const pics = new Map();
-  function pic(project, kind) {
-    const key = `${project.id}|${project.now}|${kind}|${lang()}|${cardTheme()}|${JSON.stringify(project.options)}`;
+  function pic(project, kind, still = false) {
+    const key = `${project.id}|${project.now}|${kind}|${lang()}|${cardTheme()}|${still}|${JSON.stringify(project.options)}`;
     if (!pics.has(key)) {
       const pet = petOf(project, { lang: lang() });
       if (!pet) return null;
-      const svg = kind === 'card' ? LP.renderCard(pet, { theme: cardTheme() }) : LP.renderMini(pet, { theme: cardTheme() });
+      const svg = kind === 'card' ? LP.renderCard(pet, { theme: cardTheme(), still }) : LP.renderMini(pet, { theme: cardTheme(), still });
       if (pics.size > 400) pics.clear();
       pics.set(key, svgSrc(svg));
     }
@@ -85,7 +85,8 @@ export function homeViews(kit) {
 
   const VITAL_ICONS = { fullness: 'utensils', health: 'heart', joy: 'smile', energy: 'zap' };
   // Just the pet's little world, without the name plate under it (the page already says that).
-  const scene = (p, cls = '', alt = '') => h(`div.scene${cls ? `.${cls}` : ''}`, h('img', { src: pic(p, 'mini'), alt, loading: 'lazy' }));
+  // Lists and grids show many pets at once, so they follow the motion setting (see motion.js).
+  const scene = (p, cls = '', alt = '') => h(`div.scene${cls ? `.${cls}` : ''}`, gridPic((still) => pic(p, 'mini', still), { alt, loading: 'lazy' }));
   function vitalBars(vitals) {
     const L = tr();
     return h('div.bars', ['fullness', 'health', 'joy', 'energy'].map((k) => {
@@ -289,7 +290,7 @@ export function homeViews(kit) {
     };
 
     const eggs = ['egg', 'happy', 'party'].map((mood, i) => h('img.mini-img', {
-      src: svgSrc(LP.renderMini(kit.demoPet({ mood, species: ['bunny', 'duck', 'cat'][i], fullName: `you/${['notes', 'app', 'website'][i]}` }), { theme: cardTheme() })), alt: '',
+      src: svgSrc(LP.renderMini(kit.demoPet({ mood, species: ['bunny', 'duck', 'cat'][i], fullName: `you/${['notes', 'app', 'website'][i]}` }), { theme: cardTheme(), still: stillAll() })), alt: '',
     }));
     drawList();
     root.append(h('section.onboard',
@@ -310,7 +311,7 @@ export function homeViews(kit) {
   function scanningScreen() {
     const T = t().home;
     return h('div.scanning',
-      h('img.mini-img.wobble', { src: svgSrc(LP.renderMini(kit.demoPet({ mood: 'egg', species: 'duck', fullName: 'you/app' }), { theme: cardTheme() })), alt: '' }),
+      h('img.mini-img.wobble', { src: svgSrc(LP.renderMini(kit.demoPet({ mood: 'egg', species: 'duck', fullName: 'you/app' }), { theme: cardTheme(), still: stillAll() })), alt: '' }),
       h('p', T.scanning));
   }
 
@@ -713,7 +714,7 @@ export function homeViews(kit) {
       return h('div.grid2.detail',
         h('div.stack',
           h('section.panel.stage',
-            h('img.card-img', { src: pic(p, 'card'), alt: `${pet.displayName}: ${pet.speech}` }),
+            h('img.card-img', { src: pic(p, 'card', stillAll()), alt: `${pet.displayName}: ${pet.speech}` }),
             h('div.vitals', ['fullness', 'health', 'joy', 'energy'].map((k) => h('div.vital', h('span.vital-name', icon(VITAL_ICONS[k], { size: 13 }), L.stats[k]), h('b', pet.vitals[k]),
               h(`div.meter.${pet.vitals[k] < 35 ? 'low' : pet.vitals[k] < 60 ? 'mid' : 'ok'}`, h('i', { style: { width: `${pet.vitals[k]}%` } }))))),
             h('div.care-row', ['feed', 'play', 'pat'].map((name) => btn(careLabel(name), { icon: CARE_ICONS[name], onclick: () => care(name) }))),
@@ -880,7 +881,7 @@ export function homeViews(kit) {
         if (!cur?.summary) return;
         const pet = petOf(cur, { lang: lang() });
         const theme = ['light', 'dark'].includes(cur.options?.theme) ? cur.options.theme : cardTheme();
-        preview.src = svgSrc(LP.renderCard(pet, { theme }));
+        preview.src = svgSrc(LP.renderCard(pet, { theme, still: stillAll() }));
         preview.alt = `${pet.displayName}: ${pet.speech}`;
 
         // A swatch per color, in the shade it takes; "its own" shows the species' body color.
@@ -1009,6 +1010,7 @@ export function homeViews(kit) {
     }
     const T = t().settings;
     const H = t().home;
+    const U = t().common;
     const body = h('div.settings');
     let resetArmed = false;
 
@@ -1098,6 +1100,9 @@ export function homeViews(kit) {
             h('label.field', T.floatSize, seg(Object.entries(T.sizes), cfg.floatSize ?? 'medium', (v) => save({ floatSize: v }), T.floatSize))),
           toggle(cfg.floatBubbles !== false, T.floatBubbles, (v) => save({ floatBubbles: v })),
           state.desktop?.loginItem != null ? toggle(state.desktop.loginItem, T.login, async (v) => { use(await api('login-item', { on: v })); draw(); }) : null) : null,
+        section('gauge', T.performance,
+          h('label.field', U.motion, seg(Object.entries(U.motions), store.motion ?? 'auto', (v) => { kit.setMotion(v); draw(); }, U.motion)),
+          h('p.small.muted', { style: { margin: 0 } }, T.motionNote)),
         section('archive', T.backup,
           h('p.small.muted', { style: { margin: 0 } }, T.backupNote),
           h('div.row', btn(T.exportBackup, { icon: 'download', onclick: exportBackup }), btn(T.importBackup, { icon: 'upload', onclick: importBackup }))),
@@ -1141,7 +1146,7 @@ export function homeViews(kit) {
     const order = os ? [os, ...Object.keys(builds).filter((x) => x !== os)] : Object.keys(builds);
     root.append(
       h('section.get-hero',
-        h('div.onboard-pets', ['happy', 'party', 'sleepy'].map((mood, i) => h('img.mini-img', { src: svgSrc(LP.renderMini(kit.demoPet({ mood, species: ['cat', 'duck', 'octopus'][i], fullName: `you/${['api', 'app', 'blog'][i]}` }), { theme: cardTheme() })), alt: '' }))),
+        h('div.onboard-pets', ['happy', 'party', 'sleepy'].map((mood, i) => h('img.mini-img', { src: svgSrc(LP.renderMini(kit.demoPet({ mood, species: ['cat', 'duck', 'octopus'][i], fullName: `you/${['api', 'app', 'blog'][i]}` }), { theme: cardTheme(), still: stillAll() })), alt: '' }))),
         h('h1', T.title),
         h('p.lead', T.lead)),
       h('div.grid2',

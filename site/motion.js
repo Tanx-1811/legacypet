@@ -21,17 +21,25 @@ export const onMotionPreference = (fn) => reduced?.addEventListener?.('change', 
 
 // An <img> that holds still and moves only while pointed at (or while its tile has focus).
 // `still` and `live` return the two picture URLs; `live` is only made when it's first needed.
+// Calling it again on the same <img> (a redraw) just swaps in the new pictures.
 const pictures = new WeakMap();
+const listening = new WeakSet();
 export function hoverToMove(img, { still, live }) {
   let liveSrc = null;
   pictures.set(img, {
     play: () => { img.src = (liveSrc ??= live()); },
     stop: () => { img.src = still(); },
   });
-  img.addEventListener('pointerenter', () => pictures.get(img).play());
-  img.addEventListener('pointerleave', () => pictures.get(img).stop());
+  if (!listening.has(img)) {
+    listening.add(img);
+    img.addEventListener('pointerenter', () => pictures.get(img)?.play());
+    img.addEventListener('pointerleave', () => pictures.get(img)?.stop());
+  }
   return img;
 }
+
+// Back to an ordinary picture (the motion setting changed).
+export const stopHoverToMove = (img) => pictures.delete(img);
 
 // Keyboard users get the same: a focused tile plays the pictures inside it.
 if (typeof document !== 'undefined') {

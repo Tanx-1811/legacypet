@@ -17,6 +17,7 @@ const vi = {
   common: {
     copy: 'Sao chép', copied: 'Đã chép!', download: 'Tải', share: 'Chép link chia sẻ', shared: 'Đã chép link',
     uiLang: 'Ngôn ngữ giao diện', petLang: 'Thú nói tiếng', theme: 'Giao diện', themes: { auto: 'Tự động', light: 'Sáng', dark: 'Tối' },
+    motion: 'Chuyển động', motions: { auto: 'Tự động', full: 'Đầy đủ', lite: 'Tiết kiệm', off: 'Tắt' },
     auto: 'tự động', species: 'Loài', scenery: 'Quê nhà', name: 'Tên', namePlaceholder: 'để repo tự đặt',
     locked: 'Chưa mở', unlocked: 'Đã mở', wearing: 'Đang mặc', none: 'Không có', close: 'Đóng',
     shortcuts: 'Phím tắt', useIt: 'Dùng con này', tryIt: 'Nuôi thử', open: 'Mở',
@@ -419,6 +420,8 @@ const vi = {
     quietNote: 'Trong khoảng này không hiện thông báo hệ thống. Tin vẫn nằm trong “Mới xảy ra”.',
     refresh: 'Tự làm mới',
     every: (n) => `Mỗi ${n} phút`,
+    performance: 'Hiệu năng',
+    motionNote: 'Nhiều thú cùng cử động là thứ làm máy chậm. Tiết kiệm: chỉ thú bạn đang xem cử động, danh sách và thú trên màn hình đứng yên tới khi bạn trỏ chuột vào. Tự động chọn Tiết kiệm trên máy có từ 4 luồng CPU hoặc 4 GB RAM trở xuống, và Tắt khi hệ thống yêu cầu giảm chuyển động.',
     desktop: 'Thú trên màn hình',
     floatToggle: 'Cho một chú thú ngồi trên màn hình',
     floatWho: 'Ai ngồi',
@@ -483,7 +486,7 @@ const vi = {
     empty: 'Không tìm thấy gì.',
     keys: { move: 'chọn', open: 'mở', close: 'đóng' },
     actions: {
-      refresh: 'Làm mới tất cả thú', rescan: 'Tìm lại dự án trong các thư mục', theme: 'Đổi giao diện sáng / tối',
+      refresh: 'Làm mới tất cả thú', rescan: 'Tìm lại dự án trong các thư mục', theme: 'Đổi giao diện sáng / tối', motion: 'Đổi mức chuyển động của thú',
       lang: 'Switch to English', addFolder: 'Thêm thư mục dự án', float: 'Bật / tắt thú trên màn hình', adoptAll: 'Nhận nuôi mọi repo chưa có thú',
       feedAll: 'Cho mọi thú ăn', playAll: 'Chơi với mọi thú', patAll: 'Xoa đầu mọi thú', backup: 'Xuất bản sao lưu',
     },
@@ -509,6 +512,7 @@ const en = {
   common: {
     copy: 'Copy', copied: 'Copied!', download: 'Download', share: 'Copy share link', shared: 'Link copied',
     uiLang: 'Interface language', petLang: 'Pet speaks', theme: 'Theme', themes: { auto: 'Auto', light: 'Light', dark: 'Dark' },
+    motion: 'Motion', motions: { auto: 'Auto', full: 'Full', lite: 'Power saver', off: 'Off' },
     auto: 'auto', species: 'Species', scenery: 'Home', name: 'Name', namePlaceholder: 'let the repo name it',
     locked: 'Locked', unlocked: 'Unlocked', wearing: 'Wearing', none: 'None', close: 'Close',
     shortcuts: 'Shortcuts', useIt: 'Use this one', tryIt: 'Try it', open: 'Open',
@@ -912,6 +916,8 @@ const en = {
     quietNote: 'No system notifications in between. The news still waits under “Just happened”.',
     refresh: 'Auto refresh',
     every: (n) => `Every ${n} minutes`,
+    performance: 'Performance',
+    motionNote: 'Many pets moving at once is what slows a computer down. Power saver: only the pet you’re looking at moves; lists and the desktop pet hold still until you point at them. Auto picks Power saver on computers with 4 CPU threads or 4 GB of memory or less, and Off when your system asks for reduced motion.',
     desktop: 'Desktop pet',
     floatToggle: 'Let a pet sit on your desktop',
     floatWho: 'Who sits there',
@@ -976,7 +982,7 @@ const en = {
     empty: 'Nothing found.',
     keys: { move: 'move', open: 'open', close: 'close' },
     actions: {
-      refresh: 'Refresh every pet', rescan: 'Look for projects again', theme: 'Switch light / dark',
+      refresh: 'Refresh every pet', rescan: 'Look for projects again', theme: 'Switch light / dark', motion: 'Change how much pets move',
       lang: 'Chuyển sang tiếng Việt', addFolder: 'Add a project folder', float: 'Toggle the desktop pet', adoptAll: 'Adopt every repo without a pet',
       feedAll: 'Feed every pet', playAll: 'Play with every pet', patAll: 'Pat every pet', backup: 'Export a backup',
     },

@@ -2,14 +2,18 @@
 // click the pet to hear what it thinks. Used by the desktop app and by "Floating window".
 import { renderMini, LANGS, commandReply } from './src/index.js';
 import { api, desktop, listen, petOf } from './local.js';
+import { hoverToMove, resolveMotion, stopHoverToMove } from './motion.js';
 
 const params = new URLSearchParams(location.search);
 if (params.has('transparent')) document.documentElement.classList.add('transparent');
 const $ = (id) => document.getElementById(id);
 const dark = matchMedia('(prefers-color-scheme: dark)');
-const uiLang = () => {
-  try { return JSON.parse(localStorage.getItem('legacypet.playground.v2'))?.cfg?.lang ?? null; } catch { return null; }
+const saved = () => {
+  try { return JSON.parse(localStorage.getItem('legacypet.playground.v2')) ?? {}; } catch { return {}; }
 };
+const uiLang = () => saved().cfg?.lang ?? null;
+// The app's motion setting (shared through this browser's storage, or the app's settings).
+const motion = () => resolveMotion(saved().motion ?? state?.config?.motion ?? 'auto');
 let state = null;
 let project = null;
 let hideTimer = null;
@@ -48,7 +52,14 @@ function draw() {
   }
   const lang = uiLang() ?? state.config.ui ?? 'en';
   const pet = petOf(project, { lang });
-  $('pet').src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(renderMini(pet, { theme: dark.matches ? 'dark' : 'light' }))}`;
+  // On 'lite' the pet holds still and wakes up while the pointer is on it: a pet that never
+  // stops moving keeps a slow computer busy all day.
+  const picture = (still) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(renderMini(pet, { theme: dark.matches ? 'dark' : 'light', still }))}`;
+  const mode = motion();
+  const img = $('pet');
+  img.src = picture(mode !== 'full');
+  if (mode === 'lite') hoverToMove(img, { still: () => picture(true), live: () => picture(false) });
+  else stopHoverToMove(img);
   $('pet').alt = `${pet.displayName}: ${pet.speech}`;
   document.title = `${pet.name} · LegacyPet`;
   const L = LANGS[pet.lang] ?? LANGS.en;
