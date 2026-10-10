@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "generator": "legacypet",
+  "version": "1.3.0",
+  "generatedAt": "2026-10-10T21:47:41.367Z",
+  "repo": "Tanx-1811/legacypet",
+  "born": "2026-10-08",
+  "pet": {
+    "name": "Kobbo",
+    "displayName": "Kobbo the Feverish",
+    "species": "blob",
+    "shiny": false,
+    "stage": "baby",
+    "level": 12,
+    "rank": "bronze",
+    "mood": "sick",
+    "speech": "CI is red. Could someone check \"test (24)\"?",
+    "accessories": {
+      "hat": "icepack",
+      "face": null,
+      "pal": null
+    },
+    "aura": false
+  },
+  "vitals": {
+    "fullness": 99,
+    "health": 28,
+    "joy": 100,
+    "energy": 100,
+    "hygiene": 85
+  },
+  "facts": {
+    "daysSinceCommit": 0.2,
+    "commits7": 100,
+    "streak": 3,
+    "totalCommits": 135,
+    "stars": 1,
+    "ageDays": 2
+  },
+  "achievements": {
+    "shipper": "2026-10-08",
+    "hatched": "2026-10-08",
+    "inboxZero": "2026-10-08",
+    "quester": "2026-10-08",
+    "centurion": "2026-10-09"
+  },
+  "events": {
+    "hatched": "2026-10-08",
+    "levelUp": "2026-10-10",
+    "questDone": "2026-10-10",
+    "release": "2026-10-10",
+    "rankUp": "2026-10-09"
+  },
+  "vacations": [],
+  "quests": {
+    "week": "2026-10-05",
+    "ids": [
+      "marathon",
+      "doctor",
+      "sunny"
+    ],
+    "done": {
+      "marathon": "2026-10-10",
+      "sunny": "2026-10-10"
+    }
+  },
+  "questStars": 2,
+  "evolution": null,
+  "care": {
+    "day": "2026-10-10",
+    "today": {
+      "feed": [],
+      "play": [],
+      "pat": []
+    },
+    "total": 0,
+    "friends": {}
+  },
+  "wardrobe": {
+    "worn": []
+  },
+  "alert": null,
+  "history": [
+    {
+      "date": "2026-10-10",
+      "mood": "sick",
+      "vitals": [
+        99,
+        28,
+        100,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "mood": "party",
+      "vitals": [
+        97,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-08",
+      "mood": "party",
+      "vitals": [
+        99,
+        100,
+        95,
+        100
+      ]
+    }
+  ],
+  "lastMood": "sick",
+  "lastStage": "baby"
+}
