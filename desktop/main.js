@@ -158,6 +158,7 @@ function setFloat(on) {
     minimizable: false,
     show: false,
     title: 'LegacyPet',
+    icon: isMac ? undefined : join(here, 'build', 'icon.png'),
     webPreferences: { preload, contextIsolation: true, sandbox: true, nodeIntegration: false },
   });
   floatWin.setAlwaysOnTop(true, 'floating');

@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { MOODS } from '../src/engine/mood.js';
 import { buildPet } from '../src/engine/pet.js';
 import { mockSnapshot } from '../src/mock.js';
 import { renderCard } from '../src/render/card.js';
+import { BRAND, LOGO_PATH } from '../src/render/logo.js';
 import { renderMini } from '../src/render/mini.js';
 import { renderPark } from '../src/render/park.js';
 import { terminalArt } from '../src/render/terminal.js';
@@ -119,4 +122,17 @@ test('scene animations never hit the card chrome', () => {
     assert.doesNotMatch(svg, new RegExp(`\.${cls}\{animation`), `.${cls} must not be animated`);
   }
   assert.match(svg, /class="lp-bubbling/);
+});
+
+test('every copy of the logo is the one in src/render/logo.js', () => {
+  const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+  const icon = read('site/icon.svg');
+  assert.ok(icon.includes(`d="${LOGO_PATH}"`) && BRAND.every((c) => icon.includes(c)), 'site/icon.svg: LOGO_PATH on the BRAND gradient');
+  assert.ok(read('site/index.html').includes(`d="${LOGO_PATH}"`), 'site/index.html: the sidebar logo is LOGO_PATH');
+  assert.ok(read('site/app.css').includes(`--brand-1: ${BRAND[0]}; --brand-2: ${BRAND[1]};`), 'site/app.css: --brand-1 and --brand-2 are BRAND');
+  assert.ok(renderCard(buildPet({ snapshot: mockSnapshot({ mood: 'happy', now: NOW }), now: NOW, options: { holiday: null } })).includes(`d="${LOGO_PATH}"`), 'the card signs with the logo');
+  // Browsers keep a favicon by its URL even when the file changes (the app window kept the old paw), so a new logo needs a new URL.
+  const v = createHash('sha256').update(icon).digest('hex').slice(0, 8);
+  for (const page of ['site/index.html', 'site/float.html']) assert.ok(read(page).includes(`href="icon.svg?v=${v}"`), `${page}: link the favicon as icon.svg?v=${v}`);
+  assert.ok(read('docs/gallery/index.html').includes(encodeURIComponent(icon)), 'docs/gallery: run npm run gallery');
 });

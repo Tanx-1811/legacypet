@@ -343,7 +343,7 @@ export function pushScene(ctx) {
 
 export function mergeScene(ctx) {
   const s = ctx.look.scale;
-  const W = 36 * s;
+  const W = 42 * s;
   const H = 22 * s;
   const P = { x: 10 * s, y: H };
   const gift = PROPS.gift;
