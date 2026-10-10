@@ -77,6 +77,9 @@ h3 > .icon { color: var(--muted); }
 .side-search .label { flex: 1; }
 .side-search:hover { border-color: var(--border-strong); color: var(--text); }
 .toolbar { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+/* Language, theme, motion, help and GitHub fit on one line at the foot of the sidebar. */
+.side-foot.toolbar { gap: 2px; }
+.side-foot .btn.icon-only { padding: 6px; }
 .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 2px; }
 .seg button { border: 0; background: transparent; padding: 4px 9px; border-radius: 6px; font-size: 12.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
 .seg button:hover { color: var(--text); }
