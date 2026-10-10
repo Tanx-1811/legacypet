@@ -451,12 +451,19 @@ commits are still the real food. The pet remembers its best friends.
 
 [The playground](https://tanx-1811.github.io/legacypet/) runs the same engine in your browser, in English or Vietnamese:
 
-- **Hatch** any public repo and see its checkup, this week's quests and which path it leans towards.
+- **Hatch** any public repo and see its checkup, this week's quests and which path it leans towards. Download the card
+  (SVG or PNG), copy its README line, and jump to the repo's issues, pull requests, Actions or its pet's diary.
 - **Raise** a pet day by day: choose what the repo does each day (commits, CI, PRs, issues, releases), feed it, play,
   dress it up, type `/pet` commands, fast-forward a week or let an autoplay habit run it. Toasts tell you about level-ups, quests and trophies.
-- **Codex**: every species, mood, path, item, quest, rank, trophy and home, each with how to get it.
-- **Park**: build a Pet Park from any repos.
-- **Adopt**: pick everything once and copy the command, the workflow and the README snippet.
+- **Codex**: every species, mood, path, item, quest, rank, trophy and home, each with how to get it, with a search box.
+- **Park**: build a Pet Park from any repos (it starts with a few made-up pets, so there is something to see).
+- **Adopt**: pick everything once and copy the command, the workflow and the README snippet, then open the README
+  editor and the workflow run on GitHub straight from the steps.
+
+A bar on top of Hatch, Raise and Adopt shows the three steps (hatch, make it yours, adopt) and ticks the ones you've done.
+**Share** copies a link that carries the pet's look (species, home, color, name, catchphrase, language), a made-up
+mood or a whole park, so whoever opens it sees the same pet. Repos you hatched lately come back as one-click chips,
+**Surprise me** rolls a random look, and **?** lists every shortcut (`1`–`9` jump between pages).
 
 ## Trophies
 

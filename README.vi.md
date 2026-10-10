@@ -412,11 +412,18 @@ không thể nuôi một con thú bị bỏ bê: commit vẫn là bữa chính. 
 [Playground](https://tanx-1811.github.io/legacypet/) chạy đúng engine đó ngay trong trình duyệt, có tiếng Việt:
 
 - **Nở thú**: xem repo công khai bất kỳ nở ra con gì, kèm khám sức khỏe, nhiệm vụ tuần này và hệ tiến hóa đang nghiêng về.
+  Tải thẻ (SVG hoặc PNG), chép đoạn README, và mở ngay issue, pull request, Actions hay nhật ký của thú trên GitHub.
 - **Nuôi thử**: tự quyết repo làm gì mỗi ngày (commit, CI, PR, issue, release), cho ăn, chơi, mặc đồ, gõ lệnh `/pet`,
   tua nhanh một tuần hoặc để chế độ tự chơi chạy. Có thông báo mỗi lần lên cấp, xong nhiệm vụ hay mở cúp.
-- **Sổ tay**: mọi loài, tâm trạng, hệ tiến hóa, món đồ, nhiệm vụ, cấp bậc, cúp và quê nhà, kèm cách đạt được.
-- **Công viên**: ghép Công viên thú từ các repo bất kỳ.
-- **Nhận nuôi**: chọn một lần, chép lệnh, file workflow và đoạn README.
+- **Sổ tay**: mọi loài, tâm trạng, hệ tiến hóa, món đồ, nhiệm vụ, cấp bậc, cúp và quê nhà, kèm cách đạt được, có ô tìm kiếm.
+- **Công viên**: ghép Công viên thú từ các repo bất kỳ (mở ra là có sẵn vài thú mẫu để xem).
+- **Nhận nuôi**: chọn một lần, chép lệnh, file workflow và đoạn README, rồi mở trình sửa README và lượt chạy workflow
+  trên GitHub ngay từ từng bước.
+
+Thanh ba bước ở đầu trang Nở thú, Nuôi thử và Nhận nuôi (nở thú, cá nhân hoá, nhận nuôi) đánh dấu những bước bạn đã làm.
+**Chia sẻ** chép một đường link mang theo diện mạo của thú (loài, quê nhà, màu lông, tên, câu cửa miệng, ngôn ngữ),
+một tâm trạng mẫu hoặc cả công viên, ai mở link cũng thấy đúng con thú đó. Các repo vừa nở hiện lại thành chip bấm một lần,
+**Ngẫu nhiên** đổi diện mạo bất ngờ, và phím **?** liệt kê mọi phím tắt (`1`–`9` để chuyển trang).
 
 ## 💬 Nói chuyện với thú: `/pet`
 

@@ -19,6 +19,12 @@ Releases that need a change to your workflow file say so.
   (calendar, recent commits), quests and trophies, and its look; pin pets, sort them, or switch to a list.
 - ⌨️ **⌘K / Ctrl+K**: a command palette for every page, pet and action. Open a project in your code editor or a terminal
   from its page, and bring the desktop app up from anywhere with ⌘⇧L / Ctrl+Shift+L.
+- 🧭 **Easier from the first click**: a three-step bar (hatch, make it yours, adopt) on top of the playground's pages,
+  share links that carry the pet's look, a made-up mood or a whole park, your recent repos as one-click chips,
+  color swatches and **Surprise me** for the look, quick links to a repo's issues, pull requests, Actions and pet diary,
+  card downloads (SVG or PNG) right where the pet hatches, a searchable codex, a park that starts with a few pets,
+  links from Adopt to the README editor and the workflow run, toasts with a next step, and a **?** sheet with every
+  shortcut (`1`–`9` jump between pages). In the app, a pet's GitHub pages sit in sight on its page.
 - 🎨 **A new look**: a cleaner design with Lucide icons, a sidebar that folds into icons, scrolling tabs on phones,
   and a download page for the app.
 - 🐣 **A logo of its own**: a pet that just hatched, still wearing a piece of its eggshell, in LegacyPet's new teal.
