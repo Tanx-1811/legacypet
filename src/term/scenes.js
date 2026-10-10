@@ -281,7 +281,7 @@ export function pushScene(ctx) {
   const s = ctx.look.scale;
   const W = 30 * s;
   const H = 22 * s;
-  const P = { x: 9 * s, y: H };
+  const P = { x: 10 * s, y: H };
   const R = { x: 22 * s, y: H };
   const T = { lift: 0.45, gone: 1.45 };
   const rocket = sprite(PROPS.rocket, s);
@@ -345,7 +345,7 @@ export function mergeScene(ctx) {
   const s = ctx.look.scale;
   const W = 36 * s;
   const H = 22 * s;
-  const P = { x: 9 * s, y: H };
+  const P = { x: 10 * s, y: H };
   const gift = PROPS.gift;
   const g = sprite(gift, s);
   const count = () => Math.max(1, Math.min(5, ctx.data?.count ?? 1));

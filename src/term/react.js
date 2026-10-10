@@ -105,8 +105,8 @@ export function branchChanged(dirs, [prev, next, flag] = []) {
   return move ? move[1] !== move[2] : prev !== next;
 }
 
-// A rebase, cherry-pick or `git am` replays commits one by one, each one firing the hooks:
-// the pet sits those out.
+// A rebase, cherry-pick or `git am` replays commits one by one, each one firing the hooks, and
+// a bisect checks out commit after commit: the pet sits those out.
 export function replaying(dirs, env = process.env) {
   if (/\b(rebase|cherry-pick|am|revert)\b/.test(env.GIT_REFLOG_ACTION ?? '')) return true;
   return ['rebase-merge', 'rebase-apply', 'sequencer', 'BISECT_LOG'].some((f) => existsSync(join(dirs.own, f)));
@@ -165,10 +165,14 @@ export async function raise(root, state, { now = new Date(), lang, care = null }
   return { pet, info, prev };
 }
 
+// Saves what the pet just lived through, and keeps it as the memory for the next visit.
 export function remember(state, pet, prev) {
+  const memory = nextState(pet, prev);
   try {
-    state.store.saveMemory(state.id, nextState(pet, prev));
+    state.store.saveMemory(state.id, memory);
   } catch { /* a read-only home folder: the pet just won't remember this one */ }
+  state.memory = memory;
+  return memory;
 }
 
 async function shortstat(root) {
