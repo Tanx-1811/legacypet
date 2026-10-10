@@ -234,29 +234,39 @@ const lumaOf = (hex) => {
 
 const LEVELS = [-2, -1, 0, 1, 2];
 
+const lettersOf = new WeakMap();
+
 // Draws a sprite at twice its resolution: magnified, its outline thinned and the rest lit.
 // `colorOf(letter)` gives each letter's color and `ink` is the outline letter (null for none).
 // `rankBy(letter)` gives the colors that decide which letter wins where MMPX has to choose:
 // pass the sprite's usual colors, so a pet keeps exactly the same shape in every mood and tint.
-// Returns pixels { x, y, c } on the doubled grid, offset by (ox, oy).
+// Returns pixels { x, y, c } on the doubled grid, offset by (ox, oy). The same sprite in the
+// same colors (a card, then its mini) comes back from a cache: treat the result as read-only.
 export function hdPixels(rows, colorOf, { ink = 'o', light = true, ox = 0, oy = 0, rankBy = colorOf } = {}) {
-  const letters = [...new Set(rows.join(''))].filter((k) => k !== '.');
-  // Letters from darkest to lightest (ties broken by letter, so the order is stable).
+  let letters = lettersOf.get(rows);
+  if (!letters) lettersOf.set(rows, (letters = [...new Set(rows.join(''))].filter((k) => k !== '.').sort()));
+  // Letters from darkest to lightest (ties keep alphabetical order, so the order is stable).
   const rank = letters
     .map((k) => [k, lumaOf(rankBy(k))])
-    .sort((a, b) => a[1] - b[1] || (a[0] < b[0] ? -1 : 1))
+    .sort((a, b) => a[1] - b[1])
     .map(([k]) => k)
     .join('');
-  const { W, cells, fill, level } = shapeOf(rows, rank, ink, light);
-  const inkHex = ink && colorOf(ink);
-  const tone = inkHex ? oklchOf(inkHex) : null;
+  const shape = shapeOf(rows, rank, ink, light);
+  const colors = letters.map(colorOf);
+  const key = `${ox},${oy}|${colors.join('')}`;
+  shape.drawn ??= new Map();
+  const hit = shape.drawn.get(key);
+  if (hit) return hit;
+
+  const { W, cells, fill, level } = shape;
+  const tone = ink ? oklchOf(colorOf(ink)) : null;
   const tint = tone && tone.c > 0.02 ? Math.round(tone.h) : null;
   // Every tone each letter can take, worked out once instead of once per pixel.
   const ramp = [];
-  for (const k of letters) {
-    const c = colorOf(k);
+  letters.forEach((k, i) => {
+    const c = colors[i];
     ramp[k.charCodeAt(0)] = level ? LEVELS.map((v) => shadeColor(c, v, tint)) : [c, c, c, c, c];
-  }
+  });
   const out = [];
   for (let i = 0; i < cells.length; i++) {
     const k = cells[i];
@@ -264,5 +274,7 @@ export function hdPixels(rows, colorOf, { ink = 'o', light = true, ox = 0, oy = 
     const x = i % W;
     out.push({ x: ox + x, y: oy + (i - x) / W, c: ramp[k][fill[i] && level ? level[i] + 2 : 2] });
   }
+  if (shape.drawn.size >= 64) shape.drawn.clear();
+  shape.drawn.set(key, out);
   return out;
 }

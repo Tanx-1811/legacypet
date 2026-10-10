@@ -181,7 +181,7 @@ function hatPixelsHd(kind, [cx, top]) {
 function composeEggHd(pet, palette) {
   const shell = eggShell(palette);
   const usual = eggShell(pet.species.palette);
-  const base = hdPixels(EGG, (k) => shell[k], { rankBy: (k) => usual[k] });
+  const base = [...hdPixels(EGG, (k) => shell[k], { rankBy: (k) => usual[k] })];
   const points = EGG_CRACK.slice(0, Math.round(pet.hatchProgress * EGG_CRACK.length)).map(([x, y]) => [2 * x, 2 * y]);
   points.forEach(([x, y], i) => {
     base.push({ x, y, c: palette.o });
@@ -198,9 +198,11 @@ function composeEggHd(pet, palette) {
 function composeHd(pet, palette, face, colorOf) {
   const { species } = pet;
   const ink = palette.o;
+  let iris;
+  let inside;
   const faceColor = (ch) => {
-    if (ch === 'i') return mixOklab(ink, '#ffffff', 0.28);
-    if (ch === 'm') return mixOklab(ink, '#c0304a', 0.55);
+    if (ch === 'i') return (iris ??= mixOklab(ink, '#ffffff', 0.28));
+    if (ch === 'm') return (inside ??= mixOklab(ink, '#c0304a', 0.55));
     return colorOf(ch);
   };
   // The shape is decided by the species' usual colors, so it never changes with mood or tint.
