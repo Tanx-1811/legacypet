@@ -35,6 +35,11 @@ export function hookBlock(event, { node = process.execPath, cli }) {
   ].join('\n');
 }
 
+// The same as one line, for hooks kept somewhere LegacyPet doesn't write to (husky and friends).
+export function hookCommand(event, { node = process.execPath, cli }) {
+  return `${quote(node)} ${quote(cli)} react ${event} --hook "$@" || true`;
+}
+
 function gitOut(root, args) {
   try {
     return execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }).trim();

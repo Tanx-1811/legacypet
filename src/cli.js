@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import {
   buildPet, checkup, collectPark, collectSnapshot, createClient, insertSnippet, LANG_NAMES, mockSnapshot, MOOD_EMOJI, MOODS,
@@ -22,6 +23,12 @@ Usage
   legacypet demo                  Draw a pet from made-up data
   legacypet gallery               Draw every species, mood, stage and holiday
 
+In your terminal
+  legacypet hooks install         The pet pops up when you commit, push, pull or switch branches
+  legacypet live                  Keep the pet in a terminal pane while you code (feed, play, focus timer)
+  legacypet hi                    Say hi: the pet waves and shows how the repo is doing
+  legacypet react <event>         Play one reaction: commit | push | merge | checkout | hello (the hooks run this)
+
 Options
   --species <id>   auto | ${SPECIES_IDS.join(' | ')}
   --scenery <home> auto | ${HOMES.join(' | ')}
@@ -40,6 +47,9 @@ Options
   demo:    --mood ${MOODS.join('|')}  --stage egg|baby|adult|elder  --shiny  --aura  --level-up  --commits <n>  --holiday <id>
   render, demo:  --vacation "until 2027-01-05"  preview the pet on vacation
   demo:    --wear "cap, bird" (any item, locked or not)  --path swift|guardian|social|sage
+  hooks:   install | remove | status  --events commit,push,merge,checkout  --all (every repo the app found)  --force
+  hi, live, react:  --big | --small  --motion off  --demo (a made-up pet: add --species, --mood, --level-up…)
+  live:    --focus <minutes> (the focus timer, default 25)   react commit --demo:  --message "fix: a bug"
 
 Preview any repo in the browser: ${PLAYGROUND}
 `;
@@ -76,6 +86,14 @@ const { values: opts, positionals } = parseArgs({
     all: { type: 'boolean' },
     port: { type: 'string' },
     'no-open': { type: 'boolean' },
+    hook: { type: 'boolean' },
+    big: { type: 'boolean' },
+    small: { type: 'boolean' },
+    motion: { type: 'string' },
+    demo: { type: 'boolean' },
+    message: { type: 'string' },
+    events: { type: 'string' },
+    focus: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
   },
 });
@@ -373,6 +391,110 @@ ${sections.map((s) => `<h2>${s.title}</h2><div class="grid">${s.items.map((i) =>
   console.log(`Wrote the gallery to ${join(out, 'index.html')}`);
 }
 
+// --- the pet in your terminal (src/term) -------------------------------------------------
+
+// `--lang` defaults to English for the other commands; here the pet's own language wins unless asked.
+const langGiven = process.argv.slice(2).some((a) => a === '--lang' || a.startsWith('--lang='));
+const sizeOption = () => (opts.big ? 'big' : opts.small ? 'small' : null);
+const demoOrNull = () => (opts.demo ? demoPet({
+  mood: opts.mood ?? 'happy', species: opts.species, scenery: opts.scenery, stage: opts.stage, shiny: opts.shiny, aura: opts.aura,
+  levelUp: opts['level-up'], commits: opts.commits, holiday: opts.holiday ?? null, lang: opts.lang, name: opts.name,
+  color: opts.color, motto: opts.motto, wear: opts.wear, path: opts.path,
+}) : null);
+
+async function reactCommand(event, args) {
+  const { EVENTS, react } = await import('./term/react.js');
+  if (!EVENTS.includes(event)) throw new Error(`Usage: legacypet react <${EVENTS.join(' | ')}>`);
+  await react(event, {
+    args, hook: opts.hook, lang: langGiven ? opts.lang : null, size: sizeOption(), motion: opts.motion, demo: demoOrNull(), message: opts.message,
+  });
+}
+
+async function liveCommand() {
+  const { live } = await import('./term/live.js');
+  await live({ lang: langGiven ? opts.lang : null, size: sizeOption(), demo: demoOrNull(), focusMinutes: Math.max(1, Number(opts.focus) || 25) });
+}
+
+const HOOK_STATUS = {
+  created: 'created', added: 'added to the hook that was there', updated: 'updated', exists: 'already there',
+  skipped: 'skipped: that hook is not a shell script', removed: 'removed (the rest of the hook stays)', deleted: 'removed', none: '',
+};
+
+async function hooksCommand(action = 'status') {
+  const { HOOKS, hookCommand, hookStatus, installHooks, removeHooks } = await import('./local/hooks.js');
+  const { findRoot } = await import('./term/react.js');
+  if (!['install', 'remove', 'uninstall', 'status'].includes(action)) throw new Error('Usage: legacypet hooks install | remove | status');
+  const cli = fileURLToPath(import.meta.url);
+  let roots;
+  if (opts.all) {
+    const { createStore } = await import('./local/store.js');
+    roots = (createStore().loadCache().projects ?? []).map((p) => p.path).filter((p) => p && existsSync(join(p, '.git')));
+    if (!roots.length) throw new Error('The LegacyPet app has not found any repos yet. Open it once (legacypet app), or run this inside a repo.');
+  } else {
+    const root = findRoot(process.cwd());
+    if (!root) throw new Error('This is not a git repo. Run it inside a project, or pass --all for every repo the LegacyPet app found.');
+    roots = [root];
+  }
+  const events = opts.events ? opts.events.split(/[\s,]+/).filter(Boolean) : Object.keys(HOOKS);
+  const many = roots.length > 1;
+
+  if (action === 'status') {
+    for (const root of roots) {
+      const { dir, hooks } = hookStatus(root);
+      console.log(`🐣 Terminal pet hooks in ${many ? root : dir}`);
+      for (const h of hooks) console.log(`   ${h.installed ? '✔' : '·'} ${h.event.padEnd(9)} ${h.hook.padEnd(14)} ${h.installed ? '' : 'not installed'}`);
+    }
+    if (!many) console.log('\n   legacypet hooks install   ·   legacypet hooks remove');
+    return;
+  }
+
+  if (action === 'remove' || action === 'uninstall') {
+    for (const root of roots) {
+      const gone = removeHooks(root).results.filter((r) => r.status !== 'none');
+      if (many) console.log(`${gone.length ? '✔' : '·'} ${root}${gone.length ? '' : ': nothing to remove'}`);
+      else if (!gone.length) console.log('🐣 No LegacyPet hooks here.');
+      else {
+        console.log("🐣 The pet won't pop up in this repo's terminal any more:");
+        for (const r of gone) console.log(`   ✔ ${r.hook.padEnd(14)} ${HOOK_STATUS[r.status]}`);
+      }
+    }
+    return;
+  }
+
+  let blocked = 0;
+  for (const root of roots) {
+    const { dir, custom, blocked: isBlocked, results } = installHooks(root, { events, cli, force: opts.force });
+    if (isBlocked) {
+      blocked += 1;
+      console.log(`• ${many ? `${root}: ` : ''}its hooks live in ${custom} (core.hooksPath, set by a tool like husky and often shared with your team), so LegacyPet left them alone.`);
+      if (!many) {
+        console.log('  Add a line like this to the hooks you want there (for example .husky/post-commit):');
+        console.log(`    ${hookCommand('commit', { cli })}`);
+        console.log(`  Or write them into ${dir} anyway: legacypet hooks install --force`);
+      }
+      continue;
+    }
+    if (many) {
+      console.log(`✔ ${root}`);
+      continue;
+    }
+    console.log('🐣 Your pet will pop up in this terminal now:');
+    for (const r of results) console.log(`   ${r.status === 'skipped' ? '·' : '✔'} ${r.event.padEnd(9)} → ${r.hook.padEnd(14)} ${HOOK_STATUS[r.status]}`);
+  }
+  if (!many && !blocked) {
+    console.log(`
+   Try it:  git commit --allow-empty -m "feat: hello, pet"
+   Quiet for one command: LEGACYPET_QUIET=1 git commit …    Remove: legacypet hooks remove
+   LEGACYPET_HOOK=line (just one line) · still (no animation) · off    LEGACYPET_SIZE=big (a bigger pet)`);
+  }
+  if (/[\\/]_npx[\\/]/.test(cli)) {
+    console.log(`
+⚠ This copy of LegacyPet sits in npm's temporary cache, which npm may clear. To keep the hooks working, install it:
+    npm install -g github:Tanx-1811/legacypet
+  (when this copy is gone, the hooks use the \`legacypet\` on your PATH)`);
+  }
+}
+
 // The app: a local server plus a window. Quits when the last window closes.
 async function app() {
   const { DEFAULT_PORT, hasSite, startServer } = await import('./app/server.js');
@@ -417,6 +539,10 @@ async function main() {
   if (command === 'park') return park(args[0], args.slice(1));
   if (command === 'demo') return demo();
   if (command === 'gallery') return gallery();
+  if (command === 'hooks') return hooksCommand(args[0]);
+  if (command === 'react') return reactCommand(args[0], args.slice(1));
+  if (command === 'hi' || command === 'hello') return reactCommand('hello', args);
+  if (command === 'live' || command === 'buddy') return liveCommand();
   throw new Error(`Unknown command "${command}". Run legacypet --help`);
 }
 
