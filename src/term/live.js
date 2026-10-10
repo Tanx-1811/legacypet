@@ -318,7 +318,10 @@ export async function live({
   }
 
   function panelLines(width) {
-    const lines = [nameLine(pet, mode), xpLine(pet, w, mode), ...vitalsLines(pet, mode)];
+    // Until the repo has been read, the pet is drawn from its memory, which may not hold everything.
+    const lines = [nameLine(pet, mode)];
+    if (pet.progress) lines.push(xpLine(pet, w, mode));
+    if (pet.vitals) lines.push(...vitalsLines(pet, mode));
     const today = info?.activity?.[localDay(new Date())];
     const last = info?.snapshot?.commits?.lastDate;
     const facts = [

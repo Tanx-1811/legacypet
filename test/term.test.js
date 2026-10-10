@@ -399,3 +399,19 @@ test('live: a pet in a terminal pane that takes keys and leaves the screen as it
   assert.match(strip(text), /🎯 tập trung 01:00/);
   assert.match(strip(text), /Mochi: Tạm biệt! Ship tiếp nhé/);
 });
+
+test('live in a repo starts at once from the pet\'s memory, then reads the repo', async () => {
+  const { dir } = makeRepo('live-repo', 3);
+  await react('hello', { dir, motion: 'off', out: fakeOut(), env: {} }); // leaves a memory behind
+  const out = fakeOut({ columns: 90, rows: 30 });
+  const input = new EventEmitter();
+  Object.assign(input, { isTTY: true, setRawMode: () => {}, setEncoding: () => {}, resume: () => {}, pause: () => {} });
+  const running = live({ dir, out, input, env: { LANG: 'en_US.UTF-8' } });
+  await new Promise((r) => setTimeout(r, 400));
+  input.emit('data', 'q');
+  await running;
+  const text = strip(out.text());
+  assert.doesNotMatch(text, /waking up/, 'no wait: the memory is enough to start');
+  assert.match(text, /Lv\.2 🌱 Rookie/);
+  assert.match(text, /🍖 ━+ +\d+/, 'vitals from memory');
+});

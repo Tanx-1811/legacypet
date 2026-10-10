@@ -12,7 +12,7 @@ import { petName } from '../engine/identity.js';
 import { parseColor } from '../engine/look.js';
 import { nextState } from '../engine/memory.js';
 import { buildPet } from '../engine/pet.js';
-import { rankFor } from '../engine/rank.js';
+import { levelProgress, rankFor } from '../engine/rank.js';
 import { resolveLang, strings } from '../i18n/index.js';
 import { readWorkflow, workflowOptions } from '../local/adopt.js';
 import { git, gitDirs, readRepo } from '../local/git.js';
@@ -149,6 +149,8 @@ export function petFromMemory(memory, options = {}, lang = 'en') {
     name: options.name?.trim() || memory.pet?.name || petName(fullName),
     shiny: Boolean(memory.pet?.shiny), tint, aura: Boolean(memory.pet?.aura), accessories: memory.pet?.accessories ?? {},
     stage: memory.pet?.stage ?? 'adult', hatchProgress: Math.min(1, (memory.facts?.totalCommits ?? 5) / 5), speech: memory.pet?.speech,
+    vitals: memory.vitals ?? null, facts: memory.facts ?? {}, events: [],
+    progress: levelProgress({ level, totalCommits: memory.facts?.totalCommits }, species.modifiers),
   };
 }
 
@@ -334,6 +336,7 @@ async function reactTo(event, {
   let raised = null;
   const needPet = !demo && (!ctx.lookPet || event === 'commit' || event === 'hello' || event === 'merge');
   const raising = needPet ? raise(root, state, { now, lang }).then((r) => (raised = r)) : Promise.resolve(null);
+  raising.catch(() => {}); // a repo git can't read is handled below, never left to crash the hook
   const finish = (data, r = raised) => {
     if (r) {
       ctx.pet = r.pet;

@@ -58,20 +58,20 @@ export function nameLine(pet, mode) {
   return [p(pet.name, { bold: true }), `Lv.${pet.level}${rank}`, `${MOOD_EMOJI[pet.mood] ?? ''} ${tr.moods[pet.mood] ?? pet.mood}`].join(dot(mode));
 }
 
-// How full the bar to the next level is, counted in commits (like levelProgress).
-export function levelFraction(pet) {
+// How full the bar to the next level is, counted in commits (like levelProgress), and how much one commit adds.
+export function levelBar(pet) {
   const next = pet.progress?.nextLevel;
-  if (!next) return 1;
+  if (!next) return { fill: 1, step: 0 };
   const rate = withDefaults(pet.species?.modifiers).xpRate;
   const need = (lv) => Math.ceil((lv - 1) ** 2 / rate);
   const span = need(next.level) - need(pet.level);
-  return span > 0 ? clamp01(1 - next.commits / span) : 1;
+  return span > 0 ? { fill: clamp01(1 - next.commits / span), step: 1 / span } : { fill: 1, step: 0 };
 }
 
 export function xpLine(pet, w, mode, fill = null) {
   const next = pet.progress?.nextLevel;
   if (!next) return paint(mode)(`★ ${w.maxLevel}`, { fg: GOLD, bold: true });
-  return `${bar(fill ?? levelFraction(pet), 16, pet.rank?.color ?? GREEN, mode)} ${w.toNext(next.commits, next.level)}`;
+  return `${bar(fill ?? levelBar(pet).fill, 16, pet.rank?.color ?? GREEN, mode)} ${w.toNext(next.commits, next.level)}`;
 }
 
 const VITAL_ICONS = { fullness: '🍖', health: '💚', joy: '😊', energy: '⚡' };
@@ -84,7 +84,8 @@ export function vitalsLines(pet, mode) {
 
 // The one thing worth saying out loud after a commit, if anything.
 export function highlight(ctx) {
-  const { pet, data = {}, w, tr, now } = ctx;
+  const { pet, w, tr, now } = ctx;
+  const data = ctx.data ?? {};
   if (!pet) return null;
   const events = new Set(pet.events);
   if (events.has('hatched')) return w.hatched(pet.name);
@@ -243,10 +244,9 @@ export function commitScene(ctx) {
       const pet = ctx.ready && ctx.pet ? ctx.pet : ctx.lookPet;
       out.push(nameLine(pet, mode));
       if (ctx.ready && ctx.pet) {
-        const target = levelFraction(ctx.pet);
-        const leveled = ctx.pet.events.includes('levelUp');
-        const span = ctx.pet.progress?.nextLevel ? 1 / Math.max(1, ctx.pet.progress.nextLevel.commits + 1) : 0;
-        const before = leveled ? 0 : Math.max(0, target - span);
+        // The bar fills by the commit just eaten (or from empty, on a new level).
+        const { fill: target, step } = levelBar(ctx.pet);
+        const before = ctx.pet.events.includes('levelUp') ? 0 : Math.max(0, target - step);
         const fill = final ? target : before + (target - before) * ease(clamp01((t - T.react) / 0.6));
         out.push(xpLine(ctx.pet, w, mode, fill));
         const d = ctx.data ?? {};
