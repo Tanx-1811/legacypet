@@ -118,6 +118,42 @@ function rising(canvas, art, x, y, u, { life = 0.9, speed = 7, sway = 1 } = {}) 
   drawBitmap(canvas, art, x + Math.sin(u * 8) * sway, y - u * speed, REST);
 }
 
+// --- what the pet says ----------------------------------------------------------------------
+
+const MAIN_BRANCHES = new Set(['main', 'master', 'trunk', 'develop', 'dev']);
+
+// The pet's line for each event. Also the one line printed where there's nothing to draw on.
+export const SAY = {
+  commit(ctx) {
+    const { w, info } = ctx;
+    if (info.action === 'amend') return w.amend;
+    if (info.action === 'initial') return w.initial;
+    const species = ctx.pet?.species ?? ctx.lookPet?.species;
+    if (info.kind === 'other' && species?.food === 'water') return w.food.water;
+    return w.food[info.kind] ?? w.food.other;
+  },
+  push(ctx) {
+    const d = ctx.data ?? {};
+    if (d.tag) return ctx.w.pushTag(d.tag);
+    if (d.gone) return ctx.w.pushDelete(d.branch);
+    if (d.fresh) return ctx.w.pushNew(d.branch);
+    return ctx.w.push(d.count ?? 0, d.to ?? ctx.info.remote ?? 'origin');
+  },
+  merge: (ctx) => ctx.w.pulled(ctx.data?.count ?? 0),
+  checkout(ctx) {
+    const { w, info } = ctx;
+    if (!info.branch) return w.detached(String(info.sha ?? '').slice(0, 7));
+    return MAIN_BRANCHES.has(info.branch) ? w.home(info.branch) : w.branch(info.branch);
+  },
+  hello: (ctx) => (ctx.pet ?? ctx.lookPet)?.speech ?? ctx.w.live.hello((ctx.pet ?? ctx.lookPet)?.name ?? '🐣'),
+};
+
+// "🐣 Mochi: Nom nom! …"
+export function sayLine(event, ctx) {
+  const name = (ctx.pet ?? ctx.lookPet)?.name;
+  return `🐣 ${name ? `${name}: ` : ''}${SAY[event](ctx)}`;
+}
+
 // --- commit: the pet eats it ------------------------------------------------------------------
 
 export function commitScene(ctx) {
@@ -131,13 +167,7 @@ export function commitScene(ctx) {
   const from = { x: W - 4 * s, y: 7 * s };
   const confetti = confettiPieces(ctx.info.sha ?? 'commit', 18 * s, W);
   const party = () => (ctx.ready ? celebration(ctx.pet) : null);
-  const say = () => {
-    const { w, info } = ctx;
-    if (info.action === 'amend') return w.amend;
-    if (info.action === 'initial') return w.initial;
-    if (info.kind === 'other' && ctx.look.pet.species.food === 'water') return w.food.water;
-    return w.food[info.kind] ?? w.food.other;
-  };
+  const say = () => SAY.commit(ctx);
 
   return {
     size: { w: W, h: H },
@@ -232,8 +262,7 @@ export function commitScene(ctx) {
       return out;
     },
     text() {
-      const pet = ctx.pet ?? ctx.lookPet;
-      const lines = [`🐣 ${pet?.name ? `${pet.name}: ` : ''}${say()}`];
+      const lines = [sayLine('commit', ctx)];
       if (ctx.pet) {
         const next = ctx.pet.progress?.nextLevel;
         lines.push([`Lv.${ctx.pet.level} ${ctx.pet.rank.emoji}`, next ? ctx.w.toNext(next.commits, next.level) : ctx.w.maxLevel,
@@ -259,13 +288,7 @@ export function pushScene(ctx) {
   const flame = sprite(PROPS.flame, s);
   const confetti = confettiPieces(`push|${ctx.info.to}`, 16 * s, W);
   const tag = () => ctx.data?.tag;
-  const say = () => {
-    const d = ctx.data ?? {};
-    if (d.tag) return ctx.w.pushTag(d.tag);
-    if (d.gone) return ctx.w.pushDelete(d.branch);
-    if (d.fresh) return ctx.w.pushNew(d.branch);
-    return ctx.w.push(d.count ?? 0, d.to ?? ctx.info.remote ?? 'origin');
-  };
+  const say = () => SAY.push(ctx);
   return {
     size: { w: W, h: H },
     waitAt: 0.3,
@@ -312,7 +335,7 @@ export function pushScene(ctx) {
       out.push(d.friday ? p(ctx.w.friday, { fg: GOLD }) : '');
       return out;
     },
-    text: () => [`🐣 ${ctx.lookPet?.name ? `${ctx.lookPet.name}: ` : ''}${say()}`],
+    text: () => [sayLine('push', ctx)],
   };
 }
 
@@ -328,7 +351,7 @@ export function mergeScene(ctx) {
   const count = () => Math.max(1, Math.min(5, ctx.data?.count ?? 1));
   const spots = [[0, 0], [1, 0], [2, 0], [0.5, 1], [1.5, 1]];
   const drop = (i) => 0.3 + i * 0.22;
-  const say = () => ctx.w.pulled(ctx.data?.count ?? 0);
+  const say = () => SAY.merge(ctx);
   return {
     size: { w: W, h: H },
     waitAt: 0.3,
@@ -366,13 +389,11 @@ export function mergeScene(ctx) {
       out.push(nameLine(ctx.pet ?? ctx.lookPet, ctx.mode));
       return out;
     },
-    text: () => [`🐣 ${ctx.lookPet?.name ? `${ctx.lookPet.name}: ` : ''}${say()}`],
+    text: () => [sayLine('merge', ctx)],
   };
 }
 
 // --- checkout: off down a new branch --------------------------------------------------------
-
-const MAIN_BRANCHES = new Set(['main', 'master', 'trunk', 'develop', 'dev']);
 
 export function checkoutScene(ctx) {
   const s = ctx.look.scale;
@@ -384,11 +405,7 @@ export function checkoutScene(ctx) {
   const row = Math.floor((H - 13 * s) / 2);
   const x0 = Math.round(ctx.look.width / 2) + s;
   const x1 = signX - Math.round(ctx.look.width / 2) - 2 * s;
-  const say = () => {
-    const { w, info } = ctx;
-    if (!info.branch) return w.detached(String(info.sha ?? '').slice(0, 7));
-    return MAIN_BRANCHES.has(info.branch) ? w.home(info.branch) : w.branch(info.branch);
-  };
+  const say = () => SAY.checkout(ctx);
   return {
     size: { w: W, h: H },
     waitAt: null,
@@ -404,7 +421,7 @@ export function checkoutScene(ctx) {
     panel(t, width, final) {
       return [...bubble(say(), width, { shown: final ? Infinity : t * 60, mode: ctx.mode }), nameLine(ctx.lookPet, ctx.mode)];
     },
-    text: () => [`🐣 ${ctx.lookPet?.name ? `${ctx.lookPet.name}: ` : ''}${say()}`],
+    text: () => [sayLine('checkout', ctx)],
   };
 }
 
