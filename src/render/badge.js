@@ -3,7 +3,7 @@ import { strings } from '../i18n/index.js';
 import { hashString } from '../util/rng.js';
 import { escapeXml as esc, textWidth, truncate } from '../util/text.js';
 import { composePet } from './compose.js';
-import { bboxOf, rectsFromPixels } from './pixels.js';
+import { bboxOf, drawPixels } from './pixels.js';
 import { FONT } from './theme.js';
 
 export const BADGE_COLORS = {
@@ -37,7 +37,7 @@ export function renderBadge(pet) {
     `<g clip-path="url(#${uid}-r)">`,
     `<rect width="${lw}" height="20" fill="#2f343b"/><rect x="${lw}" width="${rw}" height="20" fill="${BADGE_COLORS[pet.mood]}"/>`,
     `<rect width="${width}" height="20" fill="url(#${uid}-s)"/></g>`,
-    `<g shape-rendering="crispEdges">${rectsFromPixels(pixels, 1, 5 - box.minX, Math.round((20 - sh) / 2) - box.minY)}</g>`,
+    `<g shape-rendering="crispEdges">${drawPixels(pixels, 1, 5 - box.minX, Math.round((20 - sh) / 2) - box.minY)}</g>`,
     `<g fill="#fff" font-family="${FONT.replace(/"/g, "'")}" font-size="11">`,
     text(5 + sw + 5, left),
     text(lw + 7, right),

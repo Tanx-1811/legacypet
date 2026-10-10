@@ -4,7 +4,7 @@ import { strings } from '../i18n/index.js';
 import { escapeXml } from '../util/text.js';
 import { composePet } from './compose.js';
 import { FLAME, MOVE_MOODS, MOVES, moveCss, moveOf } from './moves.js';
-import { rectsFromPixels, stamp } from './pixels.js';
+import { drawPixels, stamp } from './pixels.js';
 import { farFx, frontFx, homeOf, propsFx, SANDY, SCENERY, skyFx } from './scenery.js';
 
 const PX = {
@@ -151,15 +151,15 @@ function petGroup(s, comp) {
   const { pet, rng, cx, footY, ox, oy, unit } = s;
   const [cls, dur] = pet.mood === 'egg' ? ['lp-wobble', 4 - 2.5 * pet.hatchProgress] : ANIM[pet.mood] ?? ANIM.happy;
   const blink = sec(rng.range(3.2, 5.6));
-  let inner = comp.aura.length ? `<g class="lp-aura">${rectsFromPixels(comp.aura, unit, ox, oy)}</g>` : '';
-  inner += rectsFromPixels(comp.base, unit, ox, oy);
+  let inner = comp.aura.length ? `<g class="lp-aura">${drawPixels(comp.aura, unit, ox, oy)}</g>` : '';
+  inner += drawPixels(comp.base, unit, ox, oy);
   if (comp.eyesClosed) {
-    inner += `<g class="lp-blink-open" style="animation-duration:${blink}">${rectsFromPixels(comp.eyesOpen, unit, ox, oy)}</g>`;
-    inner += `<g class="lp-blink-closed" style="animation-duration:${blink}">${rectsFromPixels(comp.eyesClosed, unit, ox, oy)}</g>`;
+    inner += `<g class="lp-blink-open" style="animation-duration:${blink}">${drawPixels(comp.eyesOpen, unit, ox, oy)}</g>`;
+    inner += `<g class="lp-blink-closed" style="animation-duration:${blink}">${drawPixels(comp.eyesClosed, unit, ox, oy)}</g>`;
   } else {
-    inner += rectsFromPixels(comp.eyesOpen, unit, ox, oy);
+    inner += drawPixels(comp.eyesOpen, unit, ox, oy);
   }
-  inner += rectsFromPixels(comp.gear, unit, ox, oy);
+  inner += drawPixels(comp.gear, unit, ox, oy);
   // Rotations and squashes pivot on the pet's feet: translate there, animate, translate back.
   // The ninja's shadow clones reuse the drawn pet through <use>, so it needs an id.
   const id = pet.mood !== 'egg' && MOVES[moveOf(pet.species)].effect === 'clones'
