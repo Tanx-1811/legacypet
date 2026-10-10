@@ -3,11 +3,11 @@ export const FONT = "ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liber
 const CHROME = {
   light: {
     bg: '#ffffff', border: '#e3e8ef', text: '#1f2430', muted: '#6b7385',
-    bubble: '#f5f7fb', 'bubble-border': '#d5dbe7', track: '#e6eaf1', shadow: 'rgba(0,0,0,.16)',
+    bubble: '#f5f7fb', 'bubble-border': '#d5dbe7', track: '#e6eaf1', shadow: 'rgba(0,0,0,.16)', logo: '#0f8a7e',
   },
   dark: {
     bg: '#0d1117', border: '#30363d', text: '#e6edf3', muted: '#8b949e',
-    bubble: '#161b22', 'bubble-border': '#30363d', track: '#21262d', shadow: 'rgba(0,0,0,.45)',
+    bubble: '#161b22', 'bubble-border': '#30363d', track: '#21262d', shadow: 'rgba(0,0,0,.45)', logo: '#2fc7b1',
   },
 };
 
@@ -91,6 +91,7 @@ const STATIC_CSS = `
 .lp-trophy{font:400 14px ${FONT}}
 .lp-foot{font:400 9.5px ${FONT};fill:var(--lp-muted)}
 .lp-brand{font:700 9.5px ${FONT};fill:var(--lp-muted)}
+.lp-logo{fill:var(--lp-logo);shape-rendering:crispEdges}
 .lp-mini-name{font:700 12px ${FONT};fill:var(--lp-text)}
 .lp-tag{font:700 11px ${FONT};fill:var(--lp-text)}
 .lp-tag-sub{font:400 9.5px ${FONT};fill:var(--lp-muted)}
