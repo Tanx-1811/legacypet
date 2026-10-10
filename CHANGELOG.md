@@ -4,6 +4,32 @@ Every release of LegacyPet. `@v1` always points to the newest 1.x release, so pe
 the first run on a new version also lists these notes in the job summary.
 Releases that need a change to your workflow file say so.
 
+## 1.4.0 (unreleased)
+
+### New
+
+- ⌨️ **Your pet in the terminal**: `legacypet hooks install` adds git hooks, and from then on the pet pops up in your
+  terminal, animated, whenever git does something. A commit is a meal that matches what it does (cake for `feat:`,
+  an apple for `fix:`, broccoli for `test:`, a fortune cookie for `docs:`, an onigiri for `refactor:`, a bento for merges),
+  then come the XP it brought, the streak and the way to the next level, with confetti for level-ups, rank-ups, hatching
+  and coming back from the dead. A push takes off in a rocket, a pull rains down gifts from the team, and a new branch
+  gets a signpost. It's the same pet as in the app (same memory in `~/.legacypet`, same signature move and wardrobe),
+  in English or Vietnamese, in true color or 256 colors.
+  It never fails a commit or a push, keeps your own hooks running, leaves a team's shared hooks (`core.hooksPath`, like
+  husky's) alone unless you pass `--force`, sits out rebases and bisects, and says one line where there's no terminal
+  to draw in (an editor's commit button). `LEGACYPET_HOOK=line|still|off`, `LEGACYPET_QUIET=1` and `LEGACYPET_SIZE=big`
+  tune it; `legacypet hooks remove` takes it out, and `--all` works on every repo the app found.
+- 🪟 **`legacypet live`**: a companion for a terminal pane. The pet idles, blinks, hums and shows off its move, reacts
+  the moment you commit, pull, push or switch branches, nudges you about work that hasn't been committed for a while,
+  naps when you stop, and runs a focus timer. Keys: **f** feed, **p** play, **space** pat, **t** focus, **q** quit.
+- 👋 **`legacypet hi`**: the pet waves and shows how the repo is doing: vitals, XP, streak, today's commits, the branch
+  and its uncommitted changes, quests and trophies.
+- 🎬 **`legacypet react <event> --demo`** plays any reaction with a made-up pet (add `--level-up`, `--species`, `--big`).
+
+### Workflow
+
+Nothing to change: it all happens in the CLI, on your computer.
+
 ## 1.3.0 (2026-10-10)
 
 ### New

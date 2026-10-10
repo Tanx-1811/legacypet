@@ -35,6 +35,7 @@ Nhìn con thú một cái là biết ngay, và bạn cũng có thêm một lý d
 - 📔 **Nó viết nhật ký** từng ngày trong đời dự án của bạn.
 - 🩺 **Nó khám sức khỏe repo**: chỉ ra chỗ chưa ổn và việc nên làm.
 - 💬 **Nó nói chuyện được**: gõ `/pet` trong issue hay PR là nó trả lời, bằng 7 thứ tiếng.
+- ⌨️ **Nó hiện ra ngay trong terminal**: ăn commit, tiễn push lên đường bằng tên lửa, mở quà mỗi lần pull, [ngay chỗ bạn code](#️-ngay-trong-terminal).
 - 🏞️ **Mọi thú của bạn tụ họp trong Công viên thú** trên profile README.
 
 Tất cả chạy trong một GitHub Action: không server, không đăng ký, không theo dõi, không có dependency nào.

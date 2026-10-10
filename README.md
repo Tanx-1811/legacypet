@@ -35,6 +35,7 @@ and gives you a small, silly reason to come back and care for your code.
 - 📔 **It keeps a diary** of every day of your project's life.
 - 🩺 **It gives you a checkup**: what's wrong, and exactly what would help.
 - 💬 **It talks back.** Comment `/pet` on an issue or PR and it answers, in 7 languages.
+- ⌨️ **It shows up in your terminal.** It eats your commits, sends your pushes off in a rocket and unwraps your pulls, [right where you code](#️-in-your-terminal).
 - 🦸 **43 species to adopt**, from a rubber duck to a ninja fox, a kappa and a mimic, each living in its own animated home.
 - 🏞️ **All your pets meet in a Pet Park** on your profile README.
 
