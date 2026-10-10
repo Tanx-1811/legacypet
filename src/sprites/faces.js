@@ -43,6 +43,40 @@ export const BEAKS = {
   stitch: ['aaaa', 'oAoA'],
 };
 
+// The same expressions at twice the resolution, for the pet on cards and in the park (the badge
+// and the terminal keep the small ones above). An eye anchor covers a 4×4 block of these finer
+// pixels. Patterns are drawn for the left eye and grow toward the middle of the face for the
+// right one, like the small ones; `dx`/`dy` nudge them. 'i' is the iris (the outline color
+// lifted toward white) and 'm' the inside of a mouth (the outline color warmed toward red).
+export const EYES_HD = {
+  normal: { rows: ['.oo.', 'owoo', 'oooo', 'oiio', '.oo.'] },
+  happy: { rows: ['.oo.', 'o..o'], dy: 1 },
+  closed: { rows: ['....', '....', 'oooo', '.oo.'] },
+  star: { rows: ['..y..', '..y..', 'yyyyy', '.yyy.', '.y.y.'], dy: -1 },
+  puppy: { rows: ['.oooo.', 'owwooo', 'owwooo', 'oooooo', 'oooowo', '.oooo.'], dy: -2 },
+  teary: {
+    perEye: [
+      { rows: ['.oo.', 'owoo', 'oooo', 'oiio', '.oo.', 't...', 'tt..'] },
+      { rows: ['.oo.', 'owoo', 'oooo', 'oiio', '.oo.', '...t', '..tt'] },
+    ],
+  },
+  squint: { rows: ['oo....', '..oo..', '....oo', '..oo..', 'oo....'], dy: -1, mirror: true },
+  zombie: { perEye: [{ rows: ['.oo.', 'oggo', 'ogoo', '.oo.'] }, { rows: ['o..o', '.oo.', '.oo.', 'o..o'] }] },
+};
+
+// Mouths sit in the 8×(2…6) block of the 4-wide mouth anchor.
+export const MOUTHS_HD = {
+  smile: { rows: ['o....o', '.oooo.'], dx: 1 },
+  grin: { rows: ['oooooo', 'ommmmo', '.orro.', '..oo..'], dx: 1 },
+  flat: { rows: ['oooo'], dx: 2, dy: 1 },
+  frown: { rows: ['.oooo.', 'o....o'], dx: 1, dy: 1 },
+  open: { rows: ['.oo.', 'ommo', 'orro', '.oo.'], dx: 2 },
+  wavy: { rows: ['.o..o.', 'o.oo.o'], dx: 1, dy: 1 },
+  stitch: { rows: ['.o..o.', 'oooooo', '.o..o.'], dx: 1 },
+};
+
+export const CHEEKS_HD = { k: ['kkkk', '.kk.'], f: ['ffff', '.ff.'] };
+
 export const MOOD_FACES = {
   ecstatic: { eyes: 'happy', mouth: 'grin', cheeks: 'k' },
   happy: { eyes: 'normal', mouth: 'smile', cheeks: 'k', blink: true },

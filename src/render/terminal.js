@@ -7,7 +7,7 @@ const RESET = '\x1b[0m';
 
 // Prints the pet with half-block characters: two pixels per terminal cell.
 export function terminalArt(pet) {
-  const comp = composePet(pet);
+  const comp = composePet(pet, { hd: false });
   const cells = new Map();
   let minX = Infinity;
   let maxX = -Infinity;

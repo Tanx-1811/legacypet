@@ -148,18 +148,18 @@ function bowl(s) {
 }
 
 function petGroup(s, comp) {
-  const { pet, rng, cx, footY, ox, oy, px } = s;
+  const { pet, rng, cx, footY, ox, oy, unit } = s;
   const [cls, dur] = pet.mood === 'egg' ? ['lp-wobble', 4 - 2.5 * pet.hatchProgress] : ANIM[pet.mood] ?? ANIM.happy;
   const blink = sec(rng.range(3.2, 5.6));
-  let inner = comp.aura.length ? `<g class="lp-aura">${rectsFromPixels(comp.aura, px, ox, oy)}</g>` : '';
-  inner += rectsFromPixels(comp.base, px, ox, oy);
+  let inner = comp.aura.length ? `<g class="lp-aura">${rectsFromPixels(comp.aura, unit, ox, oy)}</g>` : '';
+  inner += rectsFromPixels(comp.base, unit, ox, oy);
   if (comp.eyesClosed) {
-    inner += `<g class="lp-blink-open" style="animation-duration:${blink}">${rectsFromPixels(comp.eyesOpen, px, ox, oy)}</g>`;
-    inner += `<g class="lp-blink-closed" style="animation-duration:${blink}">${rectsFromPixels(comp.eyesClosed, px, ox, oy)}</g>`;
+    inner += `<g class="lp-blink-open" style="animation-duration:${blink}">${rectsFromPixels(comp.eyesOpen, unit, ox, oy)}</g>`;
+    inner += `<g class="lp-blink-closed" style="animation-duration:${blink}">${rectsFromPixels(comp.eyesClosed, unit, ox, oy)}</g>`;
   } else {
-    inner += rectsFromPixels(comp.eyesOpen, px, ox, oy);
+    inner += rectsFromPixels(comp.eyesOpen, unit, ox, oy);
   }
-  inner += rectsFromPixels(comp.gear, px, ox, oy);
+  inner += rectsFromPixels(comp.gear, unit, ox, oy);
   // Rotations and squashes pivot on the pet's feet: translate there, animate, translate back.
   // The ninja's shadow clones reuse the drawn pet through <use>, so it needs an id.
   const id = pet.mood !== 'egg' && MOVES[moveOf(pet.species)].effect === 'clones'
@@ -171,13 +171,13 @@ function petGroup(s, comp) {
 
 // On good days the pet shows off its species' signature move every few seconds (see moves.js).
 function signatureMove(s, comp, body) {
-  const { pet, px, bw, mini } = s;
+  const { pet, px, unit, bw, mini } = s;
   if (pet.mood === 'egg' || !MOVE_MOODS.has(pet.mood)) return body;
   const id = moveOf(pet.species);
   const move = MOVES[id];
   const rng = createRng(`${pet.repo.fullName}|${pet.date}|move`);
   const clock = `animation-duration:${sec(move.duration ?? 7)};animation-delay:${sec(rng.range(0.6, 3))}`;
-  const height = (comp.bbox.maxY - comp.bbox.minY + 1) * px;
+  const height = (comp.bbox.maxY - comp.bbox.minY + 1) * unit;
   const origin = move.pivot === 'center' ? `;transform-origin:0 ${-Math.round(height / 2)}px` : '';
   let before = '';
   let under = '';
@@ -346,11 +346,13 @@ function emblemFx(s) {
 export function renderActor(pet, frame) {
   const { cx, footY, px } = frame;
   const comp = composePet(pet);
+  // `px` is the size of one cell of the species' grid; HD pets draw it with 2×2 finer pixels.
+  const unit = px / comp.scale;
   const { minX, maxX, minY, maxY } = comp.bbox;
-  const bw = (maxX - minX + 1) * px;
-  const ox = Math.round(cx - bw / 2 - minX * px);
-  const oy = footY - (maxY + 1) * px;
-  const s = { ...frame, pet, bw, ox, oy, pp: frame.mini ? 2 : 3, headTop: oy + minY * px };
+  const bw = (maxX - minX + 1) * unit;
+  const ox = Math.round(cx - bw / 2 - minX * unit);
+  const oy = Math.round(footY - (maxY + 1) * unit);
+  const s = { ...frame, pet, bw, ox, oy, unit, pp: frame.mini ? 2 : 3, headTop: oy + minY * unit };
   const shadow = `<ellipse cx="${cx}" cy="${footY - 1}" rx="${Math.round(bw * 0.38)}" ry="${Math.max(2, Math.round(px * 0.6))}" class="lp-shadow"/>`;
   const body = shadow
     + palFx(s)

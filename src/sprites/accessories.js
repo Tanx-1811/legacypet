@@ -121,6 +121,13 @@ export const EMBLEMS = {
 
 export const GEAR_COLORS = { monocle: '#ffd23f', glasses: '#4c6ef5', shades: '#1b1b2f', glint: '#8fa6d6' };
 
+// Face gear for HD pets (compose.js), in the finer pixels around a 4×5 eye.
+export const GEAR_HD = {
+  ring: ['..oooo..', '.o....o.', 'o......o', 'o......o', 'o......o', 'o......o', '.o....o.', '..oooo..'],
+  chain: ['o.', 'o.', '.o', '.o'],
+  lens: ['ssssssss', 'sggsssss', 'sgssssss', 'ssssssss', '.ssssss.'],
+};
+
 export const BOWLS = {
   full: ['...kKkKkk...', '.kKkkKkKkKk.', 'oooooooooooo', '.obbbbbbbbo.', '..oooooooo..'],
   half: ['............', '..kKkkKkKk..', 'oooooooooooo', '.obbbbbbbbo.', '..oooooooo..'],

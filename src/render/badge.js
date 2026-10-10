@@ -18,7 +18,7 @@ export function renderBadge(pet) {
   const uid = `lp${hashString(`${pet.repo.fullName}|badge`).toString(36)}`;
   const left = truncate(pet.name, 16);
   const right = `${MOOD_EMOJI[pet.mood]} ${tr.moods[pet.mood]} · ${pet.rank.emoji} ${tr.level(pet.level)}`;
-  const comp = composePet(pet);
+  const comp = composePet(pet, { hd: false });
   const pixels = [...comp.base, ...comp.eyesOpen];
   const box = bboxOf(pixels);
   const sw = box.maxX - box.minX + 1;
