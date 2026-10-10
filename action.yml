@@ -3,7 +3,7 @@ description: 'Adopt a pixel pet that lives in your README and thrives when your 
 author: 'Tanx-1811'
 branding:
   icon: 'heart'
-  color: 'purple'
+  color: 'green'
 
 inputs:
   github-token:

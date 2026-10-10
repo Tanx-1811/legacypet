@@ -1,10 +1,9 @@
-// Draws the app icon and the menu bar / tray icons as PNGs, straight from the pet sprites.
+// Draws the app icon and the menu bar / tray icons as PNGs, straight from LegacyPet's logo.
 // No image libraries: a tiny PNG encoder on top of node:zlib.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
-import { buildPet, mockSnapshot } from '../../src/index.js';
-import { composePet } from '../../src/render/compose.js';
+import { BRAND, LOGO } from '../../src/render/logo.js';
 
 const out = fileURLToPath(new URL('../build/', import.meta.url));
 mkdirSync(out, { recursive: true });
@@ -87,67 +86,47 @@ function canvas(w, h) {
   };
 }
 const mixRgb = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+const [top, bottom] = BRAND.map(hex);
 
-// The pet in the app icon: a happy rubber duck, LegacyPet's mascot.
-function petPixels() {
-  const now = new Date('2026-06-01T12:00:00Z');
-  const pet = buildPet({ snapshot: mockSnapshot({ mood: 'happy', now, fullName: 'Tanx-1811/legacypet' }), now, options: { species: 'duck', mood: 'happy', holiday: null, shiny: false, aura: false } });
-  const comp = composePet(pet);
-  return [...comp.base, ...comp.eyesOpen].filter((p) => !p.c.startsWith('.'));
+// Paints the logo with its top-left corner at (ox, oy), each cell scale×scale pixels.
+function drawLogo(c, ox, oy, scale, color) {
+  LOGO.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '#') c.rect(ox + x * scale, oy + y * scale, scale, scale, color); }));
 }
 
+// The app icon: the logo, big, on LegacyPet's teal.
 function appIcon(size = 1024) {
   const c = canvas(size, size);
   const inset = Math.round(size * 0.1);
   const box = size - inset * 2;
-  const top = hex('#9b7cff');
-  const bottom = hex('#5d33e6');
-  c.rounded(inset, inset + Math.round(size * 0.014), box, box, box * 0.225, () => [20, 10, 50], 0.28); // a soft drop shadow
+  c.rounded(inset, inset + Math.round(size * 0.014), box, box, box * 0.225, () => [4, 38, 34], 0.28); // a soft drop shadow
   c.rounded(inset, inset, box, box, box * 0.225, (t) => mixRgb(top, bottom, t));
   c.ellipse(size / 2, size * 0.47, box * 0.36, box * 0.36, [255, 255, 255], 0.16);
-  const pixels = petPixels();
-  const xs = pixels.map((p) => p.x);
-  const ys = pixels.map((p) => p.y);
-  const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  const scale = Math.floor((box * 0.6) / Math.max(maxX - minX + 1, maxY - minY + 1));
-  const ox = Math.round(size / 2 - ((maxX - minX + 1) * scale) / 2);
-  const oy = Math.round(size * 0.47 - ((maxY - minY + 1) * scale) / 2);
-  c.ellipse(size / 2, oy + (maxY - minY + 1) * scale + scale * 0.6, box * 0.27, scale * 1.4, [20, 8, 60], 0.35);
-  for (const p of pixels) c.rect(ox + (p.x - minX) * scale, oy + (p.y - minY) * scale, scale, scale, hex(p.c));
+  const scale = Math.floor((box * 0.6) / LOGO.length);
+  const ox = Math.round(size / 2 - (LOGO[0].length * scale) / 2);
+  const oy = Math.round(size * 0.47 - (LOGO.length * scale) / 2);
+  c.ellipse(size / 2, oy + LOGO.length * scale + scale * 0.6, box * 0.24, scale * 1.2, [3, 45, 40], 0.35);
+  drawLogo(c, ox, oy, scale, [255, 255, 255]);
   return c;
 }
 
-// LegacyPet's logo, the same one as the web app's: a pet that just hatched, still wearing a piece of its eggshell.
-const HATCHLING = [
-  '......###...',
-  '....######..',
-  '...#######..',
-  '...##..#.#..',
-  '..#.........',
-  '...######...',
-  '..########..',
-  '.##.####.##.',
-  '.##.####.##.',
-  '.####..####.',
-  '..########..',
-  '...######...',
-];
-function logo(size, { color, background = null }) {
+// The tray icon: white on the teal tile for Windows and Linux, black on nothing for the macOS menu bar
+// (a template image, which macOS tints itself). 16px plus a 32px @2x, so every cell is a whole 1px, then 2px.
+function trayIcon(size, { tile }) {
   const c = canvas(size, size);
-  if (background) c.rounded(0, 0, size, size, size * 0.22, () => hex(background));
-  const scale = Math.max(1, Math.floor((size * (background ? 0.62 : 0.8)) / Math.max(HATCHLING[0].length, HATCHLING.length)));
-  const ox = Math.floor((size - HATCHLING[0].length * scale) / 2);
-  const oy = Math.floor((size - HATCHLING.length * scale) / 2);
-  HATCHLING.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '#') c.rect(ox + x * scale, oy + y * scale, scale, scale, hex(color)); }));
+  if (tile) c.rounded(0, 0, size, size, size * 0.22, (t) => mixRgb(top, bottom, t));
+  const scale = Math.max(1, Math.floor((size * 0.75) / LOGO.length));
+  const ox = Math.floor((size - LOGO[0].length * scale) / 2);
+  const oy = Math.floor((size - LOGO.length * scale) / 2);
+  drawLogo(c, ox, oy, scale, tile ? [255, 255, 255] : [0, 0, 0]);
   return c;
 }
 
 const files = {
   'icon.png': appIcon(1024),
-  'trayTemplate.png': logo(16, { color: '#000000' }),
-  'trayTemplate@2x.png': logo(32, { color: '#000000' }),
-  'tray.png': logo(32, { color: '#ffffff', background: '#7c4dff' }),
-  'tray@2x.png': logo(64, { color: '#ffffff', background: '#7c4dff' }),
+  'trayTemplate.png': trayIcon(16, { tile: false }),
+  'trayTemplate@2x.png': trayIcon(32, { tile: false }),
+  'tray.png': trayIcon(16, { tile: true }),
+  'tray@2x.png': trayIcon(32, { tile: true }),
 };
 for (const [name, img] of Object.entries(files)) writeFileSync(`${out}${name}`, png(img));
 console.log(`Wrote ${Object.keys(files).join(', ')} to ${out}`);

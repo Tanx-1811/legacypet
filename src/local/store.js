@@ -31,6 +31,7 @@ export const DEFAULT_CONFIG = {
   terminal: null,
   ui: null,
   theme: null,
+  motion: null, // auto | full | lite | off: how much the pets move, picked in the app
 };
 
 export const projectId = (path) => createHash('sha1').update(String(path)).digest('hex').slice(0, 12);

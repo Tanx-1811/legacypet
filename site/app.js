@@ -5,6 +5,7 @@ import { homeViews } from './home.js';
 import { icon } from './icons.js';
 import { api, desktop, listen, LOCAL, MODE } from './local.js';
 import { createPalette } from './palette.js';
+import { hoverToMove, MOTIONS, onMotionPreference, resolveMotion } from './motion.js';
 
 // ---------------------------------------------------------------------------
 // Shared state. Everything the visitor picks lives in one place, survives a reload
@@ -15,6 +16,7 @@ const browserLang = (navigator.language || 'en').toLowerCase().startsWith('vi') 
 const defaults = () => ({
   ui: browserLang,
   theme: 'auto',
+  motion: 'auto',
   cfg: { species: 'auto', scenery: 'auto', name: '', color: 'auto', motto: '', lang: browserLang, wear: [], alerts: [], vacation: '', style: 'card', repo: '' },
   world: null,
   habit: 'diligent',
@@ -51,6 +53,9 @@ const tr = (lang = store.cfg.lang) => LP.LANGS[lang] ?? LP.LANGS.en;
 const darkQuery = matchMedia('(prefers-color-scheme: dark)');
 const cardTheme = () => (store.theme === 'auto' ? (darkQuery.matches ? 'dark' : 'light') : store.theme);
 const svgSrc = (svg) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+// 'full', 'lite' or 'off' (see motion.js). `stillAll()`: even the one pet in view holds still.
+const motion = () => resolveMotion(store.motion);
+const stillAll = () => motion() === 'off';
 const petOptions = (extra = {}) => ({
   species: store.cfg.species, scenery: store.cfg.scenery, name: store.cfg.name, color: store.cfg.color, motto: store.cfg.motto, lang: store.cfg.lang, ...extra,
 });
@@ -79,6 +84,14 @@ const $ = (sel, root = document) => root.querySelector(sel);
 
 function img(svg, cls, alt = '') {
   return h(`img.${cls}`, { src: svgSrc(svg), alt, decoding: 'async' });
+}
+
+// A pet picture in a grid or a list, where many sit side by side: `make(still)` returns its URL.
+// With motion on 'lite' it holds still and moves only while pointed at; on 'off' it never moves.
+function gridPic(make, attrs = {}) {
+  const mode = motion();
+  const el = h('img', { decoding: 'async', ...attrs, src: make(mode !== 'full') });
+  return mode === 'lite' ? hoverToMove(el, { still: () => make(true), live: () => make(false) }) : el;
 }
 
 function copyButton(getText) {
@@ -333,8 +346,9 @@ function viewHatch(root, arg) {
     const best = LP.PATH_IDS.reduce((a, b) => (scores[b] > scores[a] ? b : a));
     const max = Math.max(1, ...Object.values(scores));
     const files = [['pet', LP.renderCard(pet, { theme })], ['pet-mini', LP.renderMini(pet, { theme })], ['pet-badge', LP.renderBadge(pet)]];
-    box.card.replaceChildren(img(files[0][1], 'card-img', `${pet.displayName}: ${pet.speech}`));
-    box.shots.replaceChildren(img(files[1][1], 'mini-img', pet.name), img(files[2][1], 'badge-img', 'badge'));
+    const shown = stillAll() ? [LP.renderCard(pet, { theme, still: true }), LP.renderMini(pet, { theme, still: true })] : [files[0][1], files[1][1]];
+    box.card.replaceChildren(img(shown[0], 'card-img', `${pet.displayName}: ${pet.speech}`));
+    box.shots.replaceChildren(img(shown[1], 'mini-img', pet.name), img(files[2][1], 'badge-img', 'badge'));
     box.links.replaceChildren(...files.map(([file, svg]) => h('a', { href: svgSrc(svg), download: `${file}.svg` }, `⬇ ${file}.svg`)));
     box.checkup.replaceChildren(checkupList(pet, hatch.snapshot));
     box.quests.replaceChildren(questList(pet, L));
@@ -731,7 +745,7 @@ function viewSim(root) {
         const reply = LP.commandReply(result.pet, result.snapshot, {
           command, user: store.user, arg, maintainer: true, miniUrl: 'mini', wasOnVacation: false,
         });
-        consoleState.reply = markdown(reply, svgSrc(LP.renderMini(result.pet, { theme: cardTheme() })));
+        consoleState.reply = markdown(reply, svgSrc(LP.renderMini(result.pet, { theme: cardTheme(), still: stillAll() })));
         if (store.simTab === 'reply') drawPanel();
       };
       const form = h('form.row', { onsubmit: (e) => { e.preventDefault(); send(inputEl.value); } }, h('div', { style: { flex: '1', minWidth: '0' } }, inputEl), h('button.primary', { type: 'submit' }, T.send));
@@ -752,7 +766,7 @@ function viewSim(root) {
     const now = Sim.nowOf(w);
     els.day.textContent = T.day(w.day + 1, pet.date, T.weekdays[now.getUTCDay()]);
     els.status.textContent = `${LP.MOOD_EMOJI[pet.mood]} ${L.moods[pet.mood]} · ${pet.rank.emoji} ${L.level(pet.level)}${pet.path ? ` · ${pet.path.emoji}` : ''}`;
-    els.card.src = svgSrc(LP.renderCard(pet, { theme: cardTheme() }));
+    els.card.src = svgSrc(LP.renderCard(pet, { theme: cardTheme(), still: stillAll() }));
     els.card.alt = `${pet.displayName}: ${pet.speech}`;
     const yesterday = (w.state?.history ?? []).find((x) => x.date < pet.date);
     els.vitals.replaceChildren(...['fullness', 'health', 'joy', 'energy'].map((k, i) => {
@@ -785,9 +799,9 @@ function viewSim(root) {
 
 // ----- Codex: every species, mood, path, item, quest, rank, trophy and home ----
 const codexCache = new Map();
-function cachedMini(key, make) {
-  const k = `${key}|${store.cfg.lang}|${cardTheme()}`;
-  if (!codexCache.has(k)) codexCache.set(k, svgSrc(LP.renderMini(make(), { theme: cardTheme() })));
+function cachedMini(key, make, still = false) {
+  const k = `${key}|${store.cfg.lang}|${cardTheme()}|${still}`;
+  if (!codexCache.has(k)) codexCache.set(k, svgSrc(LP.renderMini(make(), { theme: cardTheme(), still })));
   return codexCache.get(k);
 }
 
@@ -796,7 +810,7 @@ function viewCodex(root, arg) {
   const U = t();
   const L = tr();
   const tryIn = (patch) => { Object.assign(store.cfg, patch); save(); go_('sim'); };
-  const pic = (key, make) => h('img', { src: cachedMini(key, make), alt: '', loading: 'lazy', width: 112 });
+  const pic = (key, make) => gridPic((still) => cachedMini(key, make, still), { alt: '', loading: 'lazy', width: 112 });
   const sections = {
     species: () => h('div.tiles', LP.SPECIES_IDS.map((id) => {
       const sp = LP.SPECIES[id];
@@ -889,7 +903,8 @@ function viewPark(root) {
     if (pets.length) {
       status.textContent = '';
       const svg = LP.renderPark(pets, { owner: store.cfg.repo.split('/')[0] || 'you', lang: store.cfg.lang, theme: cardTheme() });
-      pic.replaceChildren(img(svg, 'park-img', 'park'), h('div.links', h('a', { href: svgSrc(svg), download: 'park.svg' }, `${t().common.download} park.svg`)));
+      const shown = stillAll() ? LP.renderPark(pets, { owner: store.cfg.repo.split('/')[0] || 'you', lang: store.cfg.lang, theme: cardTheme(), still: true }) : svg;
+      pic.replaceChildren(img(shown, 'park-img', 'park'), h('div.links', h('a', { href: svgSrc(svg), download: 'park.svg' }, `${t().common.download} park.svg`)));
       const real = store.park.filter((n) => !n.startsWith('demo/'));
       yaml.replaceChildren(h('p.small.muted', T.yaml), codeBlock(`      - uses: Tanx-1811/legacypet@v1\n        with:\n          park: ${real.length ? real.join(', ') : 'auto'}`));
     }
@@ -966,7 +981,7 @@ function viewAdopt(root) {
     const lang = L();
     const fullName = cfg.repo.includes('/') ? cfg.repo : 'OWNER/REPO';
     const pet = demoPet({ species: cfg.species === 'auto' ? 'cat' : cfg.species, scenery: cfg.scenery, name: cfg.name || undefined, color: cfg.color, motto: cfg.motto, wear: cfg.wear.join(','), unlockAll: true, fullName });
-    preview.replaceChildren(img(LP.renderCard(pet, { theme: cardTheme() }), 'card-img', pet.displayName));
+    preview.replaceChildren(img(LP.renderCard(pet, { theme: cardTheme(), still: stillAll() }), 'card-img', pet.displayName));
     wearBox.replaceChildren(...LP.ITEMS.map((item) => h(`button.tile${cfg.wear.includes(item.id) ? '.on' : ''}`, {
       type: 'button', title: LP.unlockHint(lang, item),
       onclick: () => {
@@ -1027,7 +1042,7 @@ function viewAdopt(root) {
 // it's the playground, with a page to download the app.
 const homeKit = homeViews({
   h, img, svgSrc, toast, t, tr, store, save, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP, Sim, stopAuto, demoPet,
-  icon, btn, render: () => render(),
+  icon, btn, render: () => render(), motion, stillAll, gridPic, setMotion: (v) => setMotion(v),
 });
 const VIEWS = {
   home: homeKit.views.home, hatch: viewHatch, sim: viewSim, codex: viewCodex, park: viewPark, adopt: viewAdopt,
@@ -1111,6 +1126,7 @@ function drawToolbar() {
   bar.replaceChildren(
     seg(Object.entries(UI_LANGS).map(([code]) => [code, code.toUpperCase()]), store.ui, (v) => setLang(v), T.common.uiLang),
     btn('', { icon: themeIcon, kind: 'ghost', title: `${T.common.theme}: ${T.common.themes[store.theme]}`, onclick: cycleTheme }),
+    btn('', { icon: 'gauge', kind: 'ghost', title: `${T.common.motion}: ${T.common.motions[store.motion]}`, onclick: () => setMotion(MOTIONS[(MOTIONS.indexOf(store.motion) + 1) % MOTIONS.length]) }),
     btn('', { icon: 'external-link', kind: 'ghost', title: 'GitHub', href: 'https://github.com/Tanx-1811/legacypet' }));
 }
 
@@ -1128,6 +1144,16 @@ function cycleTheme() {
   applyTheme();
   save();
   codexCache.clear();
+  current?.redraw?.();
+  drawToolbar();
+}
+
+// The desktop pet's window reads the same setting from this browser's storage, and hears about
+// a change through the app (its 'config' event), so it is saved right away.
+function setMotion(value) {
+  store.motion = MOTIONS.includes(value) ? value : 'auto';
+  try { localStorage.setItem(KEY, JSON.stringify(store)); } catch { /* storage is optional */ }
+  if (LOCAL) api('config', { motion: store.motion }).catch(() => {});
   current?.redraw?.();
   drawToolbar();
 }
@@ -1163,6 +1189,7 @@ const palette = createPalette({
     }
     items.push(
       { group: 'actions', icon: { auto: 'sun-moon', light: 'sun', dark: 'moon' }[store.theme], label: A.theme, run: cycleTheme },
+      { group: 'actions', icon: 'gauge', label: A.motion, run: () => setMotion(MOTIONS[(MOTIONS.indexOf(store.motion) + 1) % MOTIONS.length]) },
       { group: 'actions', icon: 'languages', label: A.lang, run: () => setLang(store.ui === 'vi' ? 'en' : 'vi') },
     );
     return items;
@@ -1177,6 +1204,7 @@ $('#side-toggle').addEventListener('click', () => {
 });
 
 darkQuery.addEventListener('change', () => { if (store.theme === 'auto') { codexCache.clear(); current?.redraw?.(); } });
+onMotionPreference(() => { if (store.motion === 'auto') current?.redraw?.(); });
 window.addEventListener('hashchange', render);
 // Sticky bars inside a view (the codex index) sit right under the top bar on small screens.
 const wide = matchMedia('(min-width: 960px)');
@@ -1212,6 +1240,9 @@ async function bootLocal() {
     store.cfg.lang = state.config.ui;
     save();
   } else if (state.config.ui !== store.ui) api('config', { ui: store.ui }).catch(() => {});
+  // Same for how much the pets move, which the desktop pet's window follows too.
+  if (freshStore && MOTIONS.includes(state.config.motion)) store.motion = state.config.motion;
+  else if (state.config.motion !== store.motion) api('config', { motion: store.motion }).catch(() => {});
   if (state.config.online) api('token').then((r) => { if (r.token) ghToken = r.token; }).catch(() => {});
   homeKit.subscribe(() => drawNav(route().view));
   listen({

@@ -22,7 +22,7 @@ const MAX_BODY = 1024 * 1024;
 const MAX_BACKUP = 64 * 1024 * 1024; // a backup carries every pet's memory
 const CONFIG_KEYS = [
   'online', 'token', 'notify', 'mute', 'reminderHour', 'quietHours', 'refreshMinutes', 'favorite', 'float', 'floatSize', 'floatBubbles',
-  'hidden', 'options', 'notes', 'ui', 'theme', 'roots', 'pinned', 'editor', 'terminal',
+  'hidden', 'options', 'notes', 'ui', 'theme', 'motion', 'roots', 'pinned', 'editor', 'terminal',
 ];
 
 // Folder pickers that need no dependencies: the system's own dialog.

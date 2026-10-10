@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="site/icon.svg" alt="LegacyPet logo" width="72">
+<img src="site/icon.svg" alt="LegacyPet logo" width="80">
 
 # LegacyPet
 

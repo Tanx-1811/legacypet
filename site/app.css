@@ -5,7 +5,7 @@
   --accent: #0b7f75; --accent-soft: #e0f6f2; --accent-text: #ffffff; --code: #f6f6f8;
   --good: #16803c; --good-soft: #e3f6e9; --warn: #a15c00; --warn-soft: #fff3dc; --bad: #d1343b; --bad-soft: #ffe9e9;
   --tip: #2a64d6; --tip-soft: #e3edff; --gold: #b07a00;
-  --heat-0: #ebebef; --heat-1: #ad94ff; --heat-2: #8d68fb; --heat-3: #6a3bea; --heat-4: #4314b0;
+  --heat-0: #ebebef; --heat-1: #a7e9df; --heat-2: #5ccfbf; --heat-3: #14a594; --heat-4: #0b6f66;
   --shadow: 0 1px 2px rgba(16, 16, 24, .04), 0 1px 3px rgba(16, 16, 24, .06);
   --shadow-lg: 0 12px 32px rgba(16, 16, 24, .12), 0 2px 6px rgba(16, 16, 24, .06);
   --radius: 12px;
@@ -16,10 +16,10 @@
   :root:not([data-theme="light"]) {
     --bg: #0b0b0f; --panel: #131318; --panel-2: #1a1a21; --side: #0f0f14; --text: #ededf0; --muted: #9a9aa5; --faint: #6b6b76;
     --border: #26262e; --border-strong: #34343e;
-    --accent: #9b85ff; --accent-soft: #221c3d; --accent-text: #0b0b0f; --code: #101015;
+    --accent: #2fd4bd; --accent-soft: #10302c; --accent-text: #0b0b0f; --code: #101015;
     --good: #4ac77a; --good-soft: #12261a; --warn: #e0a83a; --warn-soft: #2a2110; --bad: #ff6b6b; --bad-soft: #2e1517;
     --tip: #6aa1ff; --tip-soft: #142340; --gold: #e8bb4a;
-    --heat-0: #23232b; --heat-1: #55409f; --heat-2: #7258dd; --heat-3: #9c84ff; --heat-4: #d0c4ff;
+    --heat-0: #23232b; --heat-1: #12443f; --heat-2: #1b7c70; --heat-3: #2fbfa9; --heat-4: #9cefe0;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4);
     --shadow-lg: 0 16px 40px rgba(0, 0, 0, .5);
     color-scheme: dark;
@@ -28,10 +28,10 @@
 :root[data-theme="dark"] {
   --bg: #0b0b0f; --panel: #131318; --panel-2: #1a1a21; --side: #0f0f14; --text: #ededf0; --muted: #9a9aa5; --faint: #6b6b76;
   --border: #26262e; --border-strong: #34343e;
-  --accent: #9b85ff; --accent-soft: #221c3d; --accent-text: #0b0b0f; --code: #101015;
+  --accent: #2fd4bd; --accent-soft: #10302c; --accent-text: #0b0b0f; --code: #101015;
   --good: #4ac77a; --good-soft: #12261a; --warn: #e0a83a; --warn-soft: #2a2110; --bad: #ff6b6b; --bad-soft: #2e1517;
   --tip: #6aa1ff; --tip-soft: #142340; --gold: #e8bb4a;
-  --heat-0: #23232b; --heat-1: #55409f; --heat-2: #7258dd; --heat-3: #9c84ff; --heat-4: #d0c4ff;
+  --heat-0: #23232b; --heat-1: #12443f; --heat-2: #1b7c70; --heat-3: #2fbfa9; --heat-4: #9cefe0;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, .5);
   color-scheme: dark;
@@ -62,7 +62,8 @@ h3 > .icon { color: var(--muted); }
 /* ---- The app shell: a sidebar on wide screens, a top bar with scrolling tabs on small ones ---- */
 .shell { min-height: 100vh; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; min-width: 0; }
-.logo { flex: none; width: 30px; height: 30px; padding: 6px; border-radius: 8px; background: linear-gradient(160deg, #8f70ff, #5a35f0); color: #fff; box-shadow: 0 2px 8px rgba(109, 74, 255, .35); }
+/* The logo is a 12×12 pixel grid: 24px inside the tile keeps every cell exactly 2px (4px on retina). */
+.logo { flex: none; width: 32px; height: 32px; padding: 4px; border-radius: 9px; background: linear-gradient(160deg, var(--brand-1), var(--brand-2)); color: #fff; box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-2) 35%, transparent); }
 .brand-text { display: grid; min-width: 0; }
 .brand-text b { font-size: 16px; letter-spacing: -0.02em; }
 #tagline { display: none; }

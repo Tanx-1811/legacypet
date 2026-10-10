@@ -74,6 +74,7 @@ export const NOTIFY_GROUPS = {
 };
 const groupOf = (kind) => Object.keys(NOTIFY_GROUPS).find((g) => NOTIFY_GROUPS[g].includes(kind)) ?? null;
 export const FLOAT_SIZES = ['small', 'medium', 'large'];
+export const MOTIONS = ['auto', 'full', 'lite', 'off']; // how much the pets move (site/motion.js)
 
 // Quiet hours wrap around midnight: { from: 22, to: 8 } is 22:00 to 07:59.
 export function inQuietHours(quiet, date) {
@@ -105,6 +106,7 @@ export function cleanConfigPatch(patch, remap = (id) => id) {
       if (value === null) out.quietHours = null;
       else if (hourOrNull(value?.from) != null && hourOrNull(value?.to) != null) out.quietHours = { from: value.from, to: value.to };
     } else if (key === 'floatSize') { if (FLOAT_SIZES.includes(value)) out.floatSize = value; }
+    else if (key === 'motion') { if (MOTIONS.includes(value)) out.motion = value; }
     else if (['notify', 'floatBubbles', 'online', 'float'].includes(key)) out[key] = Boolean(value);
     else if (key === 'refreshMinutes') { const n = Number(value); if (n >= 1 && n <= 1440) out.refreshMinutes = n; }
     else if (key === 'hidden' || key === 'pinned') out[key] = Array.isArray(value) ? [...new Set(value.filter(isId).map(remap))] : [];
