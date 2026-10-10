@@ -31,6 +31,8 @@ const FLOWERS = ['#ff7eb6', '#ffd23f', '#ffffff', '#b388ff'];
 
 const r1 = (v) => Math.round(v * 10) / 10;
 const sec = (v) => `${v.toFixed(2)}s`;
+// Effects start part-way through their loop (a negative delay), so a still picture (paused
+// animations) catches them spread out mid-flight instead of all waiting at the start.
 
 function at(x, y, content, cls = '', style = '') {
   const inner = cls || style ? `<g${cls ? ` class="${cls}"` : ''}${style ? ` style="${style}"` : ''}>${content}</g>` : content;
@@ -78,7 +80,7 @@ function holidaySky(s) {
         const angle = (k / 10) * Math.PI * 2;
         dots += `<rect x="${r1(Math.cos(angle) * radius - 1.5)}" y="${r1(Math.sin(angle) * radius - 1.5)}" width="3" height="3" fill="${colors[(k + i) % colors.length]}"/>`;
       }
-      out += at(x + w * fx, y + h * fy, dots, 'lp-burst', `animation-delay:${sec(i * 0.8)}`);
+      out += at(x + w * fx, y + h * fy, dots, 'lp-burst', `animation-delay:-${sec(i * 0.8)}`);
     });
   }
   if (pet.holiday === 'tet') {
@@ -193,7 +195,7 @@ function signatureMove(s, comp, body) {
   return `<style>${moveCss(id)}</style>${before}<g class="lp-mv-${id}" style="${clock}${origin}">${under}${body}</g>`;
 }
 
-const rise = (s, x, y, content, dur, delay) => at(x, y, content, 'lp-rise lp-px', `animation-duration:${sec(dur)};animation-delay:${sec(delay)}`);
+const rise = (s, x, y, content, dur, delay) => at(x, y, content, 'lp-rise lp-px', `animation-duration:${sec(dur)};animation-delay:-${sec(delay)}`);
 
 function moodFx(s) {
   const { pet, cx, bw, headTop, pp, mini, rng, x, y, w } = s;
@@ -232,7 +234,7 @@ function moodFx(s) {
       const sizes = mini ? [8, 10, 12] : [10, 13, 16];
       const color = pet.mood === 'hibernating' ? ';fill:#ffffff' : '';
       return sizes
-        .map((size, i) => at(cx + bw * 0.3 + i * 5 * k, headTop - 2 - i * 4 * k, `<text class="lp-z lp-zz" style="font-size:${size}px;animation-duration:3.6s;animation-delay:${sec(i * 1.2)}${color}">${i === 0 ? 'z' : 'Z'}</text>`))
+        .map((size, i) => at(cx + bw * 0.3 + i * 5 * k, headTop - 2 - i * 4 * k, `<text class="lp-z lp-zz" style="font-size:${size}px;animation-duration:3.6s;animation-delay:-${sec(i * 1.2)}${color}">${i === 0 ? 'z' : 'Z'}</text>`))
         .join('');
     }
     case 'sad': {
@@ -241,14 +243,14 @@ function moodFx(s) {
       const top = headTop - (mini ? 20 : 30);
       let drops = '';
       for (let i = 0; i < 4; i++) {
-        drops += `<rect x="${r1(left + cp * (1.5 + i * 2.2))}" y="${r1(top + 4 * cp)}" width="${pp - 1}" height="${pp + 2}" class="lp-raindrop lp-drip" style="animation-duration:1.1s;animation-delay:${sec(i * 0.27)}"/>`;
+        drops += `<rect x="${r1(left + cp * (1.5 + i * 2.2))}" y="${r1(top + 4 * cp)}" width="${pp - 1}" height="${pp + 2}" class="lp-raindrop lp-drip" style="animation-duration:1.1s;animation-delay:-${sec(i * 0.27)}"/>`;
       }
       return `<g class="lp-float" style="animation-duration:4s">${drops}<g class="lp-px">${stamp(A.RAINCLOUD.rows, A.RAINCLOUD.colors, cp, left, top)}</g></g>`;
     }
     case 'sick': {
       const dp = Math.max(2, pp - 1);
       return [[0.42, 0], [-0.46, 0.9]]
-        .map(([dx, delay]) => at(cx + dx * bw, headTop + 8 * k, stamp(A.DROP, { t: '#7fd3ff' }, dp, -1.5 * dp, 0), 'lp-drip lp-px', `animation-duration:1.8s;animation-delay:${sec(delay)}`))
+        .map(([dx, delay]) => at(cx + dx * bw, headTop + 8 * k, stamp(A.DROP, { t: '#7fd3ff' }, dp, -1.5 * dp, 0), 'lp-drip lp-px', `animation-duration:1.8s;animation-delay:-${sec(delay)}`))
         .join('');
     }
     case 'zombie': {

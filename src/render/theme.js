@@ -211,10 +211,14 @@ const STATIC_CSS = `
 @keyframes lp-flag{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
 @keyframes lp-bulb{0%{opacity:1}50%{opacity:.25}}
 @keyframes lp-twinkle-soft{0%,100%{opacity:.75}50%{opacity:1}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+@media (prefers-reduced-motion:reduce){*{animation-play-state:paused!important}}
 `.replace(/\n/g, '');
 
-export const buildCss = ({ theme = 'auto', mood, home = 'meadow' }) => themeBlock(theme, mood, home) + STATIC_CSS;
+// A still picture (a grid of many pets, power saving): every animation holds its first frame, so
+// once drawn the picture costs the computer nothing, however many of them are on screen.
+const STILL = '*{animation-play-state:paused!important}';
+
+export const buildCss = ({ theme = 'auto', mood, home = 'meadow', still = false }) => themeBlock(theme, mood, home) + STATIC_CSS + (still ? STILL : '');
 
 // Just the card chrome (background, text, borders) for simple panels like the stats chart.
 export function chromeCss(theme = 'auto') {

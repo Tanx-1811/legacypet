@@ -22,7 +22,7 @@ export function parkSummary(pets) {
 }
 
 // Every pet from a profile in one meadow, each with a little name sign.
-export function renderPark(pets, { owner, lang = 'en', theme = 'auto' } = {}) {
+export function renderPark(pets, { owner, lang = 'en', theme = 'auto', still = false } = {}) {
   if (!pets.length) throw new Error('A park needs at least one pet');
   const list = pets.slice(0, PARK_MAX);
   const tr = strings(lang);
@@ -69,7 +69,7 @@ export function renderPark(pets, { owner, lang = 'en', theme = 'auto' } = {}) {
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="${uid}-t ${uid}-d">`,
     `<title id="${uid}-t">${esc(title)}</title>`,
     `<desc id="${uid}-d">${esc(`${sub}. ${desc}`)}</desc>`,
-    `<style>${buildCss({ theme, mood: 'happy', home: 'meadow' })}</style>`,
+    `<style>${buildCss({ theme, mood: 'happy', home: 'meadow', still })}</style>`,
     `<defs>${skyDefs(uid, { x, y, w, h, rx: 10 })}</defs>`,
     `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" class="lp-card"/>`,
     `<g clip-path="url(#${uid}-clip)">`,

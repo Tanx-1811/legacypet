@@ -83,7 +83,7 @@ function trophies(pet, tr) {
     + quest;
 }
 
-export function renderCard(pet, { theme = 'auto' } = {}) {
+export function renderCard(pet, { theme = 'auto', still = false } = {}) {
   const tr = strings(pet.lang);
   const uid = uidFor(pet, 'card');
   const scene = renderScene(pet, { x: 10, y: 10, w: 200, h: H - 20, uid, variant: 'card' });
@@ -94,7 +94,7 @@ export function renderCard(pet, { theme = 'auto' } = {}) {
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="${uid}-t ${uid}-d">`,
     `<title id="${uid}-t">${esc(`${pet.displayName} ${MOOD_EMOJI[pet.mood]} ${pet.repo.fullName}`)}</title>`,
     `<desc id="${uid}-d">${esc(describe(pet))}</desc>`,
-    `<style>${buildCss({ theme, mood: pet.mood, home: homeOf(pet) })}</style>`,
+    `<style>${buildCss({ theme, mood: pet.mood, home: homeOf(pet), still })}</style>`,
     `<defs>${scene.defs}</defs>`,
     `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="14" class="lp-card"/>`,
     scene.body,
