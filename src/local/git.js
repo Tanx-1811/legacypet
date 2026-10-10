@@ -130,7 +130,7 @@ async function inSlot(fn) {
 }
 
 // Where a repo keeps its history: `.git`, or the folder a `.git` file points to (a worktree).
-function gitDirs(dir) {
+export function gitDirs(dir) {
   const dotGit = join(dir, '.git');
   try {
     if (!statSync(dotGit).isFile()) return { own: dotGit, common: dotGit };

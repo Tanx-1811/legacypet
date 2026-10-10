@@ -168,16 +168,17 @@ export class Canvas {
   }
 }
 
-// Places text columns next to (or under) a block of lines, padding by visible width.
-export function sideBySide(left, right, { gap = 2, width = null } = {}) {
-  const leftWidth = Math.max(0, ...left.map(visibleWidth));
+// Places a panel of text lines to the right of a block of lines, bottom-aligned with it.
+// `leftWidth` keeps the panel in place while the block's own lines change width.
+export function sideBySide(left, right, { gap = 2, width = null, leftWidth = null } = {}) {
+  const lw = leftWidth ?? Math.max(0, ...left.map(visibleWidth));
   const rows = Math.max(left.length, right.length);
   const top = rows - right.length; // the panel sits at the bottom, by the pet's feet
   const out = [];
   for (let i = 0; i < rows; i++) {
     const l = left[i] ?? '';
     const r = right[i - top] ?? '';
-    out.push(r ? `${l}${' '.repeat(leftWidth - visibleWidth(l) + gap)}${r}` : l);
+    out.push(r ? `${l}${' '.repeat(Math.max(0, lw - visibleWidth(l)) + gap)}${r}` : l);
   }
   return width ? out.map((line) => clip(line, width)) : out;
 }
@@ -225,6 +226,14 @@ export function createPlayer(out = process.stdout) {
       s += '\x1b[?2026l';
       out.write(s);
       drawn = Math.max(drawn, lines.length);
+    },
+    // Drops the first `count` lines of what's on screen (empty headroom the animation needed),
+    // pulling the rest up, so the frame left in the scrollback is no taller than it must be.
+    trimTop(count) {
+      const n = Math.min(count, drawn - 1);
+      if (n <= 0) return;
+      out.write(`\x1b[${drawn}A\r\x1b[${n}M\x1b[${drawn - n}B\r`);
+      drawn -= n;
     },
     // Shows the cursor again. The last frame stays on screen, part of the scrollback.
     end() {
