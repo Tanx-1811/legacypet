@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🐾 LegacyPet
+<img src="site/icon.svg" alt="LegacyPet logo" width="72">
+
+# LegacyPet
 
 **Repo của bạn có một con thú cưng. Đừng để nó thành thây ma.**
 

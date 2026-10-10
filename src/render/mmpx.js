@@ -13,22 +13,43 @@
 // `luma(letter)` ranks letters: in ambiguous spots the darker (or opaque) one is the foreground.
 // '.' and anything off the grid is transparent, which counts as the brightest.
 
-export function magnify(rows, luma) {
+const DOT = 46; // '.'
+const PAD = 3; // the rules look up to three cells away
+
+// The doubled sprite as letter codes, row by row: { codes, w, h } with w, h the new size.
+export function magnifyCodes(rows, luma) {
   const w = rows[0].length;
   const h = rows.length;
-  const cells = rows.map((row) => [...row]);
-  const src = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? '.' : cells[y][x]);
-  const lum = (k) => (k === '.' ? Infinity : luma(k));
-  const out = Array.from({ length: h * 2 }, () => new Array(w * 2));
+  const pw = w + 2 * PAD;
+  const grid = new Uint16Array(pw * (h + 2 * PAD)).fill(DOT);
+  const lum = new Float64Array(grid.length).fill(Infinity);
+  const seen = new Map();
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const A = src(x - 1, y - 1); const B = src(x, y - 1); const C = src(x + 1, y - 1);
-      const D = src(x - 1, y); const E = src(x, y); const F = src(x + 1, y);
-      const G = src(x - 1, y + 1); const H = src(x, y + 1); const I = src(x + 1, y + 1);
+      const code = rows[y].charCodeAt(x);
+      const i = (y + PAD) * pw + x + PAD;
+      grid[i] = code;
+      if (code !== DOT) {
+        if (!seen.has(code)) seen.set(code, luma(String.fromCharCode(code)));
+        lum[i] = seen.get(code);
+      }
+    }
+  }
+  const W = 2 * w;
+  const out = new Uint16Array(W * 2 * h);
+  const p2 = 2 * pw;
+  const p3 = 3 * pw;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y + PAD) * pw + x + PAD;
+      const E = grid[i];
+      const A = grid[i - pw - 1]; const B = grid[i - pw]; const C = grid[i - pw + 1];
+      const D = grid[i - 1]; const F = grid[i + 1];
+      const G = grid[i + pw - 1]; const H = grid[i + pw]; const I = grid[i + pw + 1];
       let J = E; let K = E; let L = E; let M = E;
       if (A !== E || B !== E || C !== E || D !== E || F !== E || G !== E || H !== E || I !== E) {
-        const P = src(x, y - 2); const Q = src(x - 2, y); const R = src(x + 2, y); const S = src(x, y + 2);
-        const Bl = lum(B); const Dl = lum(D); const El = lum(E); const Fl = lum(F); const Hl = lum(H);
+        const P = grid[i - p2]; const Q = grid[i - 2]; const R = grid[i + 2]; const S = grid[i + p2];
+        const Bl = lum[i - pw]; const Dl = lum[i - 1]; const El = lum[i]; const Fl = lum[i + 1]; const Hl = lum[i + pw];
 
         // 1:1 slopes (the EPX rules, made safer)
         if (D === B && D !== H && D !== F && (El >= Dl || E === A) && (E === A || E === C || E === G) && (El < Dl || A !== D || E !== P || E !== Q)) J = D;
@@ -37,10 +58,10 @@ export function magnify(rows, luma) {
         if (F === H && F !== B && F !== D && (El >= Fl || E === I) && (E === C || E === G || E === I) && (El < Fl || I !== H || E !== R || E !== S)) M = F;
 
         // Intersections
-        if (E !== F && E === C && E === I && E === D && E === Q && F === B && F === H && F !== src(x + 3, y)) { K = F; M = F; }
-        if (E !== D && E === A && E === G && E === F && E === R && D === B && D === H && D !== src(x - 3, y)) { J = D; L = D; }
-        if (E !== H && E === G && E === I && E === B && E === P && H === D && H === F && H !== src(x, y + 3)) { L = H; M = H; }
-        if (E !== B && E === A && E === C && E === H && E === S && B === D && B === F && B !== src(x, y - 3)) { J = B; K = B; }
+        if (E !== F && E === C && E === I && E === D && E === Q && F === B && F === H && F !== grid[i + 3]) { K = F; M = F; }
+        if (E !== D && E === A && E === G && E === F && E === R && D === B && D === H && D !== grid[i - 3]) { J = D; L = D; }
+        if (E !== H && E === G && E === I && E === B && E === P && H === D && H === F && H !== grid[i + p3]) { L = H; M = H; }
+        if (E !== B && E === A && E === C && E === H && E === S && B === D && B === F && B !== grid[i - p3]) { J = B; K = B; }
 
         // Triangle tips
         if (Bl < El && E === G && E === H && E === I && E === S && E !== A && E !== D && E !== C && E !== F) { J = B; K = B; }
@@ -51,30 +72,37 @@ export function magnify(rows, luma) {
         // 2:1 slopes
         if (H !== B) {
           if (H !== A && H !== E && H !== C) {
-            if (H === G && H === F && H === R && H !== D && H !== src(x + 2, y - 1)) L = M;
-            if (H === I && H === D && H === Q && H !== F && H !== src(x - 2, y - 1)) M = L;
+            if (H === G && H === F && H === R && H !== D && H !== grid[i - pw + 2]) L = M;
+            if (H === I && H === D && H === Q && H !== F && H !== grid[i - pw - 2]) M = L;
           }
           if (B !== I && B !== G && B !== E) {
-            if (B === A && B === F && B === R && B !== D && B !== src(x + 2, y + 1)) J = K;
-            if (B === C && B === D && B === Q && B !== F && B !== src(x - 2, y + 1)) K = J;
+            if (B === A && B === F && B === R && B !== D && B !== grid[i + pw + 2]) J = K;
+            if (B === C && B === D && B === Q && B !== F && B !== grid[i + pw - 2]) K = J;
           }
         }
         if (F !== D) {
           if (D !== I && D !== E && D !== C) {
-            if (D === A && D === H && D === S && D !== B && D !== src(x + 1, y + 2)) J = L;
-            if (D === G && D === B && D === P && D !== H && D !== src(x + 1, y - 2)) L = J;
+            if (D === A && D === H && D === S && D !== B && D !== grid[i + p2 + 1]) J = L;
+            if (D === G && D === B && D === P && D !== H && D !== grid[i - p2 + 1]) L = J;
           }
           if (F !== E && F !== A && F !== G) {
-            if (F === C && F === H && F === S && F !== B && F !== src(x - 1, y + 2)) K = M;
-            if (F === I && F === B && F === P && F !== H && F !== src(x - 1, y - 2)) M = K;
+            if (F === C && F === H && F === S && F !== B && F !== grid[i + p2 - 1]) K = M;
+            if (F === I && F === B && F === P && F !== H && F !== grid[i - p2 - 1]) M = K;
           }
         }
       }
-      out[2 * y][2 * x] = J;
-      out[2 * y][2 * x + 1] = K;
-      out[2 * y + 1][2 * x] = L;
-      out[2 * y + 1][2 * x + 1] = M;
+      const o = 2 * y * W + 2 * x;
+      out[o] = J;
+      out[o + 1] = K;
+      out[o + W] = L;
+      out[o + W + 1] = M;
     }
   }
-  return out.map((row) => row.join(''));
+  return { codes: out, w: W, h: 2 * h };
+}
+
+// The doubled sprite as rows of letters.
+export function magnify(rows, luma) {
+  const { codes, w, h } = magnifyCodes(rows, luma);
+  return Array.from({ length: h }, (_, y) => String.fromCharCode(...codes.subarray(y * w, (y + 1) * w)));
 }

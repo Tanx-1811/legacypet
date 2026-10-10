@@ -117,34 +117,37 @@ function appIcon(size = 1024) {
   return c;
 }
 
-// LegacyPet's paw, the same one as the web app's logo.
-const PAW = [
-  '...##...##..',
-  '...##...##..',
-  '...##...##..',
-  '##........##',
-  '##..####..##',
-  '##.######.##',
+// LegacyPet's logo, the same one as the web app's: a pet that just hatched, still wearing a piece of its eggshell.
+const HATCHLING = [
+  '......###...',
+  '....######..',
+  '...#######..',
+  '...##..#.#..',
+  '..#.........',
+  '...######...',
   '..########..',
+  '.##.####.##.',
+  '.##.####.##.',
+  '.####..####.',
   '..########..',
-  '..########..',
+  '...######...',
 ];
-function paw(size, { color, background = null }) {
+function logo(size, { color, background = null }) {
   const c = canvas(size, size);
   if (background) c.rounded(0, 0, size, size, size * 0.22, () => hex(background));
-  const scale = Math.max(1, Math.floor((size * (background ? 0.62 : 0.8)) / PAW[0].length));
-  const ox = Math.floor((size - PAW[0].length * scale) / 2);
-  const oy = Math.floor((size - PAW.length * scale) / 2);
-  PAW.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '#') c.rect(ox + x * scale, oy + y * scale, scale, scale, hex(color)); }));
+  const scale = Math.max(1, Math.floor((size * (background ? 0.62 : 0.8)) / Math.max(HATCHLING[0].length, HATCHLING.length)));
+  const ox = Math.floor((size - HATCHLING[0].length * scale) / 2);
+  const oy = Math.floor((size - HATCHLING.length * scale) / 2);
+  HATCHLING.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '#') c.rect(ox + x * scale, oy + y * scale, scale, scale, hex(color)); }));
   return c;
 }
 
 const files = {
   'icon.png': appIcon(1024),
-  'trayTemplate.png': paw(16, { color: '#000000' }),
-  'trayTemplate@2x.png': paw(32, { color: '#000000' }),
-  'tray.png': paw(32, { color: '#ffffff', background: '#7c4dff' }),
-  'tray@2x.png': paw(64, { color: '#ffffff', background: '#7c4dff' }),
+  'trayTemplate.png': logo(16, { color: '#000000' }),
+  'trayTemplate@2x.png': logo(32, { color: '#000000' }),
+  'tray.png': logo(32, { color: '#ffffff', background: '#7c4dff' }),
+  'tray@2x.png': logo(64, { color: '#ffffff', background: '#7c4dff' }),
 };
 for (const [name, img] of Object.entries(files)) writeFileSync(`${out}${name}`, png(img));
 console.log(`Wrote ${Object.keys(files).join(', ')} to ${out}`);

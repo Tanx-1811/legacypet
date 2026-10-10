@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🐾 LegacyPet
+<img src="site/icon.svg" alt="LegacyPet logo" width="72">
+
+# LegacyPet
 
 **Your repo has a pet. Don't let it become a zombie.**
 

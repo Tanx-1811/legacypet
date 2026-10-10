@@ -180,7 +180,8 @@ function hatPixelsHd(kind, [cx, top]) {
 // The egg's crack: a fine zigzag through the crack points, longer with every commit.
 function composeEggHd(pet, palette) {
   const shell = eggShell(palette);
-  const base = hdPixels(EGG, (k) => shell[k]);
+  const usual = eggShell(pet.species.palette);
+  const base = hdPixels(EGG, (k) => shell[k], { rankBy: (k) => usual[k] });
   const points = EGG_CRACK.slice(0, Math.round(pet.hatchProgress * EGG_CRACK.length)).map(([x, y]) => [2 * x, 2 * y]);
   points.forEach(([x, y], i) => {
     base.push({ x, y, c: palette.o });
@@ -202,12 +203,14 @@ function composeHd(pet, palette, face, colorOf) {
     if (ch === 'm') return mixOklab(ink, '#c0304a', 0.55);
     return colorOf(ch);
   };
-  const body = hdPixels(species.grid, (k) => palette[k]);
+  // The shape is decided by the species' usual colors, so it never changes with mood or tint.
+  const usual = (k) => species.palette[k] ?? FACE_COLORS[k];
+  const body = hdPixels(species.grid, (k) => palette[k], { rankBy: usual });
   const [mx, my] = species.mouth;
   const cheeks = face.cheeks ? species.cheeks.flatMap(([x, y]) => gridToPixels(CHEEKS_HD[face.cheeks], FACE_COLORS, 2 * x, 2 * y)) : [];
   let mouth;
   if (species.mouthStyle === 'beak') {
-    mouth = hdPixels(BEAKS[face.mouth], faceColor, { ink: null, light: false, ox: 2 * mx, oy: 2 * my });
+    mouth = hdPixels(BEAKS[face.mouth], faceColor, { ink: null, light: false, ox: 2 * mx, oy: 2 * my, rankBy: usual });
   } else {
     const m = MOUTHS_HD[face.mouth];
     mouth = gridToPixels(m.rows, faceColor, 2 * mx + (m.dx ?? 0), 2 * my + (m.dy ?? 0));
