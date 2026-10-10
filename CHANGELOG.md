@@ -22,7 +22,8 @@ Releases that need a change to your workflow file say so.
 - 🎨 **A new look**: a cleaner design with Lucide icons, a sidebar that folds into icons, scrolling tabs on phones,
   and a download page for the app.
 - 🐣 **A logo of its own**: a pet that just hatched, still wearing a piece of its eggshell, in LegacyPet's new teal.
-  It's on the playground, the app and tray icons, and the corner of every pet card.
+  It's on the playground, the app and tray icons, and the corner of every pet card, and 🐣 now signs the pet's commits,
+  notices and job summary.
 - 📜 **Weekly quests**: three goals a week, picked from what the repo really does (commit days, CI, replies, merged PRs,
   releases, teamwork, happy days, nothing stale). Each finished quest earns a quest star and +5 joy until Monday;
   all three earn two more. Shown on the card, in the diary, the job summary and `/pet quests`.

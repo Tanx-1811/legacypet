@@ -11,9 +11,11 @@ const W = 520;
 const H = 256;
 const X = 228;
 const R = 508;
-// The "legacypet" signature: 9.5px monospace, about 0.6em a character, with the 12px logo in front of it.
+// The "legacypet" signature: the 12px logo, then the name held to a fixed width (9.5px monospace runs
+// 0.55–0.6em a character depending on the font), so the gap between them is 4px everywhere.
 const BRAND = 'legacypet';
-const BRAND_X = Math.round(R - BRAND.length * 5.7 - 4 - 12);
+const BRAND_W = Math.round(BRAND.length * 5.7);
+const BRAND_X = R - BRAND_W - 4 - 12;
 const STATS = [['fullness', '🍖'], ['health', '❤️'], ['joy', '😊'], ['energy', '⚡'], ['hygiene', '🧼']];
 
 export const uidFor = (pet, variant) => `lp${hashString(`${pet.repo.fullName}|${pet.mood}|${variant}`).toString(36)}`;
@@ -110,8 +112,8 @@ export function renderCard(pet, { theme = 'auto', still = false } = {}) {
     stats(pet, tr),
     trophies(pet, tr),
     `<text x="${X}" y="246" class="lp-foot">${esc(footer)}</text>`,
-    `<path transform="translate(${BRAND_X} 236)" d="${LOGO_PATH}" class="lp-logo"/>`,
-    `<text x="${R}" y="246" text-anchor="end" class="lp-brand">${BRAND}</text>`,
+    `<path transform="translate(${BRAND_X} 237)" d="${LOGO_PATH}" class="lp-logo"/>`,
+    `<text x="${R}" y="246" text-anchor="end" textLength="${BRAND_W}" class="lp-brand">${BRAND}</text>`,
     '</svg>',
   ].join('');
 }

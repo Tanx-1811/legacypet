@@ -11,7 +11,7 @@ import {
 import { adoptLocal, findReadme } from './local/adopt.js';
 
 const HELP = `
-🐾 legacypet: a pixel pet that lives in your README
+🐣 legacypet: a pixel pet that lives in your README
 
 Usage
   legacypet app                   Open the LegacyPet app: every project on this computer gets a pet
@@ -171,11 +171,11 @@ async function adopt(owner) {
 
   const width = String(repos.length).length;
   repos.forEach((r, i) => {
-    const marks = `${pets[i] ? '🐾' : '  '}${r.isPrivate ? '🔒' : '  '}`;
+    const marks = `${pets[i] ? '🐣' : '  '}${r.isPrivate ? '🔒' : '  '}`;
     const meta = [r.stars ? `★${r.stars}` : '', r.language ?? '', ago(r.pushedAt)].filter(Boolean).join(' · ');
     console.log(`  ${String(i + 1).padStart(width)}. ${marks} ${r.fullName.padEnd(36)} ${meta}`);
   });
-  console.log('\n  🐾 already has a pet   🔒 private');
+  console.log('\n  🐣 already has a pet   🔒 private');
 
   let answer = opts.repos;
   if (!answer) {
@@ -253,7 +253,7 @@ async function init() {
 
   console.log(`
 Next steps
-  1. git add ${workflow} ${readme ?? ''} && git commit -m "Adopt a LegacyPet 🐾" && git push
+  1. git add ${workflow} ${readme ?? ''} && git commit -m "Adopt a LegacyPet 🐣" && git push
   2. Your pet hatches by itself a minute after the push. Refresh your README and say hi!`);
 }
 
@@ -386,7 +386,7 @@ async function app() {
     if (ping?.app === 'legacypet') {
       const url = `http://127.0.0.1:${port}/#/home`;
       if (!opts['no-open']) openAppWindow(url, { profileDir: join(dataDir(), 'window') });
-      return console.log(`🐾 LegacyPet is already running at ${url}`);
+      return console.log(`🐣 LegacyPet is already running at ${url}`);
     }
   } catch { /* nothing there: start it */ }
 
@@ -397,7 +397,7 @@ async function app() {
   };
   server = await startServer({ port, onIdle: opts['no-open'] ? null : quit });
   const url = server.appUrl();
-  console.log(`🐾 LegacyPet is running at ${url}`);
+  console.log(`🐣 LegacyPet is running at ${url}`);
   console.log('   Everything stays on this computer. Press Ctrl+C to quit.');
   if (opts['no-open']) return;
   const win = openAppWindow(url, { profileDir: join(dataDir(), 'window') });

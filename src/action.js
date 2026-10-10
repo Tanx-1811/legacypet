@@ -49,7 +49,7 @@ async function announceUpdates(client, { owner, repo, prevState }) {
   if (!fresh.length) return '';
   const yaml = fresh.some((e) => e.workflow) ? await currentWorkflow(client, owner, repo) : null;
   const todo = fresh.filter((e) => e.workflow && yaml != null && !e.workflow.test(yaml));
-  command('notice', `🐾 LegacyPet updated to v${VERSION}: ${fresh.flatMap((e) => e.items).length} new things. See the job summary.${todo.length ? ' One step is needed to unlock everything.' : ''}`);
+  command('notice', `🐣 LegacyPet updated to v${VERSION}: ${fresh.flatMap((e) => e.items).length} new things. See the job summary.${todo.length ? ' One step is needed to unlock everything.' : ''}`);
   return [
     `### 🆕 What's new in LegacyPet v${VERSION}`,
     '',
@@ -70,7 +70,7 @@ function writeSummary(pet, snapshot, { branch, published, dryRun, parkPets, prev
   const head = ['fullness', 'health', 'joy', 'energy', 'hygiene'].filter((k) => v[k] != null);
   const park = parkPets?.length ? parkSummary(parkPets) : null;
   const md = [
-    `## 🐾 ${pet.displayName}`,
+    `## 🐣 ${pet.displayName}`,
     '',
     `${MOOD_EMOJI[pet.mood]} **${pet.rank.emoji} ${tr.level(pet.level)} ${tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])}**, ${tr.moods[pet.mood]}${pet.shiny ? ' ✨' : ''}`,
     '',
@@ -182,7 +182,7 @@ async function main() {
 
   const client = createClient({ token });
   const now = new Date();
-  console.log(`🐾 Visiting the pet of ${owner}/${repo}...`);
+  console.log(`🐣 Visiting the pet of ${owner}/${repo}...`);
 
   const snapshot = await collectSnapshot(client, { owner, repo, now, ignoreChecks });
   snapshot.warnings.forEach(warn);
@@ -241,7 +241,7 @@ async function main() {
     try {
       const result = await publishFiles(client, {
         owner, repo, branch, files,
-        message: `🐾 ${pet.name} is ${pet.mood} (Lv.${pet.level}) [skip ci]`,
+        message: `🐣 ${pet.name} is ${pet.mood} (Lv.${pet.level}) [skip ci]`,
       });
       published = result.changed;
       console.log(result.changed ? `📦 Published to ${branch} (${result.sha.slice(0, 7)})` : '📦 Nothing changed');

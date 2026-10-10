@@ -180,7 +180,7 @@ test('publishAdoption commits only the pet\'s files and pushes them', async () =
   const result = await publishAdoption(path, files.map((f) => f.path));
   assert.deepEqual(result, { committed: true, pushed: true, error: null, hint: null });
   const shown = sh(bare, ['show', '--stat', '--format=%s', 'main']);
-  assert.match(shown, /^Adopt a LegacyPet 🐾/);
+  assert.match(shown, /^Adopt a LegacyPet 🐣/);
   assert.match(shown, /legacypet\.yml/);
   assert.doesNotMatch(shown, /other\.txt/);
   assert.match(sh(path, ['status', '--porcelain']), /^A {2}other\.txt/m, 'still staged, untouched');

@@ -97,7 +97,7 @@ async function findReadme(client, fullName, ref) {
 export async function adoptRepo(client, repo, { options = {}, style = 'card', force = false, readme = true } = {}) {
   const { fullName, defaultBranch: branch } = repo;
   const done = { fullName, workflow: 'skipped', readme: 'skipped' };
-  const message = 'Adopt a LegacyPet 🐾';
+  const message = 'Adopt a LegacyPet 🐣';
 
   const existing = await readFile(client, fullName, WORKFLOW_PATH, branch);
   if (existing && !force) done.workflow = 'exists';

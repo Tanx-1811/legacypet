@@ -1,6 +1,6 @@
 # Contributing to LegacyPet
 
-Thanks for wanting to help raise more pets! 🐾 The project has **zero dependencies**:
+Thanks for wanting to help raise more pets! 🐣 The project has **zero dependencies**:
 all you need is Node.js 20 or newer.
 
 ```sh

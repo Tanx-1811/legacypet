@@ -13,6 +13,8 @@ import { hoverToMove, MOTIONS, onMotionPreference, resolveMotion } from './motio
 // ---------------------------------------------------------------------------
 const KEY = 'legacypet.playground.v2';
 const browserLang = (navigator.language || 'en').toLowerCase().startsWith('vi') ? 'vi' : 'en';
+// A first visit to the park finds it already full of made-up pets, so there is something to see.
+const DEMO_PARK = [['ecstatic', 'duck'], ['happy', 'cat'], ['sick', 'octopus'], ['hungry', 'snake'], ['party', 'crab'], ['zombie', 'blob']].map(([m, s]) => `demo/x/${m}/${s}`);
 const defaults = () => ({
   ui: browserLang,
   theme: 'auto',
@@ -22,7 +24,10 @@ const defaults = () => ({
   habit: 'diligent',
   simTab: 'quests',
   user: 'you',
-  park: [],
+  park: DEMO_PARK,
+  // The repos hatched lately (newest first) and the ones sent off to GitHub for adoption.
+  recent: [],
+  adopted: [],
 });
 // Whether this browser had nothing saved yet (a new window of the app picks up its settings).
 let freshStore = true;
@@ -113,13 +118,15 @@ const codeBlock = (text) => {
 };
 
 const TOAST_ICONS = { good: 'circle-check', gold: 'sparkles', bad: 'circle-alert' };
-function toast(text, kind = '') {
+// `action` ({ label, run }) adds a button that leads on from the news, e.g. "Open the park".
+function toast(text, kind = '', action = null) {
   const box = $('#toasts');
   const el = h(`div.toast${kind ? `.${kind}` : ''}`, { role: 'status', title: t().toastClose, onclick: () => el.remove() },
-    icon(TOAST_ICONS[kind] ?? 'info', { size: 16 }), h('span', text));
+    icon(TOAST_ICONS[kind] ?? 'info', { size: 16 }), h('span', text),
+    action ? h('button.toast-action', { type: 'button', onclick: (e) => { e.stopPropagation(); el.remove(); action.run(); } }, action.label) : null);
   box.append(el);
   while (box.children.length > 3) box.firstChild.remove();
-  setTimeout(() => el.remove(), 4000);
+  setTimeout(() => el.remove(), action ? 6500 : 4000);
 }
 
 // A button with an icon: btn('Refresh', { icon: 'refresh-cw', kind: 'primary', onclick }).
@@ -152,25 +159,200 @@ function seg(options, value, onchange, label) {
   return box;
 }
 
-// Pickers shared by several views: species, home, coat color, the pet's language, name and catchphrase.
-function lookFields(onchange) {
+// A modal sheet that closes on Esc, on its × or a click outside, and cleans up after itself.
+function dialog(...children) {
+  const el = h('dialog.sheet', ...children);
+  el.addEventListener('close', () => el.remove());
+  el.addEventListener('click', (e) => { if (e.target === el) el.close(); });
+  document.body.append(el);
+  el.showModal();
+  return el;
+}
+const closeX = () => h('form', { method: 'dialog' }, btn('', { icon: 'x', kind: 'ghost close', title: t().common.close, type: 'submit' }));
+
+function download(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = h('a', { href: url, download: name, hidden: true });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+// The card as a picture for chats and slides: drawn at twice its size, pixels kept sharp.
+async function svgToPng(svg, scale = 2) {
+  const image = new Image();
+  await new Promise((done, fail) => { image.onload = done; image.onerror = () => fail(new Error('PNG')); image.src = svgSrc(svg); });
+  const canvas = h('canvas', { width: image.naturalWidth * scale, height: image.naturalHeight * scale });
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return new Promise((done) => canvas.toBlob(done, 'image/png'));
+}
+async function copyText(text, action = null) {
+  try { await navigator.clipboard.writeText(text); toast(t().home.share.copied, 'good', action); } catch { toast(text); }
+}
+
+// ----- Links that carry a pet along ---------------------------------------------------
+// A shared link opens the same pet: its look rides in the address (#/hatch/owner/repo?species=cat&color=teal),
+// and so does a made-up mood (?mood=sick) or a whole park (?repos=a/b,c/d).
+const LINK_LOOK = {
+  species: (v) => v === 'auto' || LP.SPECIES_IDS.includes(v),
+  scenery: (v) => v === 'auto' || LP.HOMES.includes(v),
+  color: (v) => v === 'auto' || LP.COLOR_IDS.includes(v) || /^#[0-9a-f]{6}$/i.test(v),
+  name: (v) => v.length <= 40,
+  motto: (v) => v.length <= LP.MOTTO_MAX,
+  lang: (v) => Object.hasOwn(LP.LANGS, v),
+};
+const PARK_ENTRY = /^(?:[\w.-]+\/[\w.-]+|demo\/x\/[a-z]+\/[a-z]+)$/;
+
+function linkTo(view, arg = '', extra = {}) {
+  const params = new URLSearchParams();
+  for (const key of Object.keys(LINK_LOOK)) {
+    const v = String(store.cfg[key] ?? '').trim();
+    if (v && v !== 'auto') params.set(key, v);
+  }
+  for (const [k, v] of Object.entries(extra)) if (v) params.set(k, v);
+  // Nobody else can open the app on this computer: its links lead to the public playground.
+  const base = LOCAL ? LP.PLAYGROUND : location.href.split('#')[0];
+  const query = params.toString();
+  return `${base}#/${view}${arg ? `/${arg}` : ''}${query ? `?${query}` : ''}`;
+}
+
+// Takes in what a shared link carries (see linkTo).
+function takeLink(params) {
+  let took = false;
+  for (const [key, ok] of Object.entries(LINK_LOOK)) {
+    const v = params.get(key);
+    if (v != null && ok(v)) { store.cfg[key] = v; took = true; }
+  }
+  const repos = params.get('repos');
+  if (repos != null) {
+    store.park = [...new Set(repos.split(',').map((s) => s.trim()).filter((s) => PARK_ENTRY.test(s)))].slice(0, LP.PARK_MAX);
+    took = true;
+  }
+  if (took) save();
+}
+
+// A phone gets the system's share sheet; everywhere else the link goes to the clipboard.
+async function shareLink(url) {
+  if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+    try { await navigator.share({ title: 'LegacyPet', url }); return; } catch (err) { if (err.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(url); toast(t().common.shared, 'good'); } catch { toast(url); }
+}
+
+// The repos hatched lately, newest first, one click away on every page that asks for a repo.
+function addRecent(fullName) {
+  if (!/^[\w.-]+\/[\w.-]+$/.test(fullName ?? '')) return;
+  store.recent = [fullName, ...store.recent.filter((r) => r.toLowerCase() !== fullName.toLowerCase())].slice(0, 8);
+  save();
+}
+function recentChips(onpick, { skip = [] } = {}) {
+  const T = t().common;
+  const list = store.recent.filter((r) => !skip.includes(r));
+  if (!list.length) return null;
+  return h('div.examples.recent',
+    h('span.recent-label', icon('history', { size: 14 }), T.recent),
+    list.map((r) => h('button.chip', { type: 'button', onclick: () => onpick(r) }, r)),
+    h('button.chip.ghost', {
+      type: 'button', title: T.clearRecent, 'aria-label': T.clearRecent,
+      onclick: (e) => { store.recent = []; save(); e.currentTarget.closest('.recent')?.remove(); },
+    }, icon('x', { size: 13 })));
+}
+function markAdopted(fullName) {
+  addRecent(fullName);
+  if (!store.adopted.includes(fullName)) store.adopted = [...store.adopted, fullName].slice(-20);
+  save();
+}
+function addToPark(fullName) {
   const T = t();
-  const L = tr();
-  const set = (key) => (v) => { store.cfg[key] = v; save(); onchange(); };
-  const name = h('input', { type: 'text', value: store.cfg.name, placeholder: T.common.namePlaceholder, maxlength: 40 });
-  name.oninput = () => set('name')(name.value);
-  const motto = h('input', { type: 'text', value: store.cfg.motto, placeholder: T.common.mottoPlaceholder, maxlength: LP.MOTTO_MAX });
-  motto.oninput = () => set('motto')(motto.value);
-  const colors = ['auto', ...LP.COLOR_IDS].map((id) => [id, T.common.colors[id]]);
-  return h('div.fields',
-    h('label.field', T.common.species, select([['auto', `${T.common.auto} 🎲`], ...LP.SPECIES_IDS.map((id) => [id, L.species[id]])], store.cfg.species, set('species'))),
-    h('label.field', T.common.scenery, select([['auto', T.common.auto], ...LP.HOMES.map((id) => [id, T.homes[id]])], store.cfg.scenery, set('scenery'))),
-    h('label.field', T.common.color, select(colors, colors.some(([id]) => id === store.cfg.color) ? store.cfg.color : 'auto', set('color'))),
-    h('label.field', T.common.petLang, select(Object.entries(LP.LANG_NAMES), store.cfg.lang, set('lang'))),
-    h('label.field', T.common.name, h('div.input-row', name, btn('', {
-      icon: 'dices', title: T.common.randomName, onclick: () => { name.value = LP.randomName(); set('name')(name.value); },
-    }))),
-    h('label.field', T.common.motto, motto));
+  const real = store.park.filter((n) => !n.startsWith('demo/'));
+  if (!real.includes(fullName)) {
+    if (real.length >= LP.PARK_MAX) return toast(T.park.full, 'bad');
+    store.park = [...real, fullName];
+    save();
+  }
+  toast(T.hatch.addedPark(fullName), 'good', { label: T.common.openPark, run: () => go_('park') });
+}
+
+// The three steps from a curious visitor to a pet in the README, on top of each step's page.
+// Steps already taken get a check, and every step is a link.
+const lookChanged = () => ['species', 'scenery', 'color'].some((k) => store.cfg[k] !== 'auto') || Boolean(store.cfg.name || store.cfg.motto);
+function journey(active) {
+  const T = t().journey;
+  const steps = [
+    ['hatch', 'hatch', () => store.recent.length > 0],
+    ['raise', 'sim', () => lookChanged() || (store.world?.day ?? 0) > 0],
+    ['adopt', 'adopt', () => store.adopted.length > 0],
+  ];
+  const bar = h('nav.journey', { 'aria-label': T.label });
+  bar.redraw = () => bar.replaceChildren(...steps.flatMap(([id, view, done], i) => [
+    i ? icon('chevron-right', { size: 16, cls: 'journey-arrow' }) : null,
+    h(`a.journey-step${id === active ? '.current' : ''}${done() ? '.done' : ''}`, { href: `#/${view}`, 'aria-current': id === active ? 'step' : null },
+      h('span.journey-num', done() && id !== active ? icon('check', { size: 14 }) : String(i + 1)),
+      h('span.journey-text', h('b', T[id]), h('small', T[`${id}Note`]))),
+  ]).filter(Boolean));
+  bar.redraw();
+  return bar;
+}
+
+// Pickers shared by several views: species, home, coat color, the pet's language, name and catchphrase.
+// "Surprise me" and "Reset" change everything at once, so the box draws itself again after them.
+// `extra`: more buttons for its header (the simulator's "Adopt with this look").
+function lookFields(onchange, { title = t().adopt.look, extra = null } = {}) {
+  const box = h('div.look');
+  const any = (list) => list[Math.floor(Math.random() * list.length)];
+  const changeAll = (patch) => { Object.assign(store.cfg, patch); save(); onchange(); draw(); };
+  function draw() {
+    const T = t();
+    const L = tr();
+    const cfg = store.cfg;
+    const set = (key) => (v) => { cfg[key] = v; save(); onchange(); paint(); };
+    const name = h('input', { type: 'text', value: cfg.name, placeholder: T.common.namePlaceholder, maxlength: 40 });
+    name.oninput = () => set('name')(name.value);
+    const motto = h('input', { type: 'text', value: cfg.motto, placeholder: T.common.mottoPlaceholder, maxlength: LP.MOTTO_MAX });
+    motto.oninput = () => set('motto')(motto.value);
+    // A swatch per color, in the shade it takes; "its own" shows the species' body color once a species is picked.
+    const shade = (c) => (c === 'auto' ? LP.SPECIES[cfg.species]?.palette.b ?? '' : c === 'mono' ? '#a3a8b1' : `hsl(${LP.PET_COLORS[c]} 72% 56%)`);
+    const picker = h('input', { type: 'color', value: '#ff8800', 'aria-label': T.common.colors.custom });
+    picker.onchange = () => set('color')(picker.value);
+    const custom = h('label.swatch.custom', { title: T.common.colors.custom }, icon('palette', { size: 14 }), picker);
+    const swatches = h('div.swatches', { role: 'group', 'aria-label': T.common.color },
+      ['auto', ...LP.COLOR_IDS].map((c) => h(`button.swatch${c === 'auto' ? '.own' : ''}`, {
+        type: 'button', title: T.common.colors[c], 'aria-label': T.common.colors[c], 'data-color': c, onclick: () => set('color')(c),
+      })),
+      custom);
+    function paint() {
+      const color = String(cfg.color || 'auto').toLowerCase();
+      for (const b of swatches.querySelectorAll('button.swatch')) {
+        b.setAttribute('aria-pressed', String(b.dataset.color === color));
+        b.style.setProperty('--sw', shade(b.dataset.color));
+      }
+      const own = color.startsWith('#');
+      custom.classList.toggle('on', own);
+      if (own) { custom.style.setProperty('--sw', color); picker.value = color; } else custom.style.removeProperty('--sw');
+    }
+    box.replaceChildren(
+      h('div.look-head', h('h3', `🎨 ${title}`), h('div.row',
+        extra,
+        btn(T.common.surprise, {
+          icon: 'dices', kind: 'sm',
+          onclick: () => changeAll({ species: any(LP.SPECIES_IDS), scenery: Math.random() < 0.5 ? 'auto' : any(LP.HOMES), color: any(['auto', ...LP.COLOR_IDS]), name: LP.randomName() }),
+        }),
+        btn(T.common.resetLook, { icon: 'rotate-ccw', kind: 'sm ghost', onclick: () => changeAll({ species: 'auto', scenery: 'auto', color: 'auto', name: '', motto: '' }) }))),
+      h('div.fields',
+        h('label.field', T.common.species, select([['auto', `${T.common.auto} 🎲`], ...LP.SPECIES_IDS.map((id) => [id, L.species[id]])], cfg.species, set('species'))),
+        h('label.field', T.common.scenery, select([['auto', T.common.auto], ...LP.HOMES.map((id) => [id, T.homes[id]])], cfg.scenery, set('scenery'))),
+        h('label.field', T.common.petLang, select(Object.entries(LP.LANG_NAMES), cfg.lang, set('lang'))),
+        h('label.field', T.common.name, h('div.input-row', name, btn('', {
+          icon: 'dices', title: T.common.randomName, onclick: () => { name.value = LP.randomName(); set('name')(name.value); },
+        }))),
+        h('label.field.wide', T.common.motto, motto),
+        h('div.field.wide', h('span', T.common.color), swatches)));
+    paint();
+  }
+  draw();
+  return box;
 }
 
 // Turns a `/pet` reply (GitHub markdown) into safe HTML for the console.
@@ -437,7 +619,7 @@ function viewHatch(root, arg) {
       h('div.pick-main',
         h('div.pick-name', h('b.mono', picker.owner ? r.name : r.fullName),
           r.isPrivate && h('span.pick-tag', '🔒'), r.fork && h('span.pick-tag', 'fork'), r.archived && h('span.pick-tag', '📦'),
-          r.pet && h('span.pick-tag.pet', `🐾 ${T.hasPet}`)),
+          r.pet && h('span.pick-tag.pet', `🐣 ${T.hasPet}`)),
         r.description && h('div.small.muted.clip', { title: r.description }, r.description),
         h('div.small.muted', [r.stars ? `★ ${r.stars}` : '', r.language, ago(r.pushedAt)].filter(Boolean).join(' · '))),
       h('div.pick-actions',

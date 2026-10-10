@@ -6,7 +6,7 @@ import { insertSnippet, snippetFor, workflowYaml } from '../setup.js';
 import { WORKFLOW_PATH } from '../github/repos.js';
 import { git } from './git.js';
 
-export const ADOPT_MESSAGE = 'Adopt a LegacyPet 🐾';
+export const ADOPT_MESSAGE = 'Adopt a LegacyPet 🐣';
 const INPUTS = ['species', 'scenery', 'name', 'color', 'motto', 'theme', 'lang', 'wear', 'vacation', 'park', 'alerts'];
 
 export const findReadme = (dir) => {

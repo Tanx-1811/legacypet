@@ -1,5 +1,6 @@
 // The command palette (⌘K / Ctrl+K): jump to any page or project, or run an action, from the keyboard.
-// items(): [{ group, icon, label, hint, keywords, run }]
+// items(): [{ group, icon, label, hint, keywords, run, searchOnly }]
+// `searchOnly` items (every species, say) wait until something is typed, so the list starts short.
 
 // Loose matching: every typed character in order, word starts score higher.
 function score(query, text) {
@@ -36,7 +37,7 @@ export function createPalette({ h, icon, t, items }) {
       const q = input.value.trim();
       shown = all
         .map((item) => ({ item, s: score(q, `${item.label} ${item.keywords ?? ''} ${item.hint ?? ''}`) }))
-        .filter((x) => x.s > 0)
+        .filter((x) => x.s > 0 && (q || !x.item.searchOnly))
         .sort((a, b) => (q ? b.s - a.s : 0))
         .slice(0, 60)
         .map((x) => x.item);

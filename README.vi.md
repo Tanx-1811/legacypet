@@ -84,7 +84,7 @@ Lệnh này mở cùng ứng dụng trong cửa sổ riêng (Chrome hoặc Edge)
 ### Cách 1: một cú click trên web (không cần cài gì, khuyên dùng)
 
 Mở **[playground](https://tanx-1811.github.io/legacypet/)**, gõ `owner/repo` của bạn để xem nó nở ra con gì,
-kèm bảng khám sức khỏe repo. Ưng rồi thì bấm **🐾 Adopt on GitHub**: GitHub mở sẵn file workflow đã điền xong,
+kèm bảng khám sức khỏe repo. Ưng rồi thì bấm **🐣 Adopt on GitHub**: GitHub mở sẵn file workflow đã điền xong,
 bạn chỉ cần bấm **Commit changes**, khoảng một phút sau thú tự nở. Cuối cùng dán đoạn snippet trang web đưa vào README là xong.
 
 ### Cách 2: một lệnh duy nhất
@@ -98,7 +98,7 @@ npx github:Tanx-1811/legacypet init --lang vi
 Lệnh này tạo `.github/workflows/legacypet.yml`, chèn con thú lên đầu `README.md` và vẽ thử con thú ngay trong terminal. Sau đó:
 
 ```sh
-git add . && git commit -m "Nhận nuôi LegacyPet 🐾" && git push
+git add . && git commit -m "Nhận nuôi LegacyPet 🐣" && git push
 ```
 
 ### Cách 3: chọn nhiều repo từ danh sách, không cần clone
@@ -107,7 +107,7 @@ git add . && git commit -m "Nhận nuôi LegacyPet 🐾" && git push
 npx github:Tanx-1811/legacypet adopt --lang vi
 ```
 
-Lệnh này liệt kê các repo của bạn (🐾 là đã có thú, 🔒 là repo riêng tư) rồi hỏi bạn chọn repo nào (`1,3`, `2-5`, `all` hoặc gõ tên).
+Lệnh này liệt kê các repo của bạn (🐣 là đã có thú, 🔒 là repo riêng tư) rồi hỏi bạn chọn repo nào (`1,3`, `2-5`, `all` hoặc gõ tên).
 Sau đó nó commit workflow và snippet README vào từng repo qua API. Lệnh dùng `$GITHUB_TOKEN` hoặc tài khoản `gh` đang đăng nhập.
 Muốn ghi được file workflow thì token cần quyền `workflow`: chạy `gh auth refresh -s workflow`. Với repo của tổ chức thì thêm tên vào sau, ví dụ `adopt ten-to-chuc`.
 

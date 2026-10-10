@@ -85,7 +85,7 @@ It opens the same app in its own window (Chrome or Edge) and quits when you clos
 ### 1. Adopt it in one click (nothing to install)
 
 Open the **[playground](https://tanx-1811.github.io/legacypet/)**, type your `owner/repo`
-and see which pet it hatches, plus a checkup. Like it? Press **🐾 Adopt on GitHub**:
+and see which pet it hatches, plus a checkup. Like it? Press **🐣 Adopt on GitHub**:
 GitHub opens with the workflow already filled in. Press **Commit changes** and your pet
 hatches by itself within a minute. Then paste the README snippet the page gives you. Done!
 
@@ -101,7 +101,7 @@ This adds `.github/workflows/legacypet.yml`, puts the pet at the top of your `RE
 and shows a preview right in your terminal. Then:
 
 ```sh
-git add . && git commit -m "Adopt a LegacyPet 🐾" && git push
+git add . && git commit -m "Adopt a LegacyPet 🐣" && git push
 ```
 
 The pet hatches by itself a minute after the push. Refresh your README. Hello, pet!
@@ -676,7 +676,7 @@ npx github:Tanx-1811/legacypet demo --species cat --color teal --motto "Ship it,
 
 In a terminal with true color, it draws the pet right in your shell.
 
-`adopt` lists your repos (🐾 already has a pet, 🔒 private), asks which ones (`1,3`, `2-5`, `all` or names), and commits the workflow and README snippet to each one through the API. It uses `$GITHUB_TOKEN` or your `gh` login; writing workflow files needs the `workflow` scope (`gh auth refresh -s workflow`). Pass an owner (`adopt my-org`) for an organization's repos, or `--repos "app,lib"` to skip the question.
+`adopt` lists your repos (🐣 already has a pet, 🔒 private), asks which ones (`1,3`, `2-5`, `all` or names), and commits the workflow and README snippet to each one through the API. It uses `$GITHUB_TOKEN` or your `gh` login; writing workflow files needs the `workflow` scope (`gh auth refresh -s workflow`). Pass an owner (`adopt my-org`) for an organization's repos, or `--repos "app,lib"` to skip the question.
 
 ## FAQ
 

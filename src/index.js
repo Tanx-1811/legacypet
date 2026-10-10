@@ -72,7 +72,7 @@ function branchReadme(pet, branch, hasPark, state) {
   const name = pet.repo.fullName;
   const shields = `https://img.shields.io/endpoint?url=${encodeURIComponent(petUrls(name, branch).shields)}`;
   return [
-    `# 🐾 ${pet.displayName}`,
+    `# 🐣 ${pet.displayName}`,
     '',
     `${MOOD_EMOJI[pet.mood]} ${tr.level(pet.level)} ${tr.kind(tr.stages[pet.stage], tr.species[pet.speciesId])}, ${tr.moods[pet.mood]}.`,
     '',
