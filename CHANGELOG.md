@@ -4,7 +4,7 @@ Every release of LegacyPet. `@v1` always points to the newest 1.x release, so pe
 the first run on a new version also lists these notes in the job summary.
 Releases that need a change to your workflow file say so.
 
-## 1.3.0 (unreleased)
+## 1.3.0 (2026-10-10)
 
 ### New
 
