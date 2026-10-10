@@ -7,7 +7,7 @@
 // git is read in the background; the scene pauses (the pet keeps chewing) until the numbers
 // are in. Where nothing can be drawn (a GUI commit button), it prints one line and reads nothing.
 import { closeSync, existsSync, fstatSync, openSync, readFileSync, readSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { petName } from '../engine/identity.js';
 import { parseColor } from '../engine/look.js';
 import { nextState } from '../engine/memory.js';
@@ -18,6 +18,7 @@ import { readWorkflow, workflowOptions } from '../local/adopt.js';
 import { git, gitDirs, readRepo } from '../local/git.js';
 import { cleanOptions, localDay } from '../local/projects.js';
 import { createStore, projectId } from '../local/store.js';
+import { parseRemote } from '../setup.js';
 import { SPECIES } from '../sprites/index.js';
 import { createActor } from './actor.js';
 import { frameHeight, play, SCENES, sayLine, still } from './scenes.js';
@@ -149,6 +150,14 @@ export function petFromMemory(memory, options = {}, lang = 'en') {
     shiny: Boolean(memory.pet?.shiny), tint, aura: Boolean(memory.pet?.aura), accessories: memory.pet?.accessories ?? {},
     stage: memory.pet?.stage ?? 'adult', hatchProgress: Math.min(1, (memory.facts?.totalCommits ?? 5) / 5), speech: memory.pet?.speech,
   };
+}
+
+// The pet's name without running git: the one it was given, or the one its repo's name gives it.
+export function nameOf(root, dirs, options = {}) {
+  if (options.name?.trim()) return options.name.trim();
+  const config = read(join(dirs?.common ?? join(root, '.git'), 'config'));
+  const url = /\[remote "origin"\][^[]*?\burl\s*=\s*(\S+)/.exec(config)?.[1];
+  return petName(parseRemote(url ?? '') ?? `local/${basename(root)}`);
 }
 
 // Reads the repo and raises its pet one step, like the app does on a visit.
@@ -316,6 +325,7 @@ async function reactTo(event, {
   if (state) ctx.lookPet = petFromMemory(state.memory, state.options, lang);
 
   if (style === 'line') {
+    ctx.lookPet ??= root ? { name: nameOf(root, dirs, state.options) } : null;
     out.write(`${sayLine(event, ctx)}\n`);
     return ctx;
   }
