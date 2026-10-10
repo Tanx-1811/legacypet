@@ -78,7 +78,7 @@ const vi = {
   journey: {
     label: 'Ba bước để có thú',
     hatch: 'Nở thú', hatchNote: 'Xem repo nở ra con gì',
-    raise: 'Biến nó thành của bạn', raiseNote: 'Đặt tên, chọn màu, nuôi thử',
+    raise: 'Cá nhân hoá', raiseNote: 'Đặt tên, chọn màu, nuôi thử',
     adopt: 'Nhận nuôi', adoptNote: 'Một cú bấm trên GitHub',
   },
   sim: {

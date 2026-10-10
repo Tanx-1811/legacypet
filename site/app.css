@@ -679,6 +679,7 @@ textarea.notes { display: block; margin: 0; resize: vertical; min-height: 96px; 
 @media (max-width: 640px) {
   .journey { gap: 4px; }
   .journey-step { padding: 7px 8px; gap: 7px; }
+  .journey-text b { white-space: normal; line-height: 1.2; }
   .journey-text small, .journey-arrow { display: none; }
 }
 
