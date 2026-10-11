@@ -5,7 +5,7 @@ import { homeViews } from './home.js';
 import { icon } from './icons.js';
 import { api, desktop, listen, LOCAL, MODE } from './local.js';
 import { createPalette } from './palette.js';
-import { hoverToMove, MOTIONS, onMotionPreference, resolveMotion } from './motion.js';
+import { hoverToMove, livePicture, MOTIONS, onMotionPreference, resolveMotion, restWhenAway, whenNear } from './motion.js';
 
 // ---------------------------------------------------------------------------
 // Shared state. Everything the visitor picks lives in one place, survives a reload
@@ -91,11 +91,21 @@ function img(svg, cls, alt = '') {
   return h(`img.${cls}`, { src: svgSrc(svg), alt, decoding: 'async' });
 }
 
+// The one pet a page is about (its card, the park): `make(still)` returns the SVG. A moving
+// picture goes inline (see livePicture in motion.js); on 'off' it's a still <img>.
+function petPic(make, cls, alt = '') {
+  return stillAll() ? img(make(true), cls, alt) : livePicture(make(false), { cls, alt });
+}
+
 // A pet picture in a grid or a list, where many sit side by side: `make(still)` returns its URL.
 // With motion on 'lite' it holds still and moves only while pointed at; on 'off' it never moves.
-function gridPic(make, attrs = {}) {
+// `lazy`: its picture is only made when it comes near the screen.
+function gridPic(make, { lazy = false, ...attrs } = {}) {
   const mode = motion();
-  const el = h('img', { decoding: 'async', ...attrs, src: make(mode !== 'full') });
+  const el = h('img', { decoding: 'async', ...attrs });
+  const show = () => { el.src = make(mode !== 'full'); };
+  if (lazy) whenNear(el, show);
+  else show();
   return mode === 'lite' ? hoverToMove(el, { still: () => make(true), live: () => make(false) }) : el;
 }
 
@@ -566,15 +576,16 @@ function viewHatch(root, arg, params) {
     const scores = LP.pathScores({ snapshot: hatch.snapshot, facts: pet.facts });
     const best = LP.PATH_IDS.reduce((a, b) => (scores[b] > scores[a] ? b : a));
     const max = Math.max(1, ...Object.values(scores));
-    const files = { card: LP.renderCard(pet, { theme }), mini: LP.renderMini(pet, { theme }), badge: LP.renderBadge(pet) };
-    const shown = stillAll() ? [LP.renderCard(pet, { theme, still: true }), LP.renderMini(pet, { theme, still: true })] : [files.card, files.mini];
-    box.card.replaceChildren(img(shown[0], 'card-img', `${pet.displayName}: ${pet.speech}`));
-    box.shots.replaceChildren(img(shown[1], 'mini-img', pet.name), img(files.badge, 'badge-img', 'badge'));
-    // The same three files the action publishes, a PNG for chats, and the README line.
-    const svgFile = (kind, name) => btn(S[kind], { icon: 'download', kind: 'sm', onclick: () => download(new Blob([files[kind]], { type: 'image/svg+xml' }), name) });
+    // The same three files the action publishes, made when they're asked for.
+    const files = { card: () => LP.renderCard(pet, { theme }), mini: () => LP.renderMini(pet, { theme }), badge: () => LP.renderBadge(pet) };
+    box.card.replaceChildren(petPic((still) => LP.renderCard(pet, { theme, still }), 'card-img', `${pet.displayName}: ${pet.speech}`));
+    // The mini is there to show what that style looks like: like a list, it moves when pointed at.
+    box.shots.replaceChildren(gridPic((still) => svgSrc(LP.renderMini(pet, { theme, still })), { class: 'mini-img', alt: pet.name }), img(files.badge(), 'badge-img', 'badge'));
+    // The files, a PNG for chats, and the README line.
+    const svgFile = (kind, name) => btn(S[kind], { icon: 'download', kind: 'sm', onclick: () => download(new Blob([files[kind]()], { type: 'image/svg+xml' }), name) });
     box.downloads.replaceChildren(...[
       svgFile('card', 'pet.svg'), svgFile('mini', 'pet-mini.svg'), svgFile('badge', 'pet-badge.svg'),
-      btn(S.png, { icon: 'image-down', kind: 'sm', onclick: async () => { try { download(await svgToPng(files.card), 'pet.png'); } catch (err) { toast(err.message, 'bad'); } } }),
+      btn(S.png, { icon: 'image-down', kind: 'sm', onclick: async () => { try { download(await svgToPng(files.card()), 'pet.png'); } catch (err) { toast(err.message, 'bad'); } } }),
       hatch.mood ? null : btn(S.readme, {
         icon: 'copy', kind: 'sm',
         onclick: () => copyText(LP.snippetFor(hatch.snapshot.repo.fullName, 'card', 'legacypet', { isPrivate: Boolean(hatch.snapshot.repo.isPrivate) }), { label: T.adoptIt, run: () => go_('adopt') }),
@@ -747,7 +758,7 @@ function viewSim(root) {
 
   const els = {
     day: h('span.day-pill'),
-    card: h('img.card-img', { alt: '' }),
+    card: h('div.pics.spot'),
     vitals: h('div.vitals'),
     status: h('p.small.muted', { style: { margin: 0 } }),
     panel: h('div'),
@@ -875,7 +886,7 @@ function viewSim(root) {
       h('div.stack',
         h('section.panel.stage',
           h('div.row', { style: { justifyContent: 'space-between' } }, els.day, els.status),
-          h('div.pics.spot', els.card),
+          els.card,
           els.vitals,
           h('div.big-actions',
             h('button', { type: 'button', onclick: () => care('feed') }, T.feed),
@@ -985,7 +996,8 @@ function viewSim(root) {
         const reply = LP.commandReply(result.pet, result.snapshot, {
           command, user: store.user, arg, maintainer: true, miniUrl: 'mini', wasOnVacation: false,
         });
-        consoleState.reply = markdown(reply, svgSrc(LP.renderMini(result.pet, { theme: cardTheme(), still: stillAll() })));
+        // A picture in a chat reply holds still like one in a list, unless every pet moves.
+        consoleState.reply = markdown(reply, svgSrc(LP.renderMini(result.pet, { theme: cardTheme(), still: motion() !== 'full' })));
         if (store.simTab === 'reply') drawPanel();
       };
       const form = h('form.row', { onsubmit: (e) => { e.preventDefault(); send(inputEl.value); } }, h('div', { style: { flex: '1', minWidth: '0' } }, inputEl), h('button.primary', { type: 'submit' }, T.send));
@@ -1007,8 +1019,7 @@ function viewSim(root) {
     const now = Sim.nowOf(w);
     els.day.textContent = T.day(w.day + 1, pet.date, T.weekdays[now.getUTCDay()]);
     els.status.textContent = `${LP.MOOD_EMOJI[pet.mood]} ${L.moods[pet.mood]} · ${pet.rank.emoji} ${L.level(pet.level)}${pet.path ? ` · ${pet.path.emoji}` : ''}`;
-    els.card.src = svgSrc(LP.renderCard(pet, { theme: cardTheme(), still: stillAll() }));
-    els.card.alt = `${pet.displayName}: ${pet.speech}`;
+    els.card.replaceChildren(petPic((still) => LP.renderCard(pet, { theme: cardTheme(), still }), 'card-img', `${pet.displayName}: ${pet.speech}`));
     const yesterday = (w.state?.history ?? []).find((x) => x.date < pet.date);
     els.vitals.replaceChildren(...['fullness', 'health', 'joy', 'energy'].map((k, i) => {
       const v = pet.vitals[k];
@@ -1051,7 +1062,7 @@ function viewCodex(root, arg, params) {
   const U = t();
   const L = tr();
   const tryIn = (patch) => { Object.assign(store.cfg, patch); save(); go_('sim'); };
-  const pic = (key, make) => gridPic((still) => cachedMini(key, make, still), { alt: '', loading: 'lazy', width: 112 });
+  const pic = (key, make) => gridPic((still) => cachedMini(key, make, still), { alt: '', width: 112, lazy: true });
   const sections = {
     species: () => h('div.tiles', LP.SPECIES_IDS.map((id) => {
       const sp = LP.SPECIES[id];
@@ -1182,12 +1193,11 @@ function viewPark(root) {
     }
     if (pets.length) {
       status.textContent = '';
-      const svg = LP.renderPark(pets, { owner: store.cfg.repo.split('/')[0] || 'you', lang: store.cfg.lang, theme: cardTheme() });
-      const shown = stillAll() ? LP.renderPark(pets, { owner: store.cfg.repo.split('/')[0] || 'you', lang: store.cfg.lang, theme: cardTheme(), still: true }) : svg;
-      pic.replaceChildren(h('div.spot', img(shown, 'park-img', 'park')),
+      const park = (still = false) => LP.renderPark(pets, { owner: store.cfg.repo.split('/')[0] || 'you', lang: store.cfg.lang, theme: cardTheme(), still });
+      pic.replaceChildren(h('div.spot', petPic(park, 'park-img', 'park')),
         h('div.quick', { style: { marginTop: '12px' } },
-          btn('park.svg', { icon: 'download', kind: 'sm', onclick: () => download(new Blob([svg], { type: 'image/svg+xml' }), 'park.svg') }),
-          btn('park.png', { icon: 'image-down', kind: 'sm', onclick: async () => { try { download(await svgToPng(svg), 'park.png'); } catch (err) { toast(err.message, 'bad'); } } }),
+          btn('park.svg', { icon: 'download', kind: 'sm', onclick: () => download(new Blob([park()], { type: 'image/svg+xml' }), 'park.svg') }),
+          btn('park.png', { icon: 'image-down', kind: 'sm', onclick: async () => { try { download(await svgToPng(park()), 'park.png'); } catch (err) { toast(err.message, 'bad'); } } }),
           btn(t().common.share, { icon: 'link', kind: 'sm', onclick: () => shareLink(parkLink()) })));
       const real = store.park.filter((n) => !n.startsWith('demo/'));
       yaml.replaceChildren(h('p.small.muted', T.yaml), codeBlock(`      - uses: Tanx-1811/legacypet@v1\n        with:\n          park: ${real.length ? real.join(', ') : 'auto'}`));
@@ -1282,7 +1292,7 @@ function viewAdopt(root) {
     repoHint.className = `status small${cfg.repo && !ready ? ' bad' : ''}`;
     recentBox.replaceChildren(...[recentChips((r) => { repo.value = r; repo.oninput(); }, { skip: [cfg.repo] })].filter(Boolean));
     const pet = demoPet({ species: cfg.species === 'auto' ? 'cat' : cfg.species, scenery: cfg.scenery, name: cfg.name || undefined, color: cfg.color, motto: cfg.motto, wear: cfg.wear.join(','), unlockAll: true, fullName });
-    preview.replaceChildren(img(LP.renderCard(pet, { theme: cardTheme(), still: stillAll() }), 'card-img', pet.displayName));
+    preview.replaceChildren(petPic((still) => LP.renderCard(pet, { theme: cardTheme(), still }), 'card-img', pet.displayName));
     wearBox.replaceChildren(...LP.ITEMS.map((item) => h(`button.tile${cfg.wear.includes(item.id) ? '.on' : ''}`, {
       type: 'button', title: LP.unlockHint(lang, item),
       onclick: () => {
@@ -1349,7 +1359,7 @@ function viewAdopt(root) {
 // it's the playground, with a page to download the app.
 const homeKit = homeViews({
   h, img, svgSrc, toast, t, tr, store, save, cardTheme, checkupList, questList, codeBlock, seg, select, go_, LP, Sim, stopAuto, demoPet,
-  icon, btn, render: () => render(), motion, stillAll, gridPic, setMotion: (v) => setMotion(v),
+  icon, btn, render: () => render(), motion, stillAll, gridPic, petPic, setMotion: (v) => setMotion(v),
   dialog, closeX, download, svgToPng, copyText,
 });
 const VIEWS = {
@@ -1512,9 +1522,13 @@ function setMotion(value) {
   store.motion = MOTIONS.includes(value) ? value : 'auto';
   try { localStorage.setItem(KEY, JSON.stringify(store)); } catch { /* storage is optional */ }
   if (LOCAL) api('config', { motion: store.motion }).catch(() => {});
+  applyMotion();
   current?.redraw?.();
   drawToolbar();
 }
+
+// On 'lite' the pets rest while you're away from the window (see motion.js).
+const applyMotion = () => restWhenAway(motion() === 'lite');
 
 function applyTheme() {
   if (store.theme === 'auto') delete document.documentElement.dataset.theme;
@@ -1574,7 +1588,11 @@ $('#side-toggle').addEventListener('click', () => {
 });
 
 darkQuery.addEventListener('change', () => { if (store.theme === 'auto') { codexCache.clear(); current?.redraw?.(); } });
-onMotionPreference(() => { if (store.motion === 'auto') current?.redraw?.(); });
+onMotionPreference(() => {
+  if (store.motion !== 'auto') return;
+  applyMotion();
+  current?.redraw?.();
+});
 window.addEventListener('hashchange', render);
 // Sticky bars inside a view (the codex index) sit right under the top bar on small screens.
 const wide = matchMedia('(min-width: 960px)');
@@ -1623,6 +1641,7 @@ async function bootLocal() {
   // Same for how much the pets move, which the desktop pet's window follows too.
   if (freshStore && MOTIONS.includes(state.config.motion)) store.motion = state.config.motion;
   else if (state.config.motion !== store.motion) api('config', { motion: store.motion }).catch(() => {});
+  applyMotion();
   if (state.config.online) api('token').then((r) => { if (r.token) ghToken = r.token; }).catch(() => {});
   homeKit.subscribe(() => drawNav(route().view));
   listen({
@@ -1641,6 +1660,7 @@ async function bootLocal() {
 }
 
 applyTheme();
+applyMotion();
 render();
 navHeight();
 if (LOCAL) bootLocal();

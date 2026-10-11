@@ -184,6 +184,8 @@ details summary { cursor: pointer; }
 .card-img { width: 100%; max-width: 520px; height: auto; display: block; aspect-ratio: 520 / 256; }
 .mini-img { width: 160px; max-width: 100%; height: auto; display: block; aspect-ratio: 160 / 192; }
 .badge-img { height: 28px; width: auto; display: block; }
+/* A moving picture is the SVG inline (site/motion.js): it clips to its corners like an <img>. */
+span[role="img"]:is(.card-img, .mini-img, .park-img) { overflow: hidden; }
 .shots { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-top: 14px; }
 .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 13px; }
 
@@ -272,7 +274,7 @@ button.tile:not(:disabled):hover { transform: translateY(-2px); border-color: co
 .tile.locked .em { filter: grayscale(1); }
 .tile.on { border-color: var(--accent); background: var(--accent-soft); }
 .tile .tag { position: absolute; top: 6px; right: 6px; font-size: 11px; color: var(--accent); font-weight: 700; }
-.tile img { width: 112px; height: auto; }
+.tile img { width: 112px; height: auto; aspect-ratio: 160 / 192; }
 .tile.new { animation: pop .6s ease-out; }
 @keyframes pop { 0% { transform: scale(.85); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
 .codex-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; position: sticky; top: var(--nav-h, 44px); z-index: 5; background: var(--bg); padding: 8px 0; border-bottom: 1px solid var(--border); }

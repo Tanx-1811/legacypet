@@ -16,7 +16,11 @@
   .wrap { height: 100%; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; align-items: end; padding: 6px; box-sizing: border-box; -webkit-app-region: drag; cursor: grab; }
   .bubble { max-width: min(200px, 94vw); background: var(--bubble); border: 1px solid var(--border); border-radius: 12px; padding: 5px 9px; box-shadow: 0 4px 14px rgba(0,0,0,.15); opacity: 0; transform: translateY(4px); transition: opacity .2s, transform .2s; text-align: center; }
   .bubble.show { opacity: 1; transform: none; }
-  .pet { width: var(--pet-w, 132px); height: auto; display: block; image-rendering: pixelated; filter: drop-shadow(0 4px 6px rgba(0,0,0,.18)); }
+  /* The shadow is a box-shadow on the card's rounded corners, drawn once: a drop-shadow filter
+     would be worked out again for every frame of a moving pet. */
+  .pet { width: var(--pet-w, 132px); display: block; border-radius: calc(var(--pet-w, 132px) * .1); box-shadow: 0 4px 10px rgba(0,0,0,.18); }
+  .pet:empty { box-shadow: none; }
+  .pet > * { display: block; width: 100%; height: auto; image-rendering: pixelated; border-radius: inherit; overflow: hidden; }
   .bar { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; -webkit-app-region: no-drag; }
   body:hover .bar, .bar:focus-within { opacity: 1; }
   .bar button { border: 1px solid var(--border); background: var(--bubble); color: var(--text); border-radius: 99px; width: 30px; height: 30px; font-size: 15px; cursor: pointer; padding: 0; }
@@ -28,7 +32,7 @@
 <body>
 <div class="wrap">
   <div class="bubble" id="bubble" role="status"></div>
-  <img class="pet" id="pet" alt="">
+  <div class="pet" id="pet"></div>
   <div class="bar" id="bar"></div>
 </div>
 <script type="module" src="float.js"></script>
