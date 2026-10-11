@@ -326,6 +326,11 @@ Thú đã nở thì giữ nguyên loài, kể cả khi có loài mới được 
 Những ngày vui (vui, phấn khích, quẩy), mỗi loài lại khoe một động tác riêng vài giây một lần, thêm vào chuyển động theo tâm trạng.
 Khi thú mệt hay ốm thì nó thôi, và người xem bật reduced motion thì cũng tắt.
 
+🚶 Thú còn biết đi dạo: trên thẻ, thẻ mini và trong công viên, thú đang vui sẽ đi lòng vòng quanh nhà, bước từng bước
+lắc lư, kéo theo bạn đồng hành, cái bóng và những trái tim hay nốt nhạc của nó, theo một lộ trình riêng rồi quay về chỗ cũ.
+Thú đói thì lon ton tới xem bát ăn, thú zombie thì lê bước; thú buồn, ốm hay buồn ngủ thì đứng yên cho tới khi được chăm.
+Ảnh tĩnh (reduced motion, tiết kiệm pin) cho thấy thú ở chỗ quen thuộc của nó.
+
 | Loài | Động tác | | Loài | Động tác |
 | --- | --- | --- | --- | --- |
 | Slime | nén dẹp rồi bật nảy | | Cáo Ninja | lướt nhanh như chớp, để lại hai bóng phân thân |

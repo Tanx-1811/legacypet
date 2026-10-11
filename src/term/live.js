@@ -195,6 +195,18 @@ export async function live({
     refresh().catch(() => {});
   }
 
+  // You're at work when a changed file was saved again: the pet stays awake while you edit.
+  let lastSave = 0;
+  function newestSave(paths) {
+    let newest = 0;
+    for (const path of paths.slice(0, 200)) {
+      try {
+        newest = Math.max(newest, statSync(join(root, path)).mtimeMs);
+      } catch { /* deleted */ }
+    }
+    return newest;
+  }
+
   let checking = false;
   async function watchStatus() {
     if (!root || checking) return;
@@ -202,8 +214,14 @@ export async function live({
     try {
       const text = await git(root, ['status', '--porcelain=v1'], { allowFail: true });
       if (text == null) return;
-      const count = text.split('\n').filter((l) => l.trim()).length;
+      const changed = text.split('\n').filter((l) => l.trim());
+      const count = changed.length;
       const t = Date.now();
+      const saved = newestSave(changed.map((l) => l.slice(3).split(' -> ').pop().replace(/^"|"$/g, '')));
+      if (saved > lastSave) {
+        if (lastSave) wake();
+        lastSave = saved;
+      }
       if (dirty != null && count !== dirty) wake();
       if (count && !dirty) {
         dirtySince ??= t;

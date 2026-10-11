@@ -25,6 +25,10 @@ Releases that need a change to your workflow file say so.
 - 👋 **`legacypet hi`**: the pet waves and shows how the repo is doing: vitals, XP, streak, today's commits, the branch
   and its uncommitted changes, quests and trophies.
 - 🎬 **`legacypet react <event> --demo`** plays any reaction with a made-up pet (add `--level-up`, `--species`, `--big`).
+- 🚶 **Pets get around**: in every repo's card, the mini card and the park, a pet in a good mood strolls around its
+  home, stepping from foot to foot with its pal, shadow and hearts in tow, on its own route that comes back to where it
+  started. A hungry pet trots over to check its bowl, a zombie shambles; a sad, sick or sleepy pet stays put until it's
+  cared for. A card grows by about 1 KB and costs no more to show; still pictures show the pet at home.
 
 ### Workflow
 

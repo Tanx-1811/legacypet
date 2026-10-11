@@ -1,0 +1,17 @@
+{
+  "$comment": "Cấu hình Claude Code harness. Hướng dẫn: D:/claude-harness/README.md",
+  "format": true,
+  "guard": {
+    "dangerous": true,
+    "secrets": true,
+    "extraAsk": []
+  },
+  "verify": {
+    "enabled": true,
+    "typecheck": true,
+    "lint": true,
+    "syntax": true,
+    "maxRounds": 2
+  },
+  "packages": {}
+}

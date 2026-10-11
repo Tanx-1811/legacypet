@@ -330,6 +330,11 @@ Pets that already hatched keep their species when new ones join the pool.
 On good days (happy, ecstatic or partying) every species shows off its own move every few seconds,
 on top of its mood animation. It stops when the pet feels bad, and with reduced motion.
 
+🚶 Pets get around, too: on the card, the mini card and in the park, a pet in a good mood strolls around its home,
+stepping from foot to foot with its pal, its shadow and its hearts or notes in tow, on a route of its own that comes
+back to where it started. A hungry pet trots over to check its bowl, a zombie shambles; a sad, sick or sleepy pet stays
+put until it's cared for. A still picture (reduced motion, power saver) shows the pet at home.
+
 | Species | Move | | Species | Move |
 | --- | --- | --- | --- | --- |
 | Slime | squashes flat and springs up | | Ninja Fox | a blink-fast dash, leaving two shadow clones behind |

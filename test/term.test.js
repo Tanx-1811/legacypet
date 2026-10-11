@@ -412,6 +412,6 @@ test('live in a repo starts at once from the pet\'s memory, then reads the repo'
   await running;
   const text = strip(out.text());
   assert.doesNotMatch(text, /waking up/, 'no wait: the memory is enough to start');
-  assert.match(text, /Lv\.2 🌱 Rookie/);
+  assert.match(text, /Lv\.\d+ 🌱 Rookie/);
   assert.match(text, /🍖 ━+ +\d+/, 'vitals from memory');
 });

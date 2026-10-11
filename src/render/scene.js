@@ -6,6 +6,7 @@ import { composePet } from './compose.js';
 import { FLAME, MOVE_MOODS, MOVES, moveCss, moveOf } from './moves.js';
 import { drawPixels, stamp } from './pixels.js';
 import { farFx, frontFx, homeOf, propsFx, SANDY, SCENERY, skyFx } from './scenery.js';
+import { WALK_MOODS, walkCss, walkName, walkPlan } from './walk.js';
 
 const PX = {
   card: { egg: 6, baby: 5, adult: 7, elder: 7 },
@@ -168,7 +169,28 @@ function petGroup(s, comp) {
     ? ` id="lp${hashString(`${pet.repo.fullName}|${pet.date}|${s.mini ? 'mini' : 'card'}|pet`).toString(36)}"` : '';
   const body = `<g class="${cls}" style="animation-duration:${sec(dur)}">`
     + `<g${id} transform="translate(${-cx} ${-footY})" class="lp-px">${inner}</g></g>`;
-  return `<g transform="translate(${cx} ${footY})">${signatureMove(s, comp, body)}</g>`;
+  const moved = signatureMove(s, comp, body);
+  // While it strolls, the pet steps from foot to foot (see walk.js).
+  return `<g transform="translate(${cx} ${footY})">${s.walk ? `<g class="${s.walk}-s">${moved}</g>` : moved}</g>`;
+}
+
+// Where the pet may stroll: as far as its frame lets everything that goes along with it
+// (its pal on the left, a hungry pet's thought bubble on the right) stay in sight.
+function strollFx(s) {
+  const { pet, cx, bw, x, w, px, mini } = s;
+  if (pet.mood === 'egg' || !WALK_MOODS.has(pet.mood)) return null;
+  const pal = A.PALS[pet.accessories?.pal];
+  const left = bw / 2 + (pal ? pal.rows[0].length * (mini ? 2.5 : 4) + (mini ? 2 : 4) : 0);
+  const right = pet.mood === 'hungry' ? bw * 0.52 + 15 * (mini ? 0.7 : 1) : bw / 2;
+  const min = Math.min(0, x + 2 + left - cx);
+  const max = Math.max(0, x + w - 2 - right - cx);
+  // A hungry pet goes to check its bowl, standing with its nose over the rim.
+  const bowl = s.bowlX == null ? null : Math.max(min, Math.min(max, s.bowlX - bw / 2 - cx));
+  const key = `${pet.repo.fullName}|${pet.date}|${cx}|${s.footY}|${mini ? 'mini' : 'card'}`;
+  const plan = walkPlan(pet.mood, { seed: key, min, max, cell: px, bowl });
+  if (!plan) return null;
+  const name = walkName(key);
+  return { name, css: walkCss(name, plan) };
 }
 
 // On good days the pet shows off its species' signature move every few seconds (see moves.js).
@@ -355,15 +377,20 @@ export function renderActor(pet, frame) {
   const ox = Math.round(cx - bw / 2 - minX * unit);
   const oy = Math.round(footY - (maxY + 1) * unit);
   const s = { ...frame, pet, bw, ox, oy, unit, pp: frame.mini ? 2 : 3, headTop: oy + minY * unit };
+  const stroll = strollFx(s);
+  s.walk = stroll?.name ?? null;
   const shadow = `<ellipse cx="${cx}" cy="${footY - 1}" rx="${Math.round(bw * 0.38)}" ry="${Math.max(2, Math.round(px * 0.6))}" class="lp-shadow"/>`;
-  const body = shadow
-    + palFx(s)
-    + petGroup(s, comp)
-    + emblemFx(s)
-    + moodFx(s)
+  // (Drawn in this order: the parts share the scene's random numbers.)
+  const front = shadow + palFx(s) + petGroup(s, comp) + emblemFx(s);
+  const fx = moodFx(s);
+  // Party confetti rains on the whole scene; the rest goes wherever the pet goes.
+  const sceneWide = pet.mood === 'party' ? fx : '';
+  const follows = front
+    + (sceneWide ? '' : fx)
     + (pet.shiny && pet.mood !== 'egg' ? sparkles(s, 4, ['#ffe066', '#ffffff']) : '')
     + (pet.aura && pet.mood !== 'egg' ? sparkles(s, 5, ['#ffd23f', '#fff3a6', '#ffffff']) : '')
     + levelUpFx(s);
+  const body = (stroll ? `<style>${stroll.css}</style><g class="${stroll.name}-x">${follows}</g>` : follows) + sceneWide;
   return { body, s };
 }
 
@@ -378,6 +405,7 @@ export function renderScene(pet, { x, y, w, h, uid, variant = 'card' }) {
     x, y, w, h, groundY, groundH, mini,
     cx: Math.round(x + w * 0.42),
     footY: groundY + Math.round(groundH * 0.2),
+    bowlX: x + w * 0.84,
     px: PX[variant][pet.stage] ?? PX[variant].adult,
   });
   const { s } = actor;
