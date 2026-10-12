@@ -99,6 +99,8 @@ export function homeViews(kit) {
   // Just the pet's little world, without the name plate under it (the page already says that).
   // Lists and grids show many pets at once, so they follow the motion setting (see motion.js).
   const scene = (p, cls = '', alt = '') => h(`div.scene${cls ? `.${cls}` : ''}`, gridPic((still) => pic(p, 'mini', still), { alt, lazy: true }));
+  // The little picture by a pet's name on its own page, where its card already moves.
+  const thumb = (p, cls) => h(`div.scene.${cls}`, h('img', { src: pic(p, 'mini', true), alt: '', decoding: 'async' }));
   function vitalBars(vitals) {
     const L = tr();
     return h('div.bars', ['fullness', 'health', 'joy', 'energy'].map((k) => {
@@ -627,7 +629,7 @@ export function homeViews(kit) {
       fill(head,
         h('nav.crumbs', { 'aria-label': 'breadcrumb' }, h('a', { href: '#/home' }, T.title), icon('chevron-right', { size: 14 }), h('span', pet.name)),
         h('div.detail-title',
-          scene(p, 'detail-avatar'),
+          thumb(p, 'detail-avatar'),
           h('div',
             h('h1', pet.displayName),
             h('div.detail-meta',

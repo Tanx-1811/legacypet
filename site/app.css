@@ -476,7 +476,7 @@ a.bar-row:hover { background: var(--panel-2); }
 .pet-card.bad { box-shadow: var(--shadow), inset 3px 0 0 var(--bad); }
 .pet-card.broken { grid-template-columns: 1fr; opacity: .7; }
 .scene { aspect-ratio: 1; overflow: hidden; border-radius: 10px; background: var(--panel-2); flex: none; }
-.scene img { display: block; width: 108.11%; max-width: none; height: auto; margin: -4.054% 0 0 -4.054%; }
+.scene img { display: block; width: 108.11%; max-width: none; height: auto; aspect-ratio: 160 / 192; margin: -4.054% 0 0 -4.054%; }
 .pet-stage { align-self: start; }
 .pet-info { min-width: 0; display: grid; gap: 4px; align-content: start; }
 .pet-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
