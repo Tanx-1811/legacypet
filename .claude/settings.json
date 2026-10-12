@@ -1,6 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
+    "allow": [
+      "Bash(node --test*)",
+      "Bash(npm test)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)"
+    ],
     "ask": [
       "Read(**/*.pem)",
       "Read(**/*.key)",
@@ -23,7 +31,21 @@
       "Edit(**/Gemfile.lock)",
       "Edit(**/Podfile.lock)",
       "Edit(**/poetry.lock)",
-      "Edit(**/uv.lock)"
+      "Edit(**/uv.lock)",
+      "Bash(git tag *)",
+      "Bash(git push --tags*)",
+      "Bash(git push * --tags*)",
+      "Bash(git push origin v*)",
+      "Bash(*npm publish*)",
+      "Bash(*gh release*)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f)",
+      "Bash(git push * -f *)",
+      "Bash(git reset --hard*)"
     ]
   },
   "hooks": {
@@ -115,6 +137,11 @@
               "after-edit"
             ],
             "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/after-edit.sh",
+            "timeout": 30
           }
         ]
       }
@@ -130,6 +157,11 @@
               "verify"
             ],
             "timeout": 400
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verify.sh",
+            "timeout": 300
           }
         ]
       }

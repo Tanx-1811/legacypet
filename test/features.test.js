@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { checkup } from '../src/engine/checkup.js';
 import { buildPet } from '../src/engine/pet.js';
@@ -8,6 +9,8 @@ import { mockSnapshot } from '../src/mock.js';
 import { renderBadge } from '../src/render/badge.js';
 import { parkSummary, renderPark } from '../src/render/park.js';
 import { insertSnippet, parseRemote, snippetFor, workflowYaml } from '../src/setup.js';
+import { LANGS } from '../src/i18n/index.js';
+import { HOMES, SPECIES } from '../src/sprites/index.js';
 
 const NOW = new Date('2026-10-08T09:00:00Z');
 const pet = (mood, extra = {}) => buildPet({
@@ -79,6 +82,43 @@ test('workflowYaml only adds the inputs you changed', () => {
   const custom = workflowYaml({ lang: 'vi', species: 'cactus', name: 'Bánh "Bao"', park: 'auto' });
   assert.match(custom, /with:\n {10}lang: vi\n {10}species: cactus\n {10}name: "Bánh \\"Bao\\""\n {10}park: auto/);
   assert.match(custom, /actions: write/);
+});
+
+// Simple YAML as sorted "parent > child" lines, without comments, blank lines or ordering.
+const yamlLines = (yaml) => {
+  const stack = [];
+  const out = [];
+  for (const raw of yaml.split('\n')) {
+    const line = raw.replace(/^\s*#.*$|\s+#\s.*$/, '').trimEnd();
+    if (!line) continue;
+    const indent = line.length - line.trimStart().length;
+    while (stack.length && stack.at(-1).indent >= indent) stack.pop();
+    out.push([...stack.map((s) => s.text), line.trim()].join(' > '));
+    stack.push({ indent, text: line.trim() });
+  }
+  return out.sort();
+};
+
+test('examples/legacypet.yml is workflowYaml() with notes, and suggests only real options', () => {
+  // The example is written by hand for people who copy it (notes, commented-out inputs),
+  // so it is not generated: it must keep the same triggers, permissions and step.
+  const example = readFileSync(new URL('../examples/legacypet.yml', import.meta.url), 'utf8');
+  assert.deepEqual(yamlLines(example).filter((line) => !line.includes(' > with:')), yamlLines(workflowYaml()));
+  // `key: value # a | b | c`, continued on `#   # | d | e` lines. The species list is a sample.
+  const lines = example.split('\n');
+  const choices = (key) => {
+    const start = lines.findIndex((line) => new RegExp(`^\\s*(# )?${key}: `).test(line));
+    assert.ok(start > 0, `the example mentions ${key}`);
+    const value = new RegExp(`${key}: (\\S+)`).exec(lines[start])[1];
+    const notes = [lines[start].replace(/^\s*# /, '')];
+    for (let i = start + 1; /^\s*#\s+#/.test(lines[i]); i++) notes.push(lines[i].replace(/^\s*#/, ''));
+    const options = notes.flatMap((note) => (note.split(/\s#\s/)[1] ?? '').split('|').map((s) => s.trim())).filter((s) => /^[a-z]+$/.test(s));
+    assert.ok(options.includes(value), `${key}: ${value} is one of its own options`);
+    return options;
+  };
+  assert.deepEqual(choices('lang'), Object.keys(LANGS));
+  assert.deepEqual(choices('scenery'), ['auto', ...HOMES]);
+  for (const id of choices('species')) assert.ok(id === 'auto' || SPECIES[id], `examples/legacypet.yml suggests an unknown species: ${id}`);
 });
 
 test('insertSnippet adds the pet under the title and updates it in place', () => {

@@ -9,10 +9,10 @@ import { LANGS, strings } from '../src/i18n/index.js';
 import { shieldsJson } from '../src/index.js';
 import { mockSnapshot } from '../src/mock.js';
 import { renderCard } from '../src/render/card.js';
-import { SPECIES } from '../src/sprites/index.js';
+import { HOMES, SPECIES, SPECIES_IDS } from '../src/sprites/index.js';
 import { computeGrowth, computeVitals } from '../src/engine/vitals.js';
 import { textWidth, wrapText } from '../src/util/text.js';
-import { VERSION, whatsNew } from '../src/whatsnew.js';
+import { CHANGELOG, VERSION, whatsNew } from '../src/whatsnew.js';
 
 const NOW = new Date('2026-10-08T09:00:00Z');
 const facts = (extra = {}) => ({ commits1: 0, commits14: 3, streak: 0, activeAuthors30: 1, daysSinceCommit: 0, stars: 0, ageDays: 0, ...extra });
@@ -107,6 +107,25 @@ test('every translation file has every English key', async () => {
   }
 });
 
+// action.yml and the READMEs repeat these lists for people who never read the code.
+test('action.yml and the READMEs list every language, species and home', () => {
+  const action = readFileSync(new URL('../action.yml', import.meta.url), 'utf8');
+  const listed = (input) => {
+    const description = new RegExp(`\\n  ${input}:\\n    description: '([^']+)'`).exec(action)?.[1] ?? '';
+    // "…: a, b (a note), c or d." -> [a, b, c, d]
+    const list = /[a-z]+(?: \([^)]*\))?(?:, [a-z]+(?: \([^)]*\))?)+ or [a-z]+/.exec(description)?.[0] ?? '';
+    return list.replace(/ \([^)]*\)/g, '').split(/, | or /).sort();
+  };
+  assert.deepEqual(listed('lang'), Object.keys(LANGS).sort(), 'action.yml: lang');
+  assert.deepEqual(listed('species'), ['auto', ...SPECIES_IDS].sort(), 'action.yml: species');
+  assert.deepEqual(listed('scenery'), ['auto', ...HOMES].sort(), 'action.yml: scenery');
+  for (const readme of ['README.md', 'README.vi.md']) {
+    const row = readFileSync(new URL(`../${readme}`, import.meta.url), 'utf8').split('\n').find((line) => line.startsWith('| `lang` |'));
+    const codes = [...(row?.split('|')[3] ?? '').matchAll(/`([a-z]+)`/g)].map((m) => m[1]);
+    assert.deepEqual(codes.sort(), Object.keys(LANGS).sort(), `${readme}: the lang row of the inputs table`);
+  }
+});
+
 test('every language renders every mood', () => {
   for (const code of Object.keys(LANGS)) {
     for (const mood of MOODS) {
@@ -165,8 +184,18 @@ test('shields endpoint, mood strip and version memory', () => {
   assert.equal(nextState(pet).version, VERSION);
 });
 
-test('what\'s new: only for existing pets, only releases they have not seen', () => {
+test('package.json, whatsnew.js and CHANGELOG.md name the same release', () => {
   assert.equal(JSON.parse(readFileSync(new URL('../package.json', import.meta.url))).version, VERSION);
+  assert.equal(CHANGELOG[0].version, VERSION, 'the newest entry in src/whatsnew.js is VERSION');
+  const notes = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
+  // A "## x.y.z (unreleased)" section collects notes for the next release; VERSION is the newest released one.
+  const headings = [...notes.matchAll(/^## (\d+\.\d+\.\d+)\b(?! \(unreleased\))/gm)].map((m) => m[1]);
+  assert.equal(headings[0], VERSION, 'CHANGELOG.md starts with VERSION (after any unreleased section)');
+  const versions = CHANGELOG.map((entry) => entry.version);
+  assert.deepEqual(headings.filter((v) => versions.includes(v)), versions, 'every whatsnew.js entry has a CHANGELOG.md section, newest first');
+});
+
+test('what\'s new: only for existing pets, only releases they have not seen', () => {
   assert.deepEqual(whatsNew(null), []);
   assert.deepEqual(whatsNew({ version: VERSION }), []);
   const old = whatsNew({});

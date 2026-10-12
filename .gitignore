@@ -5,3 +5,7 @@ legacypet-out/
 desktop/node_modules/
 desktop/dist/
 desktop/bundle/
+
+# Claude Code: personal settings and agent worktrees stay local
+.claude/settings.local.json
+.claude/worktrees/

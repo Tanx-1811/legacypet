@@ -29,7 +29,8 @@ jobs:
         with:
           lang: en # en | vi | ja | zh | ko | es | fr
           # species: ninja   # auto | blob | cat | duck | crab | octopus | snake | cactus
-          #                  # | ninja | mecha | dragon | bunny | bat | hero
+          #                  # | ninja | mecha | dragon | bunny | bat | hero | kitsune | …
+          #                  # every species: https://github.com/Tanx-1811/legacypet#species
           # name: Mochi      # leave empty and the repo names its own pet
           # scenery: beach   # auto | meadow | garden | pond | beach | reef | jungle | desert
           # alerts: true     # open an issue when the pet stays sick or turns zombie
