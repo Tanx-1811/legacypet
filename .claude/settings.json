@@ -10,6 +10,12 @@
       "Bash(git show*)"
     ],
     "ask": [
+      "Bash(git tag *)",
+      "Bash(git push --tags*)",
+      "Bash(git push * --tags*)",
+      "Bash(git push origin v*)",
+      "Bash(*npm publish*)",
+      "Bash(*gh release*)",
       "Read(**/*.pem)",
       "Read(**/*.key)",
       "Read(**/*.p8)",
@@ -31,13 +37,7 @@
       "Edit(**/Gemfile.lock)",
       "Edit(**/Podfile.lock)",
       "Edit(**/poetry.lock)",
-      "Edit(**/uv.lock)",
-      "Bash(git tag *)",
-      "Bash(git push --tags*)",
-      "Bash(git push * --tags*)",
-      "Bash(git push origin v*)",
-      "Bash(*npm publish*)",
-      "Bash(*gh release*)"
+      "Edit(**/uv.lock)"
     ],
     "deny": [
       "Bash(git push --force*)",
