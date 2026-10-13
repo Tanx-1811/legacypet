@@ -53,8 +53,16 @@ Windows hoặc Linux, mở lên và bấm **Cho phép & tìm dự án**. Vậy l
   rồi push bằng Git của bạn. **Nhận nuôi hàng loạt** làm cho mọi repo cùng lúc.
 - Một chú thú ngồi trên màn hình, thanh menu cho biết thú nào cần chăm, và có thông báo khi thú đói, ốm,
   lên cấp hay có thành tích mới.
-- Bảng tổng quan cho mọi dự án: lịch hoạt động cả năm, các repo sôi nổi nhất tuần, và những chuỗi commit
-  sẽ đứt nếu hôm nay không commit (có nhắc nhở buổi tối).
+- Bảng tổng quan cho mọi dự án: lịch hoạt động cả năm, các repo sôi nổi nhất tuần, và **Việc cần làm ngay**:
+  thú cần chăm, chuỗi commit sắp đứt tối nay, việc chưa commit, chưa push hay cần pull, mỗi việc kèm nút xử lý luôn.
+- **🧰 Tiện ích** cho các repo: **báo cáo công việc** (commit hôm nay, hôm qua hay cả tuần trên mọi dự án, chép thành
+  Markdown cho buổi họp sáng), **dòng thời gian** mọi commit, **bảng trạng thái Git** (repo nào chưa commit, chưa push,
+  cần pull, và fetch tất cả một lần), **tìm TODO** (bấm là mở đúng dòng trong editor), **hẹn giờ tập trung** (Pomodoro,
+  có thú cổ vũ), **soạn commit** (Conventional Commits) và **xuất CSV/JSON**. Trang của mỗi thú có thêm **Thống kê**
+  (khi nào hay commit, loại commit, ngôn ngữ, người đóng góp, repo đã gọn gàng chưa) và **Mã nguồn** (file thay đổi,
+  các nhánh kèm nhánh đã merge để dọn, stash, tag, TODO). Không có gì được commit hay push hộ bạn; fetch và pull chỉ
+  chạy khi bạn bấm (và pull chỉ với `--ff-only`).
+- **Hộp thư** (biểu tượng chuông) giữ mọi điều các thú kể gần đây.
 - Bấm **⌘K** (**Ctrl+K**) để nhảy tới bất kỳ dự án, trang hay thao tác nào, và mở dự án bằng VS Code, Cursor,
   Zed hoặc terminal ngay từ trang của nó. Trong bản desktop, **⌘⇧L** (**Ctrl+Shift+L**) gọi app lên từ bất kỳ đâu.
 - Mỗi ngày cho ăn, chơi, xoa đầu từng thú (hoặc chăm tất cả một lượt), mặc đồ cho nó, hoặc nuôi thử trong trình giả lập.
@@ -464,6 +472,7 @@ không thể nuôi một con thú bị bỏ bê: commit vẫn là bữa chính. 
 - **Công viên**: ghép Công viên thú từ các repo bất kỳ (mở ra là có sẵn vài thú mẫu để xem).
 - **Nhận nuôi**: chọn một lần, chép lệnh, file workflow và đoạn README, rồi mở trình sửa README và lượt chạy workflow
   trên GitHub ngay từ từng bước.
+- **Tiện ích**: hẹn giờ tập trung và soạn commit dùng được ngay tại đây; các tiện ích còn lại đi kèm app.
 
 Thanh ba bước ở đầu trang Nở thú, Nuôi thử và Nhận nuôi (nở thú, cá nhân hoá, nhận nuôi) đánh dấu những bước bạn đã làm.
 **Chia sẻ** chép một đường link mang theo diện mạo của thú (loài, quê nhà, màu lông, tên, câu cửa miệng, ngôn ngữ),

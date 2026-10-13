@@ -148,6 +148,13 @@ export async function startServer({
       return { ...(await projects.careAll(body.name)), state: state() };
     },
     'GET /api/backup': () => projects.backup(),
+    // Commits across every project between two moments: work reports and the timeline.
+    'POST /api/report': (body) => {
+      const when = (v) => (typeof v === 'string' && Number.isFinite(Date.parse(v)) ? new Date(v).toISOString() : null);
+      const since = when(body.since);
+      if (!since) throw Object.assign(new Error('since must be a date'), { status: 400 });
+      return projects.report({ since, until: when(body.until), mine: body.mine !== false });
+    },
     'POST /api/restore': async (body) => ({ ...(await projects.restore(body)), state: state() }),
     'POST /api/login-item': (body) => { desktop?.setLoginItem?.(Boolean(body.on)); return state(); },
   };
@@ -170,6 +177,9 @@ export async function startServer({
     },
     reveal: (id) => { (desktop?.reveal ?? systemReveal)(projects.get(id).path); return { ok: true }; },
     open: (id, body) => projects.open(id, body.with === 'terminal' ? 'terminal' : 'editor'),
+    file: (id, body) => projects.openFile(id, typeof body.path === 'string' ? body.path : '', Number.parseInt(body.line, 10) || null),
+    insights: (id) => projects.insights(id),
+    todos: (id) => projects.todos(id),
     hide: (id) => { projects.updateConfig({ hidden: [...new Set([...projects.config.hidden, id])] }); return state(); },
   };
 

@@ -25,6 +25,22 @@ Releases that need a change to your workflow file say so.
 - 👋 **`legacypet hi`**: the pet waves and shows how the repo is doing: vitals, XP, streak, today's commits, the branch
   and its uncommitted changes, quests and trophies.
 - 🎬 **`legacypet react <event> --demo`** plays any reaction with a made-up pet (add `--level-up`, `--species`, `--big`).
+- 🧰 **Tools in the app**: a **work report** (today's, yesterday's, this week's or any range of commits across every
+  project, yours or everyone's, grouped by project or day, copied as Markdown or text for a standup), a **timeline** of
+  every commit filtered by kind, project and words, a **Git board** (what's left to commit, push or pull in every repo,
+  with *Fetch all* and a careful *Pull*, `--ff-only`), a **TODO finder** (TODO, FIXME, HACK and XXX in the code, one
+  click opens the line in VS Code, Cursor, Windsurf, Zed or Sublime), a **focus timer** (25/5, 50/10 or 15/3, with a pet
+  cheering you on, a chip in the corner on every page and a notification at the end), a **commit composer**
+  (Conventional Commits with hints and the `git commit` line for bash or PowerShell; it also works on the playground) and
+  **exports** (projects and commits as CSV for Excel, or JSON). All in ⌘K too.
+- 📊 **Insights and Code on each pet's page**: when commits happen (a punch card on each committer's own clock), kinds of
+  commits, languages, contributors, biggest files and a checklist of a well-kept repo (license, CI, tests, changelog…);
+  then the changes not committed yet, branches (merged ones flagged, with the command to tidy them up), stashes, tags
+  and the TODOs. Read when the tab opens, cached until the history moves, and never written to.
+- 🎨 **A new look for the app**: a dashboard that greets you, stat tiles with a 14-day sparkline, **Do this next** (pets
+  that need care, streaks that end tonight, work to commit, push or pull, each with its button), shortcuts to the tools,
+  an **inbox** behind the bell for everything the pets said lately, and fresher colors, icon tiles and page headers
+  in light and dark.
 - 🚶 **Pets get around**: in every repo's card, the mini card and the park, a pet in a good mood strolls around its
   home, stepping from foot to foot with its pal, shadow and hearts in tow, on its own route that comes back to where it
   started. A hungry pet trots over to check its bowl, a zombie shambles; a sad, sick or sleepy pet stays put until it's

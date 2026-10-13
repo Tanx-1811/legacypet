@@ -234,12 +234,13 @@ test('the player waits for the numbers, then leaves a tidy last frame', async ()
     duration: 0.12,
     waitAt: 0.03,
     draw(c, t) {
-      if (t === 0.03 && !ready) waited += 1;
+      // The numbers come in once the player has held still for three frames: counted, not timed,
+      // so a busy computer (slow frames) can't make it look as if the player never waited.
+      if (t === 0.03 && !ready && ++waited >= 3) ready = true;
       c.set(1, 7, '#ff0000');
     },
     panel: () => ['hello'],
   };
-  setTimeout(() => { ready = true; }, 150);
   await play(scene, { out, mode: 'true', fps: 60, ready: () => ready, columns: 40 });
   const text = out.text();
   assert.ok(waited >= 2, `held still while waiting (${waited} frames)`);

@@ -46,16 +46,22 @@ const LANGUAGES = {
 const VENDORED = /(^|\/)(node_modules|vendor|third_party|dist|build|out|target|\.next|coverage|Pods)\//;
 const MINIFIED = /\.min\.(js|css)$/;
 
-export function guessLanguage(tree) {
+// Bytes of code per language, vendored and minified files left out: Map { 'Rust' => 900 }.
+export function languageBytes(tree) {
   const bytes = new Map();
   for (const { path, size } of tree) {
-    if (VENDORED.test(path) || MINIFIED.test(path)) continue;
+    if (isVendored(path)) continue;
     const ext = /\.([a-z0-9]+)$/i.exec(path)?.[1]?.toLowerCase();
     const lang = ext && LANGUAGES[ext];
     if (lang) bytes.set(lang, (bytes.get(lang) ?? 0) + size);
   }
+  return bytes;
+}
+export const isVendored = (path) => VENDORED.test(path) || MINIFIED.test(path);
+
+export function guessLanguage(tree) {
   let best = null;
-  for (const [lang, n] of bytes) if (!best || n > best[1]) best = [lang, n];
+  for (const [lang, n] of languageBytes(tree)) if (!best || n > best[1]) best = [lang, n];
   return best?.[0] ?? null;
 }
 
@@ -74,7 +80,7 @@ export function communityHealth(paths) {
   return Math.round((found / COMMUNITY.length) * 100);
 }
 
-function parseTree(text) {
+export function parseTree(text) {
   const out = [];
   for (const line of String(text ?? '').split('\n')) {
     const tab = line.indexOf('\t');
@@ -117,7 +123,7 @@ function parsePet(text) {
 const SLOTS = Math.max(2, Math.min(8, availableParallelism()));
 let busy = 0;
 const queue = [];
-async function inSlot(fn) {
+export async function inSlot(fn) {
   if (busy < SLOTS) busy += 1;
   else await new Promise((go) => queue.push(go));
   try {

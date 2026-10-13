@@ -6,6 +6,7 @@ import { icon } from './icons.js';
 import { api, desktop, listen, LOCAL, MODE } from './local.js';
 import { createPalette } from './palette.js';
 import { hoverToMove, livePicture, MOTIONS, onMotionPreference, resolveMotion, restWhenAway, whenNear } from './motion.js';
+import { createFocus, fmtClock, toolsViews } from './tools.js';
 
 // ---------------------------------------------------------------------------
 // Shared state. Everything the visitor picks lives in one place, survives a reload
@@ -78,7 +79,8 @@ function h(spec, attrs, ...children) {
     if (v == null || v === false) continue;
     if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
     else if (k === 'html') el.innerHTML = v;
-    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    // Custom properties (--k: a color) only take through setProperty.
+    else if (k === 'style' && typeof v === 'object') for (const [p, x] of Object.entries(v)) { if (p.startsWith('--')) el.style.setProperty(p, x); else el.style[p] = x; }
     else if (k in el && k !== 'list' && typeof v !== 'string') el[k] = v;
     else el.setAttribute(k, v === true ? '' : v);
   }
@@ -1362,17 +1364,50 @@ const homeKit = homeViews({
   icon, btn, render: () => render(), motion, stillAll, gridPic, petPic, setMotion: (v) => setMotion(v),
   dialog, closeX, download, svgToPng, copyText,
 });
+
+// The focus timer runs across pages: a chip in the corner shows it, and its end says so.
+const focus = createFocus({
+  onDone: (phase, { skipped, state }) => {
+    const F = t().tools.focus;
+    const text = phase === 'focus' ? F.doneFocus(state.breakMin) : F.doneBreak;
+    if (!skipped) {
+      toast(text, 'gold', phase === 'focus' ? null : { label: F.again, run: () => focus.start() });
+      if (document.hidden && globalThis.Notification?.permission === 'granted') new Notification('LegacyPet', { body: text, tag: 'lp-focus' });
+    }
+  },
+});
+const toolsKit = toolsViews({
+  h, t, tr, icon, btn, toast, store, save, dialog, closeX, download, copyText, select, seg, go_, LP, svgSrc, cardTheme, demoPet,
+  render: () => render(), homeKit, insights: homeKit.insights, focus,
+});
+const focusChip = h('a.focus-chip', { href: '#/tools/focus', hidden: true });
+document.body.append(focusChip);
+function drawFocusChip() {
+  const f = focus.state;
+  const running = f.phase !== 'idle';
+  const { view, arg } = route();
+  // The timer's own page shows it big: no chip there.
+  focusChip.hidden = !running || (view === 'tools' && arg === 'focus');
+  document.title = document.title.replace(/^⏱ \S+ · /, '');
+  if (!running) return;
+  const clock = fmtClock(focus.left());
+  focusChip.dataset.phase = f.paused ? 'paused' : f.phase;
+  focusChip.replaceChildren(icon(f.phase === 'break' ? 'coffee' : 'timer', { size: 15 }), h('span.mono', clock), h('span.focus-chip-label', f.paused ? t().tools.focus.paused : t().tools.focus.phases[f.phase]));
+  document.title = `⏱ ${clock} · ${document.title}`;
+}
+focus.subscribe(drawFocusChip);
+
 const VIEWS = {
   home: homeKit.views.home, hatch: viewHatch, sim: viewSim, codex: viewCodex, park: viewPark, adopt: viewAdopt,
-  settings: homeKit.views.settings, get: homeKit.views.get,
+  settings: homeKit.views.settings, get: homeKit.views.get, tools: toolsKit.view,
 };
-// The sidebar: your own pets first (in the app), then the playground, then settings or the download.
+// The sidebar: your own pets and tools first (in the app), then the playground, then settings or the download.
 const SECTIONS = LOCAL
-  ? [['mine', ['home']], ['explore', ['hatch', 'sim', 'codex', 'park', 'adopt']], ['bottom', ['settings']]]
-  : [['explore', ['hatch', 'sim', 'codex', 'park', 'adopt']], ['bottom', ['get']]];
+  ? [['mine', ['home', 'tools']], ['explore', ['hatch', 'sim', 'codex', 'park', 'adopt']], ['bottom', ['settings']]]
+  : [['explore', ['hatch', 'sim', 'codex', 'park', 'adopt', 'tools']], ['bottom', ['get']]];
 const NAV = SECTIONS.flatMap(([, ids]) => ids);
 const NAV_ICONS = {
-  home: 'layout-dashboard', hatch: 'egg', sim: 'gamepad-2', codex: 'book-open', park: 'trees', adopt: 'heart-handshake', settings: 'settings', get: 'monitor-down',
+  home: 'layout-dashboard', tools: 'wrench', hatch: 'egg', sim: 'gamepad-2', codex: 'book-open', park: 'trees', adopt: 'heart-handshake', settings: 'settings', get: 'monitor-down',
 };
 const DEFAULT_VIEW = NAV[0];
 const isMac = /mac/i.test(navigator.userAgentData?.platform ?? navigator.platform ?? '');
@@ -1433,6 +1468,7 @@ function render() {
   $('#tagline').textContent = T.tagline;
   drawToolbar();
   navHeight();
+  drawFocusChip();
 }
 
 // The search button and the collapse toggle at the top of the sidebar.
@@ -1452,12 +1488,17 @@ function drawToolbar() {
   const T = t();
   const bar = $('#toolbar');
   const themeIcon = { auto: 'sun-moon', light: 'sun', dark: 'moon' }[store.theme];
-  bar.replaceChildren(
+  // The inbox (in the app): a bell with the number of things the pets said since it was last opened.
+  const unread = LOCAL ? homeKit.unread() : 0;
+  bar.replaceChildren(...[
     seg(Object.entries(UI_LANGS).map(([code]) => [code, code.toUpperCase()]), store.ui, (v) => setLang(v), T.common.uiLang),
+    LOCAL ? h('span.bell-wrap', btn('', { icon: unread ? 'bell-ring' : 'bell', kind: 'ghost', title: `${T.inbox.title}${unread ? ` (${unread})` : ''}`, onclick: () => homeKit.actions.openInbox() }),
+      unread ? h('span.badge.dot-badge', unread > 9 ? '9+' : String(unread)) : null) : null,
     btn('', { icon: themeIcon, kind: 'ghost', title: `${T.common.theme}: ${T.common.themes[store.theme]}`, onclick: cycleTheme }),
     btn('', { icon: 'gauge', kind: 'ghost', title: `${T.common.motion}: ${T.common.motions[store.motion]}`, onclick: () => setMotion(MOTIONS[(MOTIONS.indexOf(store.motion) + 1) % MOTIONS.length]) }),
     btn('', { icon: 'circle-help', kind: 'ghost', title: `${T.help.title} (?)`, onclick: openHelp }),
-    btn('', { icon: 'external-link', kind: 'ghost hide-sm', title: 'GitHub', href: LP.HOMEPAGE }));
+    btn('', { icon: 'external-link', kind: 'ghost hide-sm', title: 'GitHub', href: LP.HOMEPAGE }),
+  ].filter(Boolean));
 }
 
 // Where to learn more, from the help sheet and ⌘K.
@@ -1542,6 +1583,14 @@ const palette = createPalette({
     const T = t();
     const A = T.palette.actions;
     const items = NAV.map((id) => ({ group: 'nav', icon: NAV_ICONS[id], label: T.nav[id], hint: T.navHint[id], run: () => go_(id) }));
+    // Every tool by name ("report", "todo", "pomodoro"); the ones that need the app only in the app.
+    for (const tool of toolsKit.TOOLS.filter((x) => LOCAL || !x.local)) {
+      items.push({ group: 'tools', icon: tool.icon, label: T.tools.names[tool.id], hint: T.tools.notes[tool.id], keywords: T.tools.keywords[tool.id], run: () => go_('tools', tool.id) });
+    }
+    items.push(focus.state.phase === 'idle'
+      ? { group: 'tools', icon: 'play', label: A.focusStart, run: () => focus.start() }
+      : { group: 'tools', icon: 'square', label: A.focusStop, run: () => focus.stop() });
+    if (LOCAL) items.push({ group: 'actions', icon: 'inbox', label: T.inbox.title, run: () => homeKit.actions.openInbox() });
     const state = homeKit.state;
     if (LOCAL && state) {
       for (const p of state.projects.filter((x) => x.summary)) {
@@ -1643,7 +1692,7 @@ async function bootLocal() {
   else if (state.config.motion !== store.motion) api('config', { motion: store.motion }).catch(() => {});
   applyMotion();
   if (state.config.online) api('token').then((r) => { if (r.token) ghToken = r.token; }).catch(() => {});
-  homeKit.subscribe(() => drawNav(route().view));
+  homeKit.subscribe(() => { drawNav(route().view); drawToolbar(); });
   listen({
     onChange: () => homeKit.load().then(() => current?.redraw?.()).catch(() => {}),
     onEvent: (e) => {

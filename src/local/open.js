@@ -70,6 +70,20 @@ export const publicTools = ({ editors, terminals }) => ({
   terminals: terminals.map(({ id, name }) => ({ id, name })),
 });
 
+// Opens one file in the editor, at a line when the editor takes one on its command line
+// (VS Code and its cousins: --goto file:line; Zed and Sublime: file:line). macOS's `open` can't.
+const GOTO = new Set(['vscode', 'cursor', 'windsurf']);
+const COLON = new Set(['zed', 'sublime']);
+export function fileArgs(tool, file, line = null) {
+  const at = Number.isInteger(line) && line > 0 ? line : null;
+  if (at && tool.cmd !== 'open') {
+    if (GOTO.has(tool.id)) return ['--goto', `${file}:${at}`];
+    if (COLON.has(tool.id)) return [`${file}:${at}`];
+  }
+  return tool.args(file);
+}
+export const launchFile = (tool, file, line = null) => launch({ ...tool, args: () => fileArgs(tool, file, line) }, file);
+
 // Starts the tool on `path`. Resolves once it has started (or failed to).
 export function launch(tool, path) {
   return new Promise((resolve, reject) => {

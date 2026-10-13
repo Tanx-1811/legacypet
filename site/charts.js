@@ -137,14 +137,112 @@ export function barList(items, { format = (n) => String(n) } = {}) {
 }
 
 // A stat tile: label, value, and an optional line under it (a delta reads green or red).
-export function statTile({ label, value, sub = '', trend = null, icon = null }) {
-  const tile = el('div', 'stat');
+// `chart`: a small picture at the tile's right edge (a sparkline).
+export function statTile({ label, value, sub = '', trend = null, icon = null, chart = null, tone = '' }) {
+  const tile = el('div', `stat${tone ? ` tone-${tone}` : ''}`);
   const head = el('div', 'stat-label');
-  if (icon) head.append(icon);
+  if (icon) {
+    const chip = el('span', 'stat-icon');
+    chip.append(icon);
+    head.append(chip);
+  }
   head.append(el('span', '', label));
-  tile.append(head, el('div', 'stat-value', value));
-  if (sub) tile.append(el('div', `stat-sub${trend ? ` ${trend}` : ''}`, sub));
+  const body = el('div', 'stat-body');
+  const text = el('div', 'stat-text');
+  text.append(el('div', 'stat-value', value));
+  if (sub) text.append(el('div', `stat-sub${trend ? ` ${trend}` : ''}`, sub));
+  body.append(text);
+  if (chart) body.append(chart);
+  tile.append(head, body);
   return tile;
+}
+
+// Little bars, one per value (commits per day, oldest first). The last one is today.
+export function sparkline(values, { title = '', label = (v, i) => String(v) } = {}) {
+  const W = 6;
+  const GAP = 2;
+  const H = 30;
+  const max = Math.max(1, ...values);
+  const svg = svgEl('svg', { viewBox: `0 0 ${values.length * (W + GAP) - GAP} ${H}`, class: 'spark', role: 'img', 'aria-label': title });
+  values.forEach((v, i) => {
+    const h = v ? Math.max(3, Math.round((v / max) * H)) : 2;
+    const rect = svgEl('rect', { x: i * (W + GAP), y: H - h, width: W, height: h, rx: 1.5, class: v ? (i === values.length - 1 ? 'spark-now' : 'spark-bar') : 'spark-zero' });
+    rect.dataset.i = i;
+    svg.append(rect);
+  });
+  svg.addEventListener('pointermove', (e) => {
+    const i = e.target.dataset?.i;
+    if (i == null) return hideTip();
+    const [strong, rest] = [].concat(label(values[i], Number(i)));
+    showTip(e, strong, rest ?? '');
+  });
+  svg.addEventListener('pointerleave', hideTip);
+  return svg;
+}
+
+// When commits happen: a dot per weekday and hour, bigger for more. grid[weekday][hour], 0 = Sunday.
+export function punchCard(grid, { locale = 'en', title = '', value = (n) => String(n) } = {}) {
+  const weekStart = locale === 'vi' ? 1 : 0;
+  const rows = Array.from({ length: 7 }, (_, i) => (i + weekStart) % 7);
+  const STEP = 22;
+  const LEFT = 34;
+  const TOP = 6;
+  const max = Math.max(1, ...grid.flat());
+  const svg = svgEl('svg', { viewBox: `0 0 ${LEFT + 24 * STEP} ${TOP + 7 * STEP + 16}`, class: 'punch', role: 'img', 'aria-label': title });
+  const dayFmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+  // 2023-01-01 was a Sunday: day i of that week is weekday i.
+  const dayName = (d) => dayFmt.format(new Date(2023, 0, 1 + d, 12));
+  rows.forEach((d, r) => {
+    const y = TOP + r * STEP + STEP / 2;
+    svg.append(Object.assign(svgEl('text', { x: 0, y: y + 3.5, class: 'axis' }), { textContent: dayName(d) }));
+    for (let hour = 0; hour < 24; hour++) {
+      const n = grid[d]?.[hour] ?? 0;
+      const cx = LEFT + hour * STEP + STEP / 2;
+      svg.append(svgEl('circle', { cx, cy: y, r: 1.6, class: 'punch-grid' }));
+      if (!n) continue;
+      const dot = svgEl('circle', { cx, cy: y, r: (2.5 + Math.sqrt(n / max) * 6.5).toFixed(1), class: 'punch-dot' });
+      dot.dataset.d = d;
+      dot.dataset.h = hour;
+      svg.append(dot);
+    }
+  });
+  for (let hour = 0; hour < 24; hour += 3) {
+    svg.append(Object.assign(svgEl('text', { x: LEFT + hour * STEP + STEP / 2, y: TOP + 7 * STEP + 12, class: 'axis', 'text-anchor': 'middle' }), { textContent: `${hour}h` }));
+  }
+  svg.addEventListener('pointermove', (e) => {
+    const { d, h } = e.target.dataset ?? {};
+    if (d == null) return hideTip();
+    showTip(e, value(grid[d][h]), `${dayName(Number(d))} · ${String(h).padStart(2, '0')}:00–${String(h).padStart(2, '0')}:59`);
+  });
+  svg.addEventListener('pointerleave', hideTip);
+  const wrap = el('div', 'heat-scroll');
+  wrap.append(svg);
+  return wrap;
+}
+
+// One bar split into parts (languages, kinds of commits), with a legend under it.
+// parts: [{ label, value, color, note }]; the value's share shows in the legend.
+export function stackBar(parts, { format = (share) => `${Math.round(share * 100)}%` } = {}) {
+  const total = parts.reduce((sum, p) => sum + p.value, 0) || 1;
+  const bar = el('div', 'stack-bar');
+  const legend = el('ul', 'stack-legend');
+  for (const p of parts) {
+    const share = p.value / total;
+    const seg = el('i');
+    seg.style.width = `${Math.max(0.6, share * 100)}%`;
+    seg.style.background = p.color;
+    seg.addEventListener('pointermove', (e) => showTip(e, `${p.label} · ${format(share)}`, p.note ?? ''));
+    seg.addEventListener('pointerleave', hideTip);
+    bar.append(seg);
+    const li = el('li');
+    const dot = el('span', 'stack-dot');
+    dot.style.background = p.color;
+    li.append(dot, el('span', 'stack-name', p.label), el('span', 'stack-share', format(share)));
+    legend.append(li);
+  }
+  const wrap = el('div', 'stack-wrap');
+  wrap.append(bar, legend);
+  return wrap;
 }
 
 export const localDayKey = dayKey;

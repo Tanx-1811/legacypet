@@ -33,6 +33,7 @@ export { answerCommand, commandArg, commandFromEvent, commandReply, COMMANDS, pa
 export { ALERT_MOODS, alertIssue, parseAlerts, syncAlert } from './github/alerts.js';
 export { activeVacation, parseVacation, resolveVacations } from './engine/vacation.js';
 export { mockSnapshot } from './mock.js';
+export { commitKind, words as termWords } from './term/words.js';
 export { CHANGELOG, VERSION, whatsNew } from './whatsnew.js';
 export { renderCard, renderMini, renderBadge, renderStats };
 export { PARK_MAX, renderPark, parkSummary } from './render/park.js';

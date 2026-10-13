@@ -1,6 +1,7 @@
 // "My pets", Settings and the download page. Home and Settings only exist when the
 // playground runs as the LegacyPet app on someone's computer (see local.js).
-import { barList, heatmap, localDayKey, statTile } from './charts.js';
+import { barList, heatmap, localDayKey, sparkline, statTile } from './charts.js';
+import { insightsKit } from './insights.js';
 import { api, byNeed, desktop, LOCAL, MODE, petOf } from './local.js';
 
 export function homeViews(kit) {
@@ -36,6 +37,8 @@ export function homeViews(kit) {
     return days < 730 ? fmt.format(-Math.round(days / 30), 'month') : fmt.format(-Math.round(days / 365), 'year');
   };
   const num = (n) => Number(n ?? 0).toLocaleString(store.ui);
+  // A pet's Insights and Code tabs, and the TODO list the Tools page shares (see insights.js).
+  const insights = insightsKit({ h, t, icon, btn, toast, store, ago, num, copyText });
 
   // Pictures are the slow part: draw each pet once per (run, language, theme, still or moving).
   // `picSvg` gives the SVG (for a picture shown inline), `pic` its URL (for an <img>).
@@ -94,6 +97,19 @@ export function homeViews(kit) {
     }
     return total;
   }
+  // Commits per day over the last `n` days, oldest first (today last), for a sparkline.
+  function series(activity, n = 14) {
+    const out = [];
+    const d = new Date();
+    d.setHours(12);
+    d.setDate(d.getDate() - (n - 1));
+    for (let i = 0; i < n; i++) {
+      out.push({ day: new Date(d), n: activity[localDayKey(d)] ?? 0 });
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+  const shortDay = (d) => new Intl.DateTimeFormat(store.ui, { weekday: 'short', day: 'numeric', month: 'short' }).format(d);
 
   const VITAL_ICONS = { fullness: 'utensils', health: 'heart', joy: 'smile', energy: 'zap' };
   // Just the pet's little world, without the name plate under it (the page already says that).
@@ -187,6 +203,60 @@ export function homeViews(kit) {
       use(res.state);
       toast(t().home.careAllDone(t().sim[name], res.ok, res.again + res.cant), res.ok ? 'good' : '');
     } catch (err) { toast(err.message, 'bad'); }
+  }
+
+  // One snack, game or pat for one pet, and what it says back.
+  async function careOne(p, name) {
+    try {
+      const { project: fresh } = await api(`projects/${p.id}/care`, { name });
+      const i = state.projects.findIndex((x) => x.id === p.id);
+      if (i !== -1) state.projects[i] = fresh;
+      publish();
+      const L = tr();
+      const pet = petOf(fresh, { lang: lang() });
+      const outcome = fresh.summary.careOutcome;
+      const msg = outcome === 'again' ? L.command.again[name]
+        : outcome === 'cant' ? (L.command.cant[pet.mood] ?? L.command.cant.egg)
+          : LP.commandReply(pet, fresh.snapshot, { command: name, user: fresh.user }).split('\n').find((l) => l.startsWith('> '))?.slice(2);
+      if (msg) toast(msg, outcome === 'ok' ? 'good' : '');
+    } catch (err) {
+      toast(err.message, 'bad');
+    }
+  }
+
+  // ----- The inbox: everything the pets said lately, read or not ------------------------------
+  // What was last seen is remembered in this browser; the bell counts what came after it.
+  const unread = () => (state?.events ?? []).filter((e) => e.id > (store.seenEvent ?? 0)).length;
+  function openInbox() {
+    const I = t().inbox;
+    const events = state?.events ?? [];
+    const seen = store.seenEvent ?? 0;
+    const groups = new Map();
+    const dayFmt = new Intl.DateTimeFormat(store.ui, { weekday: 'long', day: 'numeric', month: 'long' });
+    const todayKey = localDayKey(new Date());
+    for (const e of events) {
+      const key = localDayKey(new Date(e.at));
+      const title = key === todayKey ? I.today : dayFmt.format(new Date(e.at));
+      if (!groups.has(title)) groups.set(title, []);
+      groups.get(title).push(e);
+    }
+    const KIND_ICONS = { hatched: 'egg', revived: 'heart-pulse', levelUp: 'arrow-up', evolved: 'sparkles', quest: 'scroll-text', trophy: 'trophy', streak: 'flame', mood: 'heart', memory: 'circle-alert' };
+    const el = dialog(
+      closeX(),
+      h('h2', I.title),
+      h('p.muted', I.lead),
+      events.length
+        ? h('div.inbox', [...groups].map(([title, list]) => h('section',
+          h('h3', title),
+          h('ul.inbox-list', list.map((e) => h(`li${e.id > seen ? '.unread' : ''}${e.urgent ? '.urgent' : ''}`,
+            h('a', { href: `#/home/${e.projectId}` },
+              h('span.inbox-icon', icon(KIND_ICONS[e.kind] ?? 'bell', { size: 15 })),
+              h('span.mini-text', h('span', e.text), h('span.muted.small', `${ago(e.at)}${e.muted ? ` · ${I.muted}` : ''}`)))))))))
+        : h('div.empty', I.empty),
+      h('p.small.muted', I.note));
+    el.classList.add('wide');
+    el.addEventListener('click', (e) => { if (e.target.closest('a[href^="#"]')) el.close(); });
+    if (events.length) { store.seenEvent = Math.max(seen, ...events.map((e) => e.id)); kit.save(); publish(); }
   }
 
   async function exportBackup() {
@@ -318,7 +388,8 @@ export function homeViews(kit) {
     let filter = store.homeFilter ?? 'all';
     const search = h('input', { type: 'search', placeholder: T.search, 'aria-label': T.search, autocomplete: 'off', spellcheck: 'false' });
     const box = {
-      summary: h('p.page-sub'), updated: h('span.small.muted'), kpis: h('div.kpis'), heat: h('div'), top: h('div'), side: h('div.side-col'), notes: h('div.notes'),
+      hello: h('h1'), helloIcon: h('span.page-icon'), summary: h('p.page-sub'), updated: h('span.small.muted'), kpis: h('div.kpis'), todo: h('div'),
+      heat: h('div'), top: h('div'), side: h('div.side-col'), notes: h('div.notes'),
       filters: h('div.seg.filters', { role: 'group' }), banner: h('div'), pets: h('div'),
     };
     const refreshBtn = btn(T.refresh, { icon: 'refresh-cw', onclick: (e) => refreshAll(e.currentTarget) });
@@ -368,14 +439,25 @@ export function homeViews(kit) {
       const activity = combined(all);
       const week = lastDays(activity, 0, 7);
       const before = lastDays(activity, 7, 14);
+      const today = activity[localDayKey(new Date())] ?? 0;
       const best = all.slice().sort((a, b) => b.summary.streak - a.summary.streak)[0];
-      box.summary.textContent = T.summary(c.all, c.care, c.live);
+      const hour = new Date().getHours();
+      const part = hour < 5 ? 'night' : hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : hour < 22 ? 'evening' : 'night';
+      const me = all.map((p) => p.user).find(Boolean);
+      box.hello.textContent = T.hello[part](me);
+      fill(box.helloIcon, icon({ morning: 'sunrise', afternoon: 'sun', evening: 'moon-star', night: 'moon' }[part], { size: 20 }));
+      box.summary.textContent = `${T.today(today, new Date(), store.ui)} · ${T.summary(c.all, c.care, c.live)}`;
       box.updated.textContent = state.scanning ? T.refreshing : all.length ? T.updated(ago(all.map((p) => p.now).sort().pop())) : '';
+      const days = series(activity, 14);
       fill(box.kpis,
-        statTile({ icon: icon('paw-print', { size: 15 }), label: K.pets, value: num(c.all), sub: K.live(c.live) }),
-        statTile({ icon: icon('git-commit-horizontal', { size: 15 }), label: K.commits, value: num(week), sub: K.vsLast(week - before), trend: week > before ? 'up' : week < before ? 'down' : '' }),
-        statTile({ icon: icon('flame', { size: 15 }), label: K.streak, value: best?.summary.streak ? K.days(best.summary.streak) : '–', sub: best?.summary.streak ? `${best.summary.name} · ${best.folder}` : K.noStreak }),
-        statTile({ icon: icon('heart', { size: 15 }), label: K.care, value: num(c.care), sub: c.care ? K.careOf(c.all) : K.allGood, trend: c.care ? 'down' : 'up' }));
+        statTile({ icon: icon('paw-print', { size: 15 }), tone: 'teal', label: K.pets, value: num(c.all), sub: K.live(c.live) }),
+        statTile({
+          icon: icon('git-commit-horizontal', { size: 15 }), tone: 'blue', label: K.commits, value: num(week), sub: K.vsLast(week - before), trend: week > before ? 'up' : week < before ? 'down' : '',
+          chart: sparkline(days.map((x) => x.n), { title: T.activityTitle, label: (n, i) => [T.cell(n, '').replace(/ · $/, ''), shortDay(days[i].day)] }),
+        }),
+        statTile({ icon: icon('flame', { size: 15 }), tone: 'amber', label: K.streak, value: best?.summary.streak ? K.days(best.summary.streak) : '–', sub: best?.summary.streak ? `${best.summary.name} · ${best.folder}` : K.noStreak }),
+        statTile({ icon: icon('heart', { size: 15 }), tone: c.care ? 'rose' : 'green', label: K.care, value: num(c.care), sub: c.care ? K.careOf(c.all) : K.allGood, trend: c.care ? 'down' : 'up' }));
+      drawTodo(all);
       const total = Object.values(activity).reduce((a, b) => a + b, 0);
       fill(box.heat,
         h('div.panel-head', h('h3', T.activityTitle), h('span.small.muted', T.activityTotal(total))),
@@ -385,17 +467,49 @@ export function homeViews(kit) {
       fill(box.top, h('h3', T.topTitle), top.length
         ? barList(top.map((p) => ({ label: p.summary.name, sub: p.folder, value: p.summary.commits7, href: `#/home/${p.id}` })), { format: num })
         : h('p.muted.small', T.topEmpty));
-      const risky = all.filter((p) => p.summary.streak >= 2 && !p.summary.committedToday).sort((a, b) => b.summary.streak - a.summary.streak).slice(0, 4);
-      const recent = (state.events ?? []).filter((e) => Date.now() - Date.parse(e.at) < 3 * 86_400_000).slice(0, 4);
+      const recent = (state.events ?? []).filter((e) => Date.now() - Date.parse(e.at) < 3 * 86_400_000).slice(0, 6);
       fill(box.side, h('section.panel.top-panel', box.top));
       fill(box.notes,
-        risky.length ? h('section.panel.note-panel', h('h3', icon('flame', { size: 16 }), T.atRisk), h('ul.mini-list', risky.map((p) => h('li', h('a', { href: `#/home/${p.id}` },
-          scene(p, 'mini-avatar'), h('span.mini-text', h('b', p.summary.name), h('span.muted.small', T.atRiskItem(p.summary.streak))), icon('chevron-right', { size: 14, cls: 'row-go' }))))))
-          : null,
-        recent.length ? h('section.panel.note-panel', h('h3', icon('bell', { size: 16 }), T.events), h('ul.mini-list', recent.map((e) => h('li', h('a', { href: `#/home/${e.projectId}` },
-          h('span.mini-text', h('span', e.text), h('span.muted.small', ago(e.at))), icon('chevron-right', { size: 14, cls: 'row-go' }))))))
+        recent.length ? h('section.panel.note-panel', h('div.panel-head', h('h3', icon('bell', { size: 16 }), T.events), btn(t().inbox.all, { kind: 'sm ghost', icon: 'inbox', onclick: openInbox })),
+          h('ul.mini-list', recent.map((e) => h('li', h('a', { href: `#/home/${e.projectId}` },
+            h('span.mini-text', h('span', e.text), h('span.muted.small', ago(e.at))), icon('chevron-right', { size: 14, cls: 'row-go' }))))))
           : null);
-      box.notes.hidden = !risky.length && !recent.length;
+      box.notes.hidden = !recent.length;
+    }
+
+    // "Do this next": the few things worth a minute right now, each with the button that does it.
+    // Pets in trouble and streaks about to end first, then work waiting to be pushed, committed or pulled.
+    function drawTodo(all) {
+      const A = T.todoNow;
+      const items = [];
+      const open = (p, tab) => () => { if (tab) { store.detailTab = tab; kit.save(); } go_('home', p.id); };
+      for (const p of all) {
+        const s = p.summary;
+        if (s.attention === 'bad') {
+          items.push({ rank: 0, tone: 'bad', icon: 'heart-pulse', p, text: A.sick(s.name, tr(store.ui).moods[s.mood]), sub: s.speech, actions: [[careLabel('feed'), 'cookie', () => careOne(p, 'feed')], [A.open, 'arrow-right', open(p)]] });
+        }
+        if (s.streak >= 2 && !s.committedToday) {
+          items.push({ rank: 1, tone: 'warn', icon: 'flame', p, text: A.streak(s.name, s.streak), sub: p.folder, actions: [[A.code, 'code-xml', () => openWith(p, 'editor')]] });
+        }
+        if (p.ahead) items.push({ rank: 2, tone: 'violet', icon: 'cloud-upload', p, text: A.ahead(p.folder, p.ahead), sub: p.branch ?? '', actions: [[A.terminal, 'square-terminal', () => openWith(p, 'terminal')]] });
+        if (p.dirty) items.push({ rank: 3, tone: 'warn', icon: 'pencil', p, text: A.dirty(p.folder, p.dirty), sub: p.branch ?? '', actions: [[A.changes, 'file-text', open(p, 'code')], [A.code, 'code-xml', () => openWith(p, 'editor')]] });
+        if (p.behind) items.push({ rank: 4, tone: 'blue', icon: 'arrow-down-to-line', p, text: A.behind(p.folder, p.behind), sub: p.branch ?? '', actions: [[T.sync.pull, 'arrow-down-to-line', () => syncGit(p, 'pull')]] });
+        if (s.attention === 'warn') items.push({ rank: 5, tone: 'warn', icon: 'heart', p, text: A.sick(s.name, tr(store.ui).moods[s.mood]), sub: s.speech, actions: [[careLabel('feed'), 'cookie', () => careOne(p, 'feed')], [careLabel('play'), 'volleyball', () => careOne(p, 'play')]] });
+      }
+      items.sort((a, b) => a.rank - b.rank);
+      if (!items.length) {
+        fill(box.todo, h('section.panel.todo-panel.calm', h('div.clean-state', icon('check-check', { size: 20 }), h('div', h('b', A.calm), h('span.small.muted', A.calmNote)))));
+        return;
+      }
+      const shown = items.slice(0, 6);
+      fill(box.todo, h('section.panel.todo-panel',
+        h('div.panel-head', h('h3', icon('list-checks', { size: 16 }), A.title, h('span.count-pill', items.length)),
+          btn(A.board, { kind: 'sm ghost', icon: 'git-branch', href: '#/tools/git' })),
+        h('ul.todo-now', shown.map((x) => h(`li.tone-${x.tone}`,
+          h('span.todo-icon', icon(x.icon, { size: 16 })),
+          h('a.todo-text', { href: `#/home/${x.p.id}` }, h('b', x.text), x.sub ? h('span.small.muted', x.sub) : null),
+          h('div.todo-actions', x.actions.map(([label, name, run]) => btn(label, { icon: name, kind: 'sm', onclick: (e) => { e.preventDefault(); run(); } })))))),
+        items.length > shown.length ? h('p.small.muted', { style: { margin: '8px 0 0' } }, A.more(items.length - shown.length)) : null));
     }
 
     // Three quick facts under the calendar: the busiest day, how many days saw a commit, today's run.
@@ -457,14 +571,26 @@ export function homeViews(kit) {
     }
 
     const draw = () => { if (state) { drawOverview(); drawPets(); } };
+    const U = t().tools;
+    const shortcut = (id, iconName) => h('a.shortcut', { href: `#/tools/${id}` }, h(`span.tool-icon.small.tone-${{ report: 'teal', timeline: 'blue', git: 'violet', focus: 'rose', todos: 'amber', commit: 'green' }[id]}`, icon(iconName, { size: 16 })), h('span', U.names[id]));
     root.append(
-      h('header.page-head',
-        h('div', h('h1', T.title), box.summary),
+      h('header.page-head.hello',
+        h('div.page-title', box.helloIcon, h('div', box.hello, box.summary)),
         h('div.page-actions', box.updated,
           menu(btn(T.careAll, { icon: 'hand-heart' }), ['feed', 'play', 'pat'].map((name) => ({ icon: CARE_ICONS[name], label: careLabel(name), run: () => careAll(name) }))),
-          refreshBtn, btn('', { icon: 'folder-plus', title: T.addFolder, onclick: addFolder }))),
+          refreshBtn,
+          menu(btn('', { icon: 'ellipsis', title: T.moreActions }), [
+            { icon: 'folder-plus', label: T.addFolder, run: addFolder },
+            { icon: 'search', label: t().palette.actions.rescan, run: rescan },
+            '-',
+            { icon: 'file-spreadsheet', label: U.names.export, href: '#/tools/export' },
+            { icon: 'clipboard-list', label: U.names.report, href: '#/tools/report' },
+            { icon: 'inbox', label: t().inbox.title, run: openInbox },
+          ]))),
       box.kpis,
+      box.todo,
       h('div.overview', h('section.panel', box.heat), box.side),
+      h('nav.shortcuts', { 'aria-label': U.title }, shortcut('report', 'clipboard-list'), shortcut('timeline', 'history'), shortcut('git', 'git-branch'), shortcut('focus', 'timer'), shortcut('todos', 'list-todo'), shortcut('commit', 'message-square-text')),
       box.notes,
       h('div.toolbar-row', h('div.search-box', icon('search', { size: 16 }), search), box.filters, h('div.toolbar-end', sortSel, viewSeg)),
       box.banner,
@@ -566,30 +692,14 @@ export function homeViews(kit) {
   function detail(root, id) {
     const T = t().home;
     const C = t().common;
-    const TABS = ['overview', 'activity', 'progress', 'customize'];
+    const TABS = ['overview', 'activity', 'insights', 'code', 'progress', 'customize'];
+    const TAB_ICONS = { overview: 'gauge', activity: 'activity', insights: 'chart-pie', code: 'git-branch', progress: 'trophy', customize: 'sliders-horizontal' };
     let tab = TABS.includes(store.detailTab) ? store.detailTab : 'overview';
     const head = h('header.detail-head');
     const tabsBar = h('div.tabs-bar', { role: 'tablist' });
     const panel = h('div.tab-panel', { role: 'tabpanel' });
     const project = () => state.projects.find((x) => x.id === id);
-
-    async function care(name) {
-      try {
-        const { project: fresh } = await api(`projects/${id}/care`, { name });
-        const i = state.projects.findIndex((p) => p.id === id);
-        if (i !== -1) state.projects[i] = fresh;
-        publish();
-        const L = tr();
-        const pet = petOf(fresh, { lang: lang() });
-        const outcome = fresh.summary.careOutcome;
-        const msg = outcome === 'again' ? L.command.again[name]
-          : outcome === 'cant' ? (L.command.cant[pet.mood] ?? L.command.cant.egg)
-            : LP.commandReply(pet, fresh.snapshot, { command: name, user: fresh.user }).split('\n').find((l) => l.startsWith('> '))?.slice(2);
-        if (msg) toast(msg, outcome === 'ok' ? 'good' : '');
-      } catch (err) {
-        toast(err.message, 'bad');
-      }
-    }
+    const care = (name) => careOne(project(), name);
 
     function popOut() {
       const url = `float.html?id=${id}`;
@@ -607,7 +717,7 @@ export function homeViews(kit) {
       const tools = state.tools ?? { editors: [], terminals: [] };
       const editor = tools.editors.find((e) => e.id === state.config.editor) ?? tools.editors[0];
       const gh = p.github ? `https://github.com/${p.fullName}` : null;
-      const more = menu(btn('', { icon: 'ellipsis', title: T.more }), [
+      const more = menu(btn('', { icon: 'ellipsis', title: T.moreActions }), [
         { icon: 'copy', label: T.copyPath, run: () => copyPath(p) },
         { icon: 'folder-open', label: T.openFolder, run: () => api(`projects/${p.id}/reveal`, {}).catch((e) => toast(e.message, 'bad')) },
         tools.terminals.length ? { icon: 'square-terminal', label: T.openTerminal, run: () => openWith(p, 'terminal') } : null,
@@ -646,7 +756,8 @@ export function homeViews(kit) {
       fill(tabsBar, ...TABS.map((id_) => h('button.tab', {
         type: 'button', role: 'tab', 'aria-selected': String(tab === id_),
         onclick: () => { tab = id_; store.detailTab = id_; kit.save(); draw(); },
-      }, icon({ overview: 'gauge', activity: 'activity', progress: 'trophy', customize: 'sliders-horizontal' }[id_], { size: 15 }), T.tabs[id_])));
+      }, icon(TAB_ICONS[id_], { size: 15 }), T.tabs[id_],
+      id_ === 'code' && p.dirty ? h('span.count-pill', p.dirty) : null)));
     }
 
     function overviewTab(p, pet) {
@@ -972,11 +1083,16 @@ export function homeViews(kit) {
       const pet = petOf(p, { lang: lang() });
       drawHead(p, pet);
       if (typing()) { stale = true; return; }
-      const make = { overview: overviewTab, activity: activityTab, progress: progressTab, customize: customizeTab }[tab];
+      const make = {
+        overview: overviewTab, activity: activityTab, insights: (x) => insights.insightsTab(x), code: (x) => insights.codeTab(x), progress: progressTab, customize: customizeTab,
+      }[tab];
       // The customize tab keeps its fields while the pet refreshes around it.
       if (tab === 'customize' && panel.dataset.tab === 'customize' && panel.dataset.id === id) { refreshLook?.(); return; }
+      // Insights and Code read git when they open: a redraw for the same run keeps what's there.
+      if (['insights', 'code'].includes(tab) && panel.dataset.tab === tab && panel.dataset.id === id && panel.dataset.now === p.now) return;
       panel.dataset.tab = tab;
       panel.dataset.id = id;
+      panel.dataset.now = p.now;
       fill(panel, make(p, pet));
     }
 
@@ -1102,7 +1218,7 @@ export function homeViews(kit) {
         h('p.small.muted.version', T.version(state.version, state.mode)));
     }
 
-    root.append(h('header.page-head', h('div', h('h1', T.title), h('p.page-sub', T.lead))), body);
+    root.append(h('header.page-head', h('div.page-title', h('span.page-icon', icon('settings', { size: 20 })), h('div', h('h1', T.title), h('p.page-sub', T.lead)))), body);
     draw();
     return { redraw: draw };
   }
@@ -1170,6 +1286,10 @@ export function homeViews(kit) {
     get state() { return state; },
     subscribe(fn) { subscribers.add(fn); return () => subscribers.delete(fn); },
     careCount,
+    unread,
+    insights,
+    // A pet's little world as a still picture (lists of projects on the Tools page).
+    pic: (p) => pic(p, 'mini', true),
     views: { home, settings, get: getApp },
     actions: {
       refresh: () => refreshAll(),
@@ -1177,6 +1297,9 @@ export function homeViews(kit) {
       addFolder,
       adoptAll: () => adoptAll(),
       careAll,
+      careOne,
+      openWith,
+      openInbox,
       exportBackup,
       toggleFloat: async () => { try { use(await api('config', { float: !state.config.float })); } catch (err) { toast(err.message, 'bad'); } },
     },

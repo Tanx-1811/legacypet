@@ -4,7 +4,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { userInfo } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { parseColor } from '../engine/look.js';
 import { buildPet } from '../engine/pet.js';
 import { parseVacation } from '../engine/vacation.js';
@@ -16,7 +16,8 @@ import { strings } from '../i18n/index.js';
 import { HOMES, SPECIES_IDS } from '../sprites/index.js';
 import { adoptLocal, findReadme, gitHint, publishAdoption, readWorkflow, workflowOptions } from './adopt.js';
 import { git, readRepo } from './git.js';
-import { detectTools, launch, publicTools } from './open.js';
+import { findTodos, readInsights, readReport } from './insights.js';
+import { detectTools, launch, launchFile, publicTools } from './open.js';
 import { findRepos, suggestFolders } from './scan.js';
 import { createStore, projectId } from './store.js';
 
@@ -577,6 +578,32 @@ export function createProjects({ store = createStore(), now: clock = () => new D
       if (!tool) throw Object.assign(new Error(kind === 'terminal' ? 'No terminal app found' : 'No code editor found'), { status: 404 });
       await launch(tool, p.path);
       return { ok: true, tool: tool.name };
+    },
+
+    // A file of the project (a TODO, a changed file) in the code editor, at its line. Only files
+    // inside the project folder: a path that climbs out of it is refused.
+    async openFile(id, file, line = null) {
+      const root = resolve(get(id).path);
+      const target = resolve(root, String(file ?? ''));
+      if (!file || !target.startsWith(root + sep)) throw Object.assign(new Error('Not a file of this project'), { status: 400 });
+      if (!existsSync(target)) throw Object.assign(new Error('No such file'), { status: 404 });
+      tools ??= detectTools();
+      const tool = tools.editors.find((t) => t.id === config.editor) ?? tools.editors[0];
+      if (!tool) throw Object.assign(new Error('No code editor found'), { status: 404 });
+      await launchFile(tool, target, line);
+      return { ok: true, tool: tool.name };
+    },
+
+    // The Insights and Code tabs and the Tools page: read when asked, never during a refresh.
+    insights(id) {
+      const p = get(id);
+      return readInsights(p.path, { now: clock(), defaultBranch: p.defaultBranch });
+    },
+    todos: (id) => findTodos(get(id).path),
+    // Commits across every project, for work reports and the timeline.
+    report({ since, until = null, mine = true } = {}) {
+      const repos = list().filter((p) => p.summary && !p.empty).map((p) => ({ id: p.id, path: p.path, user: p.user }));
+      return readReport(repos, { since, until, mine });
     },
 
     // "Forget everything": settings, memories and the cache. The repos are never touched.

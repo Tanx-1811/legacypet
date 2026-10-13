@@ -55,7 +55,17 @@ for macOS, Windows or Linux, open it and press **Allow & find my projects**. Tha
 - A pet sits on your desktop, the menu bar shows who needs care, and a notification tells you when a pet
   gets hungry or sick, levels up or earns a trophy.
 - A dashboard for all of them: a year of commits on one activity calendar, the busiest repos this week,
-  and the streaks that end tonight without a commit (with an evening reminder).
+  and **Do this next**: the pets that need care, the streaks that end tonight, and the work not yet committed,
+  pushed or pulled, each with the button that deals with it.
+- **🧰 Tools** for your repos: a **work report** (today's, yesterday's or this week's commits across every project,
+  copied as Markdown for your standup), a **timeline** of every commit, a **Git board** (what's left to commit,
+  push or pull, and fetch them all at once), a **TODO finder** (one click opens the line in your editor),
+  a **focus timer** (Pomodoro, with a pet cheering you on), a **commit composer** (Conventional Commits) and
+  **CSV/JSON exports**. Each pet's page gains **Insights** (when commits happen, kinds of commits, languages,
+  contributors, how well kept the repo is) and **Code** (changed files, branches with the merged ones to tidy up,
+  stashes, tags, TODOs). Nothing is ever committed or pushed for you; fetch and pull run only when you press them
+  (and pull only with `--ff-only`).
+- An **inbox** (the bell) keeps everything the pets said lately.
 - Press **⌘K** (**Ctrl+K**) to jump to any project, page or action, and open a project in VS Code, Cursor,
   Zed or a terminal straight from its page. In the desktop app, **⌘⇧L** (**Ctrl+Shift+L**) brings it up from anywhere.
 - Feed, play and pat every pet once a day (or all of them at once), dress it up, or raise it in the simulator.
@@ -504,6 +514,7 @@ commits are still the real food. The pet remembers its best friends.
 - **Park**: build a Pet Park from any repos (it starts with a few made-up pets, so there is something to see).
 - **Adopt**: pick everything once and copy the command, the workflow and the README snippet, then open the README
   editor and the workflow run on GitHub straight from the steps.
+- **Tools**: the focus timer and the commit composer work right here; the rest of the tools come with the app.
 
 A bar on top of Hatch, Raise and Adopt shows the three steps (hatch, make it yours, adopt) and ticks the ones you've done.
 **Share** copies a link that carries the pet's look (species, home, color, name, catchphrase, language), a made-up
