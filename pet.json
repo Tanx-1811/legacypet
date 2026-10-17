@@ -1,0 +1,189 @@
+{
+  "schema": 1,
+  "generator": "legacypet",
+  "version": "1.3.0",
+  "generatedAt": "2026-10-17T20:39:22.962Z",
+  "repo": "Tanx-1811/legacypet",
+  "born": "2026-10-08",
+  "pet": {
+    "name": "Kobbo",
+    "displayName": "Kobbo the Radiant",
+    "species": "blob",
+    "shiny": false,
+    "stage": "baby",
+    "level": 12,
+    "rank": "bronze",
+    "mood": "ecstatic",
+    "speech": "Green CI, fresh commits, happy issues. Bliss!",
+    "accessories": {
+      "hat": "sprout",
+      "face": null,
+      "pal": null
+    },
+    "aura": false
+  },
+  "vitals": {
+    "fullness": 79,
+    "health": 100,
+    "joy": 100,
+    "energy": 100,
+    "hygiene": 85
+  },
+  "facts": {
+    "daysSinceCommit": 4.8,
+    "commits7": 6,
+    "streak": 0,
+    "totalCommits": 141,
+    "stars": 1,
+    "ageDays": 9
+  },
+  "achievements": {
+    "shipper": "2026-10-08",
+    "hatched": "2026-10-08",
+    "inboxZero": "2026-10-08",
+    "quester": "2026-10-08",
+    "centurion": "2026-10-09",
+    "survivor": "2026-10-11"
+  },
+  "events": {
+    "hatched": "2026-10-08",
+    "levelUp": "2026-10-10",
+    "questDone": "2026-10-15",
+    "release": "2026-10-15",
+    "rankUp": "2026-10-09",
+    "recovered": "2026-10-11"
+  },
+  "vacations": [],
+  "quests": {
+    "week": "2026-10-12",
+    "ids": [
+      "sunny",
+      "doctor",
+      "feast"
+    ],
+    "done": {
+      "sunny": "2026-10-14",
+      "doctor": "2026-10-15"
+    }
+  },
+  "questStars": 4,
+  "evolution": null,
+  "care": {
+    "day": "2026-10-17",
+    "today": {
+      "feed": [],
+      "play": [],
+      "pat": []
+    },
+    "total": 0,
+    "friends": {}
+  },
+  "wardrobe": {
+    "worn": []
+  },
+  "alert": null,
+  "history": [
+    {
+      "date": "2026-10-17",
+      "mood": "ecstatic",
+      "vitals": [
+        79,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-16",
+      "mood": "ecstatic",
+      "vitals": [
+        83,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "mood": "party",
+      "vitals": [
+        87,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-14",
+      "mood": "party",
+      "vitals": [
+        91,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-13",
+      "mood": "party",
+      "vitals": [
+        96,
+        100,
+        95,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "mood": "ecstatic",
+      "vitals": [
+        99,
+        100,
+        95,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "mood": "ecstatic",
+      "vitals": [
+        98,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "mood": "sick",
+      "vitals": [
+        99,
+        28,
+        100,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "mood": "party",
+      "vitals": [
+        97,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "date": "2026-10-08",
+      "mood": "party",
+      "vitals": [
+        99,
+        100,
+        95,
+        100
+      ]
+    }
+  ],
+  "lastMood": "ecstatic",
+  "lastStage": "baby"
+}
