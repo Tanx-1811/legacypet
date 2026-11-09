@@ -1,14 +1,13 @@
 name: LegacyPet
 
+# Nothing runs on its own: no schedule, no run on push. The pet wakes up when you publish a release,
+# type /pet in an issue or pull request, or press Actions → LegacyPet → Run workflow.
+# For the usual four check-ups a day, add back under `on:`:  schedule: [{ cron: '17 */6 * * *' }]
 on:
-  schedule:
-    - cron: '17 */6 * * *' # check on the pet four times a day
   release:
     types: [published] # throw a party the moment you ship
   issue_comment:
     types: [created] # talk to your pet: /pet, /pet feed, /pet play, /pet quests
-  push:
-    paths: ['.github/workflows/legacypet.yml'] # hatch right after you commit this file
   workflow_dispatch:
 
 permissions:

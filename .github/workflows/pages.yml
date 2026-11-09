@@ -2,10 +2,12 @@
 # One-time setup: Settings → Pages → Source: "GitHub Actions".
 name: Playground
 
+# Runs only when you ask for it: push a version tag (v1.2.3) or Actions → Playground → Run workflow.
+# A tag deploy needs the github-pages environment to accept tags: Settings → Environments →
+# github-pages → Deployment branches and tags → add a tag rule `v*.*.*`.
 on:
   push:
-    branches: [main]
-    paths: ['site/**', 'src/**', 'docs/gallery/**']
+    tags: ['v*.*.*']
   workflow_dispatch:
 
 permissions:
