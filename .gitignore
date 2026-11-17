@@ -9,3 +9,21 @@ desktop/bundle/
 # Claude Code: personal settings and agent worktrees stay local
 .claude/settings.local.json
 .claude/worktrees/
+
+# --- Security baseline: secrets, keys, local env (never commit) ---
+.env
+.env.*
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+.dev.vars
+.netrc
+credentials.json
+*service-account*.json
+*firebase-adminsdk*.json
+!.env.example
